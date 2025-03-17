@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import ActionButton from '../ui-custom/ActionButton';
 import GlassCard from '../ui-custom/GlassCard';
 import { OPERATORS, METRICS, TIME_PERIODS } from '@/constants/incentiveConstants';
-import { CustomRule } from '@/types/incentiveTypes';
+import { CustomRule, RuleCondition } from '@/types/incentiveTypes';
 import { useToast } from "@/hooks/use-toast";
 import { getCurrencySymbol } from '@/utils/incentiveUtils';
 
@@ -79,16 +79,28 @@ const CustomRules: React.FC<CustomRulesProps> = ({
     updateCustomRules(newRules);
   };
 
-  const updateCustomRule = (ruleIndex: number, field: keyof CustomRule, value: any) => {
+  const updateCustomRule = (ruleIndex: number, field: keyof CustomRule, value: string | boolean) => {
     const newRules = [...customRules];
-    newRules[ruleIndex][field] = value;
+    
+    // Type assertion to handle the specific field types
+    if (field === 'name' || field === 'description' || field === 'action') {
+      (newRules[ruleIndex][field] as string) = value as string;
+    } else if (field === 'active') {
+      (newRules[ruleIndex][field] as boolean) = value as boolean;
+    }
     
     updateCustomRules(newRules);
   };
 
-  const updateCustomRuleCondition = (ruleIndex: number, conditionIndex: number, field: keyof CustomRule['conditions'][0], value: any) => {
+  const updateCustomRuleCondition = (ruleIndex: number, conditionIndex: number, field: keyof RuleCondition, value: string | number) => {
     const newRules = [...customRules];
-    newRules[ruleIndex].conditions[conditionIndex][field] = value;
+    
+    // Type assertion to handle the specific field types
+    if (field === 'period' || field === 'metric' || field === 'operator') {
+      (newRules[ruleIndex].conditions[conditionIndex][field] as string) = value as string;
+    } else if (field === 'value') {
+      (newRules[ruleIndex].conditions[conditionIndex][field] as number) = value as number;
+    }
     
     updateCustomRules(newRules);
   };
