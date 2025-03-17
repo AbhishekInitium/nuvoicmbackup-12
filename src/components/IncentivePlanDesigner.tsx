@@ -1,6 +1,5 @@
-
 import React, { useState } from 'react';
-import { PlusCircle, Trash2, Save, PlayCircle, Plus, X, Check, Percent, DollarSign, Calendar, Clock, User } from 'lucide-react';
+import { PlusCircle, Trash2, Save, PlayCircle, Plus, X, Check, Percent, DollarSign, Calendar, Clock, User, Copy, ChevronsUpDown, Database } from 'lucide-react';
 import SectionPanel from './ui-custom/SectionPanel';
 import GlassCard from './ui-custom/GlassCard';
 import ActionButton from './ui-custom/ActionButton';
@@ -13,45 +12,121 @@ import {
   TabsTrigger 
 } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+
+// Mock data for existing schemes
+const MOCK_SCHEMES = [
+  { id: 1, name: 'Enterprise Sales Plan 2024', description: 'For enterprise sales team' },
+  { id: 2, name: 'SMB Commission Structure', description: 'For small and medium business sales' },
+  { id: 3, name: 'APAC Regional Sales Plan', description: 'For Asia Pacific region' },
+  { id: 4, name: 'Partner Channel Incentive', description: 'For partner sales channel' }
+];
+
+// Database field options based on the revenue base
+const DB_FIELDS = {
+  salesOrders: [
+    'DiscountPercent', 'TotalAmount', 'ProductCategory', 'CustomerSegment', 
+    'SalesRegion', 'DealSize', 'ContractTerm', 'PaymentTerms'
+  ],
+  invoices: [
+    'InvoiceAmount', 'PaymentStatus', 'DueDate', 'DiscountApplied', 
+    'TaxAmount', 'CustomerType', 'PaymentMethod', 'Currency'
+  ],
+  collections: [
+    'CollectionAmount', 'CollectionDate', 'PaymentDelay', 'PaymentSource', 
+    'CustomerCredit', 'LatePaymentFee', 'SettlementType', 'BankAccount'
+  ]
+};
+
+// Operator options for conditions
+const OPERATORS = [
+  { value: '=', label: 'Equals (=)' },
+  { value: '!=', label: 'Not Equals (≠)' },
+  { value: '>', label: 'Greater Than (>)' },
+  { value: '>=', label: 'Greater Than or Equal (≥)' },
+  { value: '<', label: 'Less Than (<)' },
+  { value: '<=', label: 'Less Than or Equal (≤)' },
+  { value: 'contains', label: 'Contains' },
+  { value: 'starts_with', label: 'Starts With' },
+  { value: 'ends_with', label: 'Ends With' }
+];
+
+// Organization levels for credit rules
+const ORG_LEVELS = [
+  { level: 'L1', description: 'CxO / Executive Leadership' },
+  { level: 'L2', description: 'Business Unit Head' },
+  { level: 'L3', description: 'Division Head' },
+  { level: 'L4', description: 'Manager' },
+  { level: 'L5', description: 'Sales Representative' }
+];
 
 const IncentivePlanDesigner: React.FC = () => {
   const { toast } = useToast();
+  
+  const [showExistingSchemes, setShowExistingSchemes] = useState(false);
   
   const [plan, setPlan] = useState({
     name: 'North America Sales Incentive Plan',
     description: 'Commission plan for North America sales team',
     effectiveStart: '2025-01-01',
     effectiveEnd: '2025-12-31',
+    revenueBase: 'salesOrders', // New: Revenue Base - salesOrders, invoices, collections
     territories: ['USA', 'Canada', 'Mexico'],
     commissionStructure: {
-      baseRate: 3,
       tiers: [
-        { threshold: 100000, rate: 4 }
+        { from: 0, to: 100000, rate: 3 }, // Base tier
+        { from: 100001, to: 250000, rate: 4 } // Additional tier
       ]
     },
     measurementRules: {
-      primaryMetric: 'revenue',
+      primaryMetric: 'revenue', // revenue, units
       minQualification: 50000,
       adjustments: [
-        { condition: 'discount > 20%', factor: 0.8, description: 'High discount adjustment' }
+        { field: 'DiscountPercent', operator: '>', value: 20, factor: 0.8, description: 'High discount adjustment' }
       ],
       exclusions: [
-        { condition: 'overdue > 60 days', description: 'Exclude overdue payments' }
+        { field: 'PaymentTerms', operator: '>', value: 60, description: 'Exclude long payment terms' }
       ]
     },
     creditRules: {
-      roles: [
-        { role: 'Primary', percentage: 80 },
-        { role: 'Support', percentage: 20 }
-      ]
+      // New structure for organizational hierarchy
+      levels: [
+        { level: 'L5', description: 'Sales Representative', percentage: 80 },
+        { level: 'L4', description: 'Manager', percentage: 10 },
+        { level: 'L3', description: 'Division Head', percentage: 6 },
+        { level: 'L2', description: 'Business Unit Head', percentage: 3 },
+        { level: 'L1', description: 'CxO', percentage: 1 }
+      ],
+      sourceSystem: 'hcm' // hcm, manual, upload
     },
-    bonusConditions: [
-      { 
-        metric: 'Quarterly Revenue', 
-        threshold: 150000, 
-        amount: 5000, 
-        frequency: 'Quarterly',
-        description: 'Performance bonus for high achievers'
+    customRules: [
+      {
+        name: 'Consistent Sales Qualification',
+        description: 'Sales rep must have minimum sales for past 3 consecutive months',
+        conditions: [
+          { period: 'past3months', metric: 'monthlySales', operator: '>=', value: 10000 }
+        ],
+        active: true
       }
     ],
     payoutSchedule: {
@@ -67,14 +142,38 @@ const IncentivePlanDesigner: React.FC = () => {
     });
   };
 
+  const copyExistingScheme = (schemeId) => {
+    // In a real app, this would fetch the scheme from the backend
+    const selectedScheme = MOCK_SCHEMES.find(scheme => scheme.id === schemeId);
+    
+    if (selectedScheme) {
+      toast({
+        title: "Scheme Copied",
+        description: `${selectedScheme.name} has been loaded as a template.`,
+        variant: "default"
+      });
+      
+      // In a real implementation, we would get the full scheme data
+      // For now, just update the name and description
+      updatePlan('name', `Copy of ${selectedScheme.name}`);
+      updatePlan('description', selectedScheme.description);
+      
+      setShowExistingSchemes(false);
+    }
+  };
+
   const addTier = () => {
     const newTiers = [...plan.commissionStructure.tiers];
     const lastTier = newTiers[newTiers.length - 1];
-    const newThreshold = lastTier ? lastTier.threshold + 50000 : 50000;
+    
+    const newFrom = lastTier.to + 1;
+    const newTo = newFrom + 50000;
+    const newRate = lastTier.rate + 1;
     
     newTiers.push({
-      threshold: newThreshold,
-      rate: lastTier ? lastTier.rate + 1 : 4
+      from: newFrom,
+      to: newTo,
+      rate: newRate
     });
     
     updatePlan('commissionStructure', {
@@ -84,6 +183,16 @@ const IncentivePlanDesigner: React.FC = () => {
   };
 
   const removeTier = (index) => {
+    // Don't allow removing the base tier (index 0)
+    if (index === 0) {
+      toast({
+        title: "Cannot Remove Base Tier",
+        description: "The base tier cannot be removed as it defines the starting commission rate.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     const newTiers = [...plan.commissionStructure.tiers];
     newTiers.splice(index, 1);
     
@@ -93,30 +202,76 @@ const IncentivePlanDesigner: React.FC = () => {
     });
   };
 
-  const addBonus = () => {
-    const newBonuses = [...plan.bonusConditions];
-    newBonuses.push({
-      metric: 'Revenue',
-      threshold: 100000,
-      amount: 1000,
-      frequency: 'Quarterly',
-      description: 'New bonus condition'
+  const updateTier = (index, field, value) => {
+    const newTiers = [...plan.commissionStructure.tiers];
+    
+    // Parse the value as a number
+    const numValue = parseFloat(value);
+    
+    // Validate tier boundaries
+    if (field === 'from' || field === 'to') {
+      // If updating the 'from' value, ensure it's greater than the previous tier's 'to'
+      if (field === 'from' && index > 0) {
+        const prevTier = newTiers[index - 1];
+        if (numValue <= prevTier.to) {
+          toast({
+            title: "Invalid Range",
+            description: `From value must be greater than previous tier's To value (${prevTier.to})`,
+            variant: "destructive"
+          });
+          return;
+        }
+      }
+      
+      // If updating the 'to' value, ensure it's greater than the current 'from'
+      if (field === 'to') {
+        const currentFrom = newTiers[index].from;
+        if (numValue <= currentFrom) {
+          toast({
+            title: "Invalid Range",
+            description: "To value must be greater than From value",
+            variant: "destructive"
+          });
+          return;
+        }
+        
+        // If not the last tier, ensure the 'to' value is less than the next tier's 'from'
+        if (index < newTiers.length - 1) {
+          const nextTier = newTiers[index + 1];
+          if (numValue >= nextTier.from) {
+            toast({
+              title: "Invalid Range",
+              description: `To value must be less than next tier's From value (${nextTier.from})`,
+              variant: "destructive"
+            });
+            return;
+          }
+        }
+      }
+    }
+    
+    // Update the field
+    newTiers[index][field] = numValue;
+    
+    // If updating a 'to' value and not the last tier, also update the next tier's 'from' value
+    if (field === 'to' && index < newTiers.length - 1) {
+      newTiers[index + 1].from = numValue + 1;
+    }
+    
+    updatePlan('commissionStructure', {
+      ...plan.commissionStructure,
+      tiers: newTiers
     });
-    
-    updatePlan('bonusConditions', newBonuses);
-  };
-
-  const removeBonus = (index) => {
-    const newBonuses = [...plan.bonusConditions];
-    newBonuses.splice(index, 1);
-    
-    updatePlan('bonusConditions', newBonuses);
   };
 
   const addAdjustment = () => {
     const newAdjustments = [...plan.measurementRules.adjustments];
+    const defaultField = DB_FIELDS[plan.revenueBase][0];
+    
     newAdjustments.push({
-      condition: '',
+      field: defaultField,
+      operator: '>',
+      value: 0,
       factor: 1.0,
       description: 'New adjustment rule'
     });
@@ -139,8 +294,12 @@ const IncentivePlanDesigner: React.FC = () => {
 
   const addExclusion = () => {
     const newExclusions = [...plan.measurementRules.exclusions];
+    const defaultField = DB_FIELDS[plan.revenueBase][0];
+    
     newExclusions.push({
-      condition: '',
+      field: defaultField,
+      operator: '>',
+      value: 0,
       description: 'New exclusion rule'
     });
     
@@ -160,38 +319,53 @@ const IncentivePlanDesigner: React.FC = () => {
     });
   };
 
-  const addCreditRole = () => {
-    const newRoles = [...plan.creditRules.roles];
-    const totalCurrentPercentage = newRoles.reduce((sum, role) => sum + role.percentage, 0);
+  const updateCreditPercentage = (index, value) => {
+    const newLevels = [...plan.creditRules.levels];
     
-    if (totalCurrentPercentage < 100) {
-      const remainingPercentage = 100 - totalCurrentPercentage;
-      newRoles.push({
-        role: 'New Role',
-        percentage: remainingPercentage
-      });
-      
-      updatePlan('creditRules', {
-        ...plan.creditRules,
-        roles: newRoles
-      });
-    } else {
+    // Parse the new value
+    const percentage = parseInt(value);
+    
+    // Update the specified level
+    newLevels[index].percentage = percentage;
+    
+    // Calculate the sum of all percentages
+    const sum = newLevels.reduce((acc, level) => acc + level.percentage, 0);
+    
+    // If sum is not 100%, show warning
+    if (sum !== 100) {
       toast({
-        title: "Cannot add more roles",
-        description: "Total percentage cannot exceed 100%",
-        variant: "destructive"
+        title: "Warning",
+        description: `Total percentage is ${sum}%. It should equal 100%.`,
+        variant: "warning"
       });
     }
-  };
-
-  const removeCreditRole = (index) => {
-    const newRoles = [...plan.creditRules.roles];
-    newRoles.splice(index, 1);
     
     updatePlan('creditRules', {
       ...plan.creditRules,
-      roles: newRoles
+      levels: newLevels
     });
+  };
+
+  const addCustomRule = () => {
+    const newRules = [...plan.customRules];
+    
+    newRules.push({
+      name: 'New Custom Rule',
+      description: 'Define criteria for this rule',
+      conditions: [
+        { period: 'current', metric: 'sales', operator: '>=', value: 1000 }
+      ],
+      active: true
+    });
+    
+    updatePlan('customRules', newRules);
+  };
+
+  const removeCustomRule = (index) => {
+    const newRules = [...plan.customRules];
+    newRules.splice(index, 1);
+    
+    updatePlan('customRules', newRules);
   };
 
   const savePlan = () => {
@@ -222,6 +396,16 @@ const IncentivePlanDesigner: React.FC = () => {
     }
   };
 
+  const getQualificationLabel = () => {
+    return plan.measurementRules.primaryMetric === 'revenue' 
+      ? 'Minimum Qualification ($)' 
+      : 'Minimum Qualification (Units)';
+  };
+
+  const getDbFields = () => {
+    return DB_FIELDS[plan.revenueBase] || [];
+  };
+
   return (
     <div className="py-12 sm:py-16 px-4 md:px-8 min-h-screen">
       <header className="mb-12 text-center">
@@ -235,13 +419,46 @@ const IncentivePlanDesigner: React.FC = () => {
       </header>
 
       <div className="max-w-4xl mx-auto">
+        <div className="flex justify-end mb-6">
+          <Popover open={showExistingSchemes} onOpenChange={setShowExistingSchemes}>
+            <PopoverTrigger asChild>
+              <ActionButton 
+                variant="outline"
+                size="sm"
+                onClick={() => setShowExistingSchemes(true)}
+              >
+                <Copy size={16} className="mr-2" /> Copy Existing Scheme
+              </ActionButton>
+            </PopoverTrigger>
+            <PopoverContent className="w-96" align="end">
+              <div className="space-y-4">
+                <h3 className="font-medium text-lg">Select a Scheme to Copy</h3>
+                <p className="text-sm text-app-gray-500">
+                  Choose an existing scheme to use as a template
+                </p>
+                <div className="max-h-64 overflow-y-auto space-y-2">
+                  {MOCK_SCHEMES.map((scheme) => (
+                    <div 
+                      key={scheme.id}
+                      className="p-3 border rounded-lg hover:bg-app-gray-50 cursor-pointer transition-colors"
+                      onClick={() => copyExistingScheme(scheme.id)}
+                    >
+                      <h4 className="font-medium">{scheme.name}</h4>
+                      <p className="text-sm text-app-gray-500 mt-1">{scheme.description}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </PopoverContent>
+          </Popover>
+        </div>
+
         <SectionPanel title="Basic Information" defaultExpanded={true}>
           <div className="space-y-6">
             <div>
               <label className="block text-sm font-medium text-app-gray-700 mb-2">Plan Name</label>
-              <input 
-                type="text" 
-                className="form-input"
+              <Input 
+                type="text"
                 value={plan.name}
                 onChange={(e) => updatePlan('name', e.target.value)}
               />
@@ -249,8 +466,8 @@ const IncentivePlanDesigner: React.FC = () => {
             
             <div>
               <label className="block text-sm font-medium text-app-gray-700 mb-2">Description</label>
-              <textarea 
-                className="form-input min-h-[80px]"
+              <Textarea 
+                className="min-h-[80px]"
                 value={plan.description}
                 onChange={(e) => updatePlan('description', e.target.value)}
                 rows={2}
@@ -260,9 +477,8 @@ const IncentivePlanDesigner: React.FC = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               <div>
                 <label className="block text-sm font-medium text-app-gray-700 mb-2">Effective Start Date</label>
-                <input 
-                  type="date" 
-                  className="form-input"
+                <Input 
+                  type="date"
                   value={plan.effectiveStart}
                   onChange={(e) => updatePlan('effectiveStart', e.target.value)}
                 />
@@ -270,13 +486,32 @@ const IncentivePlanDesigner: React.FC = () => {
               
               <div>
                 <label className="block text-sm font-medium text-app-gray-700 mb-2">Effective End Date</label>
-                <input 
-                  type="date" 
-                  className="form-input"
+                <Input 
+                  type="date"
                   value={plan.effectiveEnd}
                   onChange={(e) => updatePlan('effectiveEnd', e.target.value)}
                 />
               </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-app-gray-700 mb-2">Revenue Base</label>
+              <Select 
+                value={plan.revenueBase}
+                onValueChange={(value) => updatePlan('revenueBase', value)}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select revenue base" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="salesOrders">Sales Orders</SelectItem>
+                  <SelectItem value="invoices">Invoices</SelectItem>
+                  <SelectItem value="collections">Collections</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-sm text-app-gray-500 mt-2">
+                Data for calculations will be sourced from the selected system
+              </p>
             </div>
           </div>
         </SectionPanel>
@@ -312,10 +547,9 @@ const IncentivePlanDesigner: React.FC = () => {
             </div>
             
             <div className="flex items-center">
-              <input 
+              <Input 
                 type="text" 
                 placeholder="Add new territory..." 
-                className="form-input" 
                 id="new-territory"
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
@@ -348,28 +582,6 @@ const IncentivePlanDesigner: React.FC = () => {
         <SectionPanel title="Commission Structure">
           <div className="space-y-8">
             <div>
-              <label className="block text-sm font-medium text-app-gray-700 mb-2">Base Commission Rate (%)</label>
-              <div className="relative">
-                <input 
-                  type="number" 
-                  step="0.1"
-                  className="form-input pl-10"
-                  value={plan.commissionStructure.baseRate}
-                  onChange={(e) => updatePlan('commissionStructure', {
-                    ...plan.commissionStructure,
-                    baseRate: parseFloat(e.target.value)
-                  })}
-                />
-                <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                  <Percent size={18} className="text-app-gray-400" />
-                </div>
-              </div>
-              <p className="text-sm text-app-gray-500 mt-2">Base commission rate for every $10,000 in sales revenue</p>
-            </div>
-            
-            <div className="section-divider"></div>
-            
-            <div>
               <div className="flex justify-between items-center mb-4">
                 <label className="text-sm font-medium text-app-gray-700">Tiered Commission Structure</label>
                 <ActionButton 
@@ -386,29 +598,14 @@ const IncentivePlanDesigner: React.FC = () => {
                   <table className="min-w-full divide-y divide-app-gray-200">
                     <thead>
                       <tr className="bg-app-gray-50">
-                        <th className="px-6 py-3 text-left text-xs font-medium text-app-gray-500 uppercase tracking-wider">Threshold ($)</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-app-gray-500 uppercase tracking-wider">From ($)</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-app-gray-500 uppercase tracking-wider">To ($)</th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-app-gray-500 uppercase tracking-wider">Commission Rate (%)</th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-app-gray-500 uppercase tracking-wider">Description</th>
                         <th className="px-6 py-3 text-right text-xs font-medium text-app-gray-500 uppercase tracking-wider">Action</th>
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-app-gray-200">
-                      <tr className="bg-app-gray-50 bg-opacity-50">
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="flex items-center">
-                            <DollarSign size={16} className="text-app-gray-400 mr-1" />
-                            <span>0</span>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="flex items-center">
-                            <Percent size={16} className="text-app-gray-400 mr-1" />
-                            <span>{plan.commissionStructure.baseRate}</span>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-app-gray-500">Base Rate</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-right">-</td>
-                      </tr>
                       {plan.commissionStructure.tiers.map((tier, index) => (
                         <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-app-gray-50 bg-opacity-30'}>
                           <td className="px-6 py-4 whitespace-nowrap">
@@ -416,15 +613,22 @@ const IncentivePlanDesigner: React.FC = () => {
                               <input 
                                 type="number" 
                                 className="form-input pl-8 py-2"
-                                value={tier.threshold}
-                                onChange={(e) => {
-                                  const newTiers = [...plan.commissionStructure.tiers];
-                                  newTiers[index].threshold = parseInt(e.target.value);
-                                  updatePlan('commissionStructure', {
-                                    ...plan.commissionStructure,
-                                    tiers: newTiers
-                                  });
-                                }}
+                                value={tier.from}
+                                onChange={(e) => updateTier(index, 'from', e.target.value)}
+                                disabled={index > 0} // Only first tier's "from" can be edited directly
+                              />
+                              <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                                <DollarSign size={16} className="text-app-gray-400" />
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="relative">
+                              <input 
+                                type="number" 
+                                className="form-input pl-8 py-2"
+                                value={tier.to}
+                                onChange={(e) => updateTier(index, 'to', e.target.value)}
                               />
                               <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                                 <DollarSign size={16} className="text-app-gray-400" />
@@ -438,14 +642,7 @@ const IncentivePlanDesigner: React.FC = () => {
                                 step="0.1"
                                 className="form-input pl-8 py-2"
                                 value={tier.rate}
-                                onChange={(e) => {
-                                  const newTiers = [...plan.commissionStructure.tiers];
-                                  newTiers[index].rate = parseFloat(e.target.value);
-                                  updatePlan('commissionStructure', {
-                                    ...plan.commissionStructure,
-                                    tiers: newTiers
-                                  });
-                                }}
+                                onChange={(e) => updateTier(index, 'rate', e.target.value)}
                               />
                               <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                                 <Percent size={16} className="text-app-gray-400" />
@@ -453,15 +650,19 @@ const IncentivePlanDesigner: React.FC = () => {
                             </div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-app-gray-500">
-                            Tier {index + 1}
+                            {index === 0 ? 'Base Tier' : `Tier ${index}`}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-right">
-                            <button 
-                              className="text-app-red hover:text-opacity-80 transition-colors duration-200"
-                              onClick={() => removeTier(index)}
-                            >
-                              <Trash2 size={18} />
-                            </button>
+                            {index === 0 ? (
+                              <span className="text-app-gray-400">-</span>
+                            ) : (
+                              <button 
+                                className="text-app-red hover:text-opacity-80 transition-colors duration-200"
+                                onClick={() => removeTier(index)}
+                              >
+                                <Trash2 size={18} />
+                              </button>
+                            )}
                           </td>
                         </tr>
                       ))}
@@ -470,7 +671,7 @@ const IncentivePlanDesigner: React.FC = () => {
                 </div>
               </div>
               <p className="text-sm text-app-gray-500 mt-3">
-                Sales exceeding each threshold will be commissioned at the corresponding rate
+                Sales within each tier range will be commissioned at the corresponding rate
               </p>
             </div>
           </div>
@@ -481,24 +682,28 @@ const IncentivePlanDesigner: React.FC = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
               <div>
                 <label className="block text-sm font-medium text-app-gray-700 mb-2">Primary Metric</label>
-                <select 
-                  className="form-input w-full"
+                <Select 
                   value={plan.measurementRules.primaryMetric}
-                  onChange={(e) => updatePlan('measurementRules', {
+                  onValueChange={(value) => updatePlan('measurementRules', {
                     ...plan.measurementRules,
-                    primaryMetric: e.target.value
+                    primaryMetric: value
                   })}
                 >
-                  <option value="revenue">Revenue</option>
-                  <option value="units">Units Sold</option>
-                  <option value="profit">Profit Margin</option>
-                  <option value="bookings">Bookings</option>
-                </select>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select primary metric" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="revenue">Revenue</SelectItem>
+                    <SelectItem value="units">Units Sold</SelectItem>
+                    <SelectItem value="profit">Profit Margin</SelectItem>
+                    <SelectItem value="bookings">Bookings</SelectItem>
+                  </SelectContent>
+                </Select>
                 <p className="text-sm text-app-gray-500 mt-2">The primary performance metric used for commission calculation</p>
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-app-gray-700 mb-2">Minimum Qualification ($)</label>
+                <label className="block text-sm font-medium text-app-gray-700 mb-2">{getQualificationLabel()}</label>
                 <div className="relative">
                   <input 
                     type="number" 
@@ -510,7 +715,11 @@ const IncentivePlanDesigner: React.FC = () => {
                     })}
                   />
                   <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                    <DollarSign size={16} className="text-app-gray-400" />
+                    {plan.measurementRules.primaryMetric === 'revenue' ? (
+                      <DollarSign size={16} className="text-app-gray-400" />
+                    ) : (
+                      <span className="text-app-gray-400 text-sm">#</span>
+                    )}
                   </div>
                 </div>
                 <p className="text-sm text-app-gray-500 mt-2">Minimum performance required to qualify for commission</p>
@@ -553,30 +762,75 @@ const IncentivePlanDesigner: React.FC = () => {
                       <GlassCard key={index} variant="outlined" className="p-4">
                         <div className="flex justify-between items-start">
                           <div className="flex-1 grid grid-cols-1 sm:grid-cols-12 gap-4">
-                            <div className="sm:col-span-5">
-                              <label className="block text-sm font-medium text-app-gray-700 mb-2">Condition</label>
-                              <input 
-                                type="text" 
-                                className="form-input w-full"
-                                value={adjustment.condition}
-                                onChange={(e) => {
+                            <div className="sm:col-span-3">
+                              <label className="block text-sm font-medium text-app-gray-700 mb-2">Field</label>
+                              <Select 
+                                value={adjustment.field}
+                                onValueChange={(value) => {
                                   const newAdjustments = [...plan.measurementRules.adjustments];
-                                  newAdjustments[index].condition = e.target.value;
+                                  newAdjustments[index].field = value;
                                   updatePlan('measurementRules', {
                                     ...plan.measurementRules,
                                     adjustments: newAdjustments
                                   });
                                 }}
-                                placeholder="e.g., discount > 20%"
+                              >
+                                <SelectTrigger className="w-full">
+                                  <SelectValue placeholder="Select field" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {getDbFields().map(field => (
+                                    <SelectItem key={field} value={field}>{field}</SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            
+                            <div className="sm:col-span-2">
+                              <label className="block text-sm font-medium text-app-gray-700 mb-2">Operator</label>
+                              <Select 
+                                value={adjustment.operator}
+                                onValueChange={(value) => {
+                                  const newAdjustments = [...plan.measurementRules.adjustments];
+                                  newAdjustments[index].operator = value;
+                                  updatePlan('measurementRules', {
+                                    ...plan.measurementRules,
+                                    adjustments: newAdjustments
+                                  });
+                                }}
+                              >
+                                <SelectTrigger className="w-full">
+                                  <SelectValue placeholder="Operator" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {OPERATORS.map(op => (
+                                    <SelectItem key={op.value} value={op.value}>{op.label}</SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            
+                            <div className="sm:col-span-2">
+                              <label className="block text-sm font-medium text-app-gray-700 mb-2">Value</label>
+                              <Input 
+                                type="number" 
+                                value={adjustment.value}
+                                onChange={(e) => {
+                                  const newAdjustments = [...plan.measurementRules.adjustments];
+                                  newAdjustments[index].value = parseFloat(e.target.value);
+                                  updatePlan('measurementRules', {
+                                    ...plan.measurementRules,
+                                    adjustments: newAdjustments
+                                  });
+                                }}
                               />
                             </div>
                             
-                            <div className="sm:col-span-3">
+                            <div className="sm:col-span-2">
                               <label className="block text-sm font-medium text-app-gray-700 mb-2">Factor</label>
-                              <input 
+                              <Input 
                                 type="number" 
                                 step="0.1"
-                                className="form-input w-full"
                                 value={adjustment.factor}
                                 onChange={(e) => {
                                   const newAdjustments = [...plan.measurementRules.adjustments];
@@ -589,441 +843,10 @@ const IncentivePlanDesigner: React.FC = () => {
                               />
                             </div>
                             
-                            <div className="sm:col-span-4">
+                            <div className="sm:col-span-3">
                               <label className="block text-sm font-medium text-app-gray-700 mb-2">Description</label>
-                              <input 
+                              <Input 
                                 type="text" 
-                                className="form-input w-full"
                                 value={adjustment.description}
                                 onChange={(e) => {
                                   const newAdjustments = [...plan.measurementRules.adjustments];
-                                  newAdjustments[index].description = e.target.value;
-                                  updatePlan('measurementRules', {
-                                    ...plan.measurementRules,
-                                    adjustments: newAdjustments
-                                  });
-                                }}
-                              />
-                            </div>
-                          </div>
-                          
-                          <button 
-                            className="p-1 rounded-full hover:bg-app-gray-100 text-app-gray-500 hover:text-app-red transition-colors duration-200 ml-3"
-                            onClick={() => removeAdjustment(index)}
-                          >
-                            <Trash2 size={18} />
-                          </button>
-                        </div>
-                      </GlassCard>
-                    ))}
-                  </div>
-                )}
-              </TabsContent>
-              
-              <TabsContent value="exclusions" className="mt-0">
-                <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-base font-medium text-app-gray-700">Exclusion Rules</h3>
-                  <ActionButton 
-                    variant="outline"
-                    size="sm"
-                    onClick={addExclusion}
-                  >
-                    <PlusCircle size={16} className="mr-1" /> Add Exclusion
-                  </ActionButton>
-                </div>
-                
-                {plan.measurementRules.exclusions.length === 0 ? (
-                  <div className="text-center py-8 border border-dashed rounded-lg">
-                    <p className="text-app-gray-500">No exclusion rules defined yet</p>
-                    <button
-                      className="mt-4 text-app-blue hover:text-app-blue-dark font-medium flex items-center justify-center mx-auto"
-                      onClick={addExclusion}
-                    >
-                      <Plus size={18} className="mr-1" /> Add your first exclusion rule
-                    </button>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {plan.measurementRules.exclusions.map((exclusion, index) => (
-                      <GlassCard key={index} variant="outlined" className="p-4">
-                        <div className="flex justify-between items-start">
-                          <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div>
-                              <label className="block text-sm font-medium text-app-gray-700 mb-2">Condition</label>
-                              <input 
-                                type="text" 
-                                className="form-input w-full"
-                                value={exclusion.condition}
-                                onChange={(e) => {
-                                  const newExclusions = [...plan.measurementRules.exclusions];
-                                  newExclusions[index].condition = e.target.value;
-                                  updatePlan('measurementRules', {
-                                    ...plan.measurementRules,
-                                    exclusions: newExclusions
-                                  });
-                                }}
-                                placeholder="e.g., overdue > 60 days"
-                              />
-                            </div>
-                            
-                            <div>
-                              <label className="block text-sm font-medium text-app-gray-700 mb-2">Description</label>
-                              <input 
-                                type="text" 
-                                className="form-input w-full"
-                                value={exclusion.description}
-                                onChange={(e) => {
-                                  const newExclusions = [...plan.measurementRules.exclusions];
-                                  newExclusions[index].description = e.target.value;
-                                  updatePlan('measurementRules', {
-                                    ...plan.measurementRules,
-                                    exclusions: newExclusions
-                                  });
-                                }}
-                              />
-                            </div>
-                          </div>
-                          
-                          <button 
-                            className="p-1 rounded-full hover:bg-app-gray-100 text-app-gray-500 hover:text-app-red transition-colors duration-200 ml-3"
-                            onClick={() => removeExclusion(index)}
-                          >
-                            <Trash2 size={18} />
-                          </button>
-                        </div>
-                      </GlassCard>
-                    ))}
-                  </div>
-                )}
-              </TabsContent>
-            </Tabs>
-          </div>
-        </SectionPanel>
-        
-        <SectionPanel 
-          title="Credit Rules" 
-          badge={
-            <div className="chip chip-blue">{plan.creditRules.roles.length}</div>
-          }
-        >
-          <div className="space-y-6">
-            <div className="flex justify-between items-center">
-              <h3 className="text-base font-medium text-app-gray-700">Sales Credit Allocation</h3>
-              <ActionButton 
-                variant="outline"
-                size="sm"
-                onClick={addCreditRole}
-              >
-                <PlusCircle size={16} className="mr-1" /> Add Role
-              </ActionButton>
-            </div>
-            
-            <p className="text-sm text-app-gray-500">Define how credit is split between sales roles</p>
-            
-            <div className="overflow-hidden rounded-xl border border-app-gray-200">
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-app-gray-200">
-                  <thead>
-                    <tr className="bg-app-gray-50">
-                      <th className="px-6 py-3 text-left text-xs font-medium text-app-gray-500 uppercase tracking-wider">Role</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-app-gray-500 uppercase tracking-wider">Credit Percentage (%)</th>
-                      <th className="px-6 py-3 text-right text-xs font-medium text-app-gray-500 uppercase tracking-wider">Action</th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-app-gray-200">
-                    {plan.creditRules.roles.map((role, index) => (
-                      <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-app-gray-50 bg-opacity-30'}>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="relative">
-                            <input 
-                              type="text" 
-                              className="form-input pl-8 py-2"
-                              value={role.role}
-                              onChange={(e) => {
-                                const newRoles = [...plan.creditRules.roles];
-                                newRoles[index].role = e.target.value;
-                                updatePlan('creditRules', {
-                                  ...plan.creditRules,
-                                  roles: newRoles
-                                });
-                              }}
-                            />
-                            <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                              <User size={16} className="text-app-gray-400" />
-                            </div>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="relative">
-                            <input 
-                              type="number" 
-                              min="0"
-                              max="100"
-                              className="form-input pl-8 py-2"
-                              value={role.percentage}
-                              onChange={(e) => {
-                                const newRoles = [...plan.creditRules.roles];
-                                newRoles[index].percentage = parseInt(e.target.value);
-                                updatePlan('creditRules', {
-                                  ...plan.creditRules,
-                                  roles: newRoles
-                                });
-                              }}
-                            />
-                            <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                              <Percent size={16} className="text-app-gray-400" />
-                            </div>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-right">
-                          <button 
-                            className="text-app-red hover:text-opacity-80 transition-colors duration-200 disabled:opacity-50"
-                            onClick={() => removeCreditRole(index)}
-                            disabled={plan.creditRules.roles.length <= 1}
-                          >
-                            <Trash2 size={18} />
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-            
-            <div className="flex items-center justify-between p-4 bg-app-gray-50 rounded-lg">
-              <div className="text-sm font-medium text-app-gray-700">Total percentage:</div>
-              <div className="text-sm font-medium">
-                {plan.creditRules.roles.reduce((sum, role) => sum + role.percentage, 0)}%
-                {plan.creditRules.roles.reduce((sum, role) => sum + role.percentage, 0) === 100 ? (
-                  <Check size={16} className="inline-block ml-2 text-app-green" />
-                ) : (
-                  <X size={16} className="inline-block ml-2 text-app-red" />
-                )}
-              </div>
-            </div>
-            
-            <p className="text-sm text-app-gray-500">
-              Total credit allocation should equal 100%
-            </p>
-          </div>
-        </SectionPanel>
-        
-        <SectionPanel title="Payout Schedule">
-          <div className="space-y-6">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-app-gray-700 mb-2">Payment Frequency</label>
-                <select 
-                  className="form-input"
-                  value={plan.payoutSchedule.frequency}
-                  onChange={(e) => updatePlan('payoutSchedule', {
-                    ...plan.payoutSchedule,
-                    frequency: e.target.value
-                  })}
-                >
-                  <option value="Weekly">Weekly</option>
-                  <option value="Bi-weekly">Bi-weekly</option>
-                  <option value="Monthly">Monthly</option>
-                  <option value="Quarterly">Quarterly</option>
-                  <option value="Annual">Annual</option>
-                </select>
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-app-gray-700 mb-2">Processing Day</label>
-                <div className="relative">
-                  <input 
-                    type="number" 
-                    min="1" 
-                    max="31"
-                    className="form-input pl-10"
-                    value={plan.payoutSchedule.processingDay}
-                    onChange={(e) => updatePlan('payoutSchedule', {
-                      ...plan.payoutSchedule,
-                      processingDay: parseInt(e.target.value)
-                    })}
-                  />
-                  <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                    <Calendar size={18} className="text-app-gray-400" />
-                  </div>
-                </div>
-                <p className="text-sm text-app-gray-500 mt-2">
-                  Day of the period when commissions are processed
-                </p>
-              </div>
-            </div>
-            
-            <GlassCard className="p-4">
-              <div className="flex items-center text-app-gray-700">
-                <Clock size={20} className="mr-2 text-app-blue" />
-                <span className="font-medium">Summary:</span>
-                <span className="ml-2">
-                  Commissions will be calculated and paid {plan.payoutSchedule.frequency.toLowerCase()}, 
-                  processed on the {plan.payoutSchedule.processingDay}{getOrdinalSuffix(plan.payoutSchedule.processingDay)} 
-                  {plan.payoutSchedule.frequency === 'Monthly' ? ' of the following month' : ''}
-                </span>
-              </div>
-            </GlassCard>
-          </div>
-        </SectionPanel>
-        
-        <SectionPanel 
-          title="Bonus Conditions" 
-          badge={
-            <div className="chip chip-blue">{plan.bonusConditions.length}</div>
-          }
-        >
-          <div className="space-y-6">
-            <div className="flex justify-between items-center">
-              <h3 className="text-base font-medium text-app-gray-700">Performance Bonuses</h3>
-              <ActionButton 
-                variant="outline"
-                size="sm"
-                onClick={addBonus}
-              >
-                <PlusCircle size={16} className="mr-1" /> Add Bonus
-              </ActionButton>
-            </div>
-            
-            {plan.bonusConditions.length === 0 ? (
-              <div className="text-center py-8">
-                <p className="text-app-gray-500">No bonus conditions defined yet</p>
-                <button
-                  className="mt-4 text-app-blue hover:text-app-blue-dark font-medium flex items-center justify-center mx-auto"
-                  onClick={addBonus}
-                >
-                  <Plus size={18} className="mr-1" /> Add your first bonus condition
-                </button>
-              </div>
-            ) : (
-              <div className="space-y-6">
-                {plan.bonusConditions.map((bonus, index) => (
-                  <GlassCard key={index} variant="outlined" className="p-6">
-                    <div className="flex justify-between items-start">
-                      <div className="flex-1 space-y-5">
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                          <div>
-                            <label className="block text-sm font-medium text-app-gray-700 mb-2">Metric</label>
-                            <input 
-                              type="text" 
-                              className="form-input"
-                              value={bonus.metric}
-                              onChange={(e) => {
-                                const newBonuses = [...plan.bonusConditions];
-                                newBonuses[index].metric = e.target.value;
-                                updatePlan('bonusConditions', newBonuses);
-                              }}
-                            />
-                          </div>
-                          
-                          <div>
-                            <label className="block text-sm font-medium text-app-gray-700 mb-2">Frequency</label>
-                            <select 
-                              className="form-input"
-                              value={bonus.frequency}
-                              onChange={(e) => {
-                                const newBonuses = [...plan.bonusConditions];
-                                newBonuses[index].frequency = e.target.value;
-                                updatePlan('bonusConditions', newBonuses);
-                              }}
-                            >
-                              <option value="Monthly">Monthly</option>
-                              <option value="Quarterly">Quarterly</option>
-                              <option value="Annual">Annual</option>
-                            </select>
-                          </div>
-                        </div>
-                        
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                          <div>
-                            <label className="block text-sm font-medium text-app-gray-700 mb-2">Threshold</label>
-                            <div className="relative">
-                              <input 
-                                type="number" 
-                                className="form-input pl-8"
-                                value={bonus.threshold}
-                                onChange={(e) => {
-                                  const newBonuses = [...plan.bonusConditions];
-                                  newBonuses[index].threshold = parseInt(e.target.value);
-                                  updatePlan('bonusConditions', newBonuses);
-                                }}
-                              />
-                              <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                                <DollarSign size={16} className="text-app-gray-400" />
-                              </div>
-                            </div>
-                          </div>
-                          
-                          <div>
-                            <label className="block text-sm font-medium text-app-gray-700 mb-2">Bonus Amount</label>
-                            <div className="relative">
-                              <input 
-                                type="number" 
-                                className="form-input pl-8"
-                                value={bonus.amount}
-                                onChange={(e) => {
-                                  const newBonuses = [...plan.bonusConditions];
-                                  newBonuses[index].amount = parseInt(e.target.value);
-                                  updatePlan('bonusConditions', newBonuses);
-                                }}
-                              />
-                              <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                                <DollarSign size={16} className="text-app-gray-400" />
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                        
-                        <div>
-                          <label className="block text-sm font-medium text-app-gray-700 mb-2">Description</label>
-                          <textarea 
-                            className="form-input min-h-[80px]"
-                            value={bonus.description}
-                            onChange={(e) => {
-                              const newBonuses = [...plan.bonusConditions];
-                              newBonuses[index].description = e.target.value;
-                              updatePlan('bonusConditions', newBonuses);
-                            }}
-                            rows={2}
-                          />
-                        </div>
-                      </div>
-                      
-                      <button 
-                        className="p-2 rounded-full hover:bg-app-gray-100 text-app-gray-500 hover:text-app-red transition-colors duration-200 ml-4"
-                        onClick={() => removeBonus(index)}
-                      >
-                        <Trash2 size={18} />
-                      </button>
-                    </div>
-                  </GlassCard>
-                ))}
-              </div>
-            )}
-          </div>
-        </SectionPanel>
-        
-        <div className="flex flex-col sm:flex-row justify-center gap-4 mt-12">
-          <ActionButton 
-            variant="primary"
-            onClick={simulatePlan}
-            className="order-2 sm:order-1"
-          >
-            <PlayCircle size={20} className="mr-2" /> Simulate Plan
-          </ActionButton>
-          
-          <ActionButton 
-            variant="secondary"
-            onClick={savePlan}
-            className="order-1 sm:order-2"
-          >
-            <Save size={20} className="mr-2" /> Save Plan
-          </ActionButton>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-export default IncentivePlanDesigner;
