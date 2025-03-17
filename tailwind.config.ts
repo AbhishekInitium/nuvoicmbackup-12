@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -61,6 +62,25 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
+				},
+				// Custom color scheme
+				app: {
+					'blue': '#007AFF',
+					'blue-dark': '#0056B3',
+					'blue-light': '#E5F1FF',
+					'gray-50': '#F9FAFB',
+					'gray-100': '#F3F4F6',
+					'gray-200': '#E5E7EB',
+					'gray-300': '#D1D5DB',
+					'gray-400': '#9CA3AF',
+					'gray-500': '#6B7280',
+					'gray-600': '#4B5563',
+					'gray-700': '#374151',
+					'gray-800': '#1F2937',
+					'gray-900': '#111827',
+					'green': '#34C759',
+					'red': '#FF3B30',
+					'orange': '#FF9500'
 				}
 			},
 			borderRadius: {
@@ -70,25 +90,56 @@ export default {
 			},
 			keyframes: {
 				'accordion-down': {
-					from: {
-						height: '0'
-					},
-					to: {
-						height: 'var(--radix-accordion-content-height)'
-					}
+					from: { height: '0' },
+					to: { height: 'var(--radix-accordion-content-height)' }
 				},
 				'accordion-up': {
-					from: {
-						height: 'var(--radix-accordion-content-height)'
-					},
-					to: {
-						height: '0'
-					}
+					from: { height: 'var(--radix-accordion-content-height)' },
+					to: { height: '0' }
+				},
+				'fade-in': {
+					from: { opacity: '0' },
+					to: { opacity: '1' }
+				},
+				'fade-out': {
+					from: { opacity: '1' },
+					to: { opacity: '0' }
+				},
+				'slide-in': {
+					from: { transform: 'translateY(10px)', opacity: '0' },
+					to: { transform: 'translateY(0)', opacity: '1' }
+				},
+				'slide-out': {
+					from: { transform: 'translateY(0)', opacity: '1' },
+					to: { transform: 'translateY(10px)', opacity: '0' }
+				},
+				'pulse-subtle': {
+					'0%, 100%': { opacity: '1' },
+					'50%': { opacity: '0.85' }
 				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
-				'accordion-up': 'accordion-up 0.2s ease-out'
+				'accordion-up': 'accordion-up 0.2s ease-out',
+				'fade-in': 'fade-in 0.2s ease-out',
+				'fade-out': 'fade-out 0.2s ease-out',
+				'slide-in': 'slide-in 0.3s ease-out',
+				'slide-out': 'slide-out 0.3s ease-out',
+				'pulse-subtle': 'pulse-subtle 2s ease-in-out infinite'
+			},
+			boxShadow: {
+				'glass': '0 4px 30px rgba(0, 0, 0, 0.05)',
+				'glass-hover': '0 10px 40px rgba(0, 0, 0, 0.08)',
+				'glass-sm': '0 2px 10px rgba(0, 0, 0, 0.03)',
+				'button': '0 1px 2px rgba(0, 0, 0, 0.05)'
+			},
+			transitionTimingFunction: {
+				'apple': 'cubic-bezier(0.42, 0, 0.58, 1)',
+				'apple-in': 'cubic-bezier(0.42, 0, 1, 1)',
+				'apple-out': 'cubic-bezier(0, 0, 0.58, 1)'
+			},
+			transitionDuration: {
+				'450': '450ms'
 			}
 		}
 	},
