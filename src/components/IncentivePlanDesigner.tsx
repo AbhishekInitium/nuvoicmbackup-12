@@ -1,12 +1,21 @@
-
 import React, { useState } from 'react';
-import { PlusCircle, Trash2, Save, PlayCircle, Plus, X, Check, Percent, DollarSign } from 'lucide-react';
+import { PlusCircle, Trash2, Save, PlayCircle, Plus, X, Check, Percent, DollarSign, Calendar, Clock, User } from 'lucide-react';
 import SectionPanel from './ui-custom/SectionPanel';
 import GlassCard from './ui-custom/GlassCard';
 import ActionButton from './ui-custom/ActionButton';
 import { cn } from '@/lib/utils';
+import { useToast } from "@/hooks/use-toast";
+import { 
+  Tabs, 
+  TabsContent, 
+  TabsList, 
+  TabsTrigger 
+} from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
 
 const IncentivePlanDesigner: React.FC = () => {
+  const { toast } = useToast();
+  
   const [plan, setPlan] = useState({
     name: 'North America Sales Incentive Plan',
     description: 'Commission plan for North America sales team',
@@ -103,28 +112,113 @@ const IncentivePlanDesigner: React.FC = () => {
     updatePlan('bonusConditions', newBonuses);
   };
 
+  const addAdjustment = () => {
+    const newAdjustments = [...plan.measurementRules.adjustments];
+    newAdjustments.push({
+      condition: '',
+      factor: 1.0,
+      description: 'New adjustment rule'
+    });
+    
+    updatePlan('measurementRules', {
+      ...plan.measurementRules,
+      adjustments: newAdjustments
+    });
+  };
+
+  const removeAdjustment = (index) => {
+    const newAdjustments = [...plan.measurementRules.adjustments];
+    newAdjustments.splice(index, 1);
+    
+    updatePlan('measurementRules', {
+      ...plan.measurementRules,
+      adjustments: newAdjustments
+    });
+  };
+
+  const addExclusion = () => {
+    const newExclusions = [...plan.measurementRules.exclusions];
+    newExclusions.push({
+      condition: '',
+      description: 'New exclusion rule'
+    });
+    
+    updatePlan('measurementRules', {
+      ...plan.measurementRules,
+      exclusions: newExclusions
+    });
+  };
+
+  const removeExclusion = (index) => {
+    const newExclusions = [...plan.measurementRules.exclusions];
+    newExclusions.splice(index, 1);
+    
+    updatePlan('measurementRules', {
+      ...plan.measurementRules,
+      exclusions: newExclusions
+    });
+  };
+
+  const addCreditRole = () => {
+    const newRoles = [...plan.creditRules.roles];
+    const totalCurrentPercentage = newRoles.reduce((sum, role) => sum + role.percentage, 0);
+    
+    if (totalCurrentPercentage < 100) {
+      const remainingPercentage = 100 - totalCurrentPercentage;
+      newRoles.push({
+        role: 'New Role',
+        percentage: remainingPercentage
+      });
+      
+      updatePlan('creditRules', {
+        ...plan.creditRules,
+        roles: newRoles
+      });
+    } else {
+      toast({
+        title: "Cannot add more roles",
+        description: "Total percentage cannot exceed 100%",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const removeCreditRole = (index) => {
+    const newRoles = [...plan.creditRules.roles];
+    newRoles.splice(index, 1);
+    
+    updatePlan('creditRules', {
+      ...plan.creditRules,
+      roles: newRoles
+    });
+  };
+
   const savePlan = () => {
     console.log('Saving plan:', plan);
-    // Toast notification instead of alert
-    document.dispatchEvent(new CustomEvent('toast', {
-      detail: {
-        title: 'Success',
-        description: 'Plan saved successfully!',
-        variant: 'success',
-      }
-    }));
+    toast({
+      title: "Success",
+      description: "Plan saved successfully!",
+      variant: "default"
+    });
   };
 
   const simulatePlan = () => {
     console.log('Simulating plan:', plan);
-    // Toast notification instead of alert
-    document.dispatchEvent(new CustomEvent('toast', {
-      detail: {
-        title: 'Redirecting',
-        description: 'Opening simulation module...',
-        variant: 'info',
-      }
-    }));
+    toast({
+      title: "Redirecting",
+      description: "Opening simulation module...",
+      variant: "default"
+    });
+  };
+
+  const getOrdinalSuffix = (day) => {
+    if (day > 3 && day < 21) return 'th';
+    switch (day % 10) {
+      case 1: return 'st';
+      case 2: return 'nd';
+      case 3: return 'rd';
+      default: return 'th';
+    }
   };
 
   return (
@@ -140,7 +234,6 @@ const IncentivePlanDesigner: React.FC = () => {
       </header>
 
       <div className="max-w-4xl mx-auto">
-        {/* Basic Information Section */}
         <SectionPanel title="Basic Information" defaultExpanded={true}>
           <div className="space-y-6">
             <div>
@@ -187,7 +280,6 @@ const IncentivePlanDesigner: React.FC = () => {
           </div>
         </SectionPanel>
         
-        {/* Territories Section */}
         <SectionPanel 
           title="Territories" 
           badge={
@@ -252,7 +344,6 @@ const IncentivePlanDesigner: React.FC = () => {
           </div>
         </SectionPanel>
         
-        {/* Commission Structure Section */}
         <SectionPanel title="Commission Structure">
           <div className="space-y-8">
             <div>
@@ -272,7 +363,7 @@ const IncentivePlanDesigner: React.FC = () => {
                   <Percent size={18} className="text-app-gray-400" />
                 </div>
               </div>
-              <p className="text-sm text-app-gray-500 mt-2">Base commission rate applied to all sales</p>
+              <p className="text-sm text-app-gray-500 mt-2">Base commission rate for every $10,000 in sales revenue</p>
             </div>
             
             <div className="section-divider"></div>
@@ -384,7 +475,398 @@ const IncentivePlanDesigner: React.FC = () => {
           </div>
         </SectionPanel>
         
-        {/* Bonus Conditions Section */}
+        <SectionPanel title="Measurement Rules">
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+              <div>
+                <label className="block text-sm font-medium text-app-gray-700 mb-2">Primary Metric</label>
+                <select 
+                  className="form-input w-full"
+                  value={plan.measurementRules.primaryMetric}
+                  onChange={(e) => updatePlan('measurementRules', {
+                    ...plan.measurementRules,
+                    primaryMetric: e.target.value
+                  })}
+                >
+                  <option value="revenue">Revenue</option>
+                  <option value="units">Units Sold</option>
+                  <option value="profit">Profit Margin</option>
+                  <option value="bookings">Bookings</option>
+                </select>
+                <p className="text-sm text-app-gray-500 mt-2">The primary performance metric used for commission calculation</p>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-app-gray-700 mb-2">Minimum Qualification ($)</label>
+                <div className="relative">
+                  <input 
+                    type="number" 
+                    className="form-input pl-8"
+                    value={plan.measurementRules.minQualification}
+                    onChange={(e) => updatePlan('measurementRules', {
+                      ...plan.measurementRules,
+                      minQualification: parseInt(e.target.value)
+                    })}
+                  />
+                  <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                    <DollarSign size={16} className="text-app-gray-400" />
+                  </div>
+                </div>
+                <p className="text-sm text-app-gray-500 mt-2">Minimum performance required to qualify for commission</p>
+              </div>
+            </div>
+            
+            <div className="section-divider"></div>
+            
+            <Tabs defaultValue="adjustments" className="w-full">
+              <TabsList className="grid grid-cols-2 mb-4">
+                <TabsTrigger value="adjustments">Adjustment Factors</TabsTrigger>
+                <TabsTrigger value="exclusions">Exclusions</TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="adjustments" className="mt-0">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-base font-medium text-app-gray-700">Adjustment Factors</h3>
+                  <ActionButton 
+                    variant="outline"
+                    size="sm"
+                    onClick={addAdjustment}
+                  >
+                    <PlusCircle size={16} className="mr-1" /> Add Adjustment
+                  </ActionButton>
+                </div>
+                
+                {plan.measurementRules.adjustments.length === 0 ? (
+                  <div className="text-center py-8 border border-dashed rounded-lg">
+                    <p className="text-app-gray-500">No adjustment factors defined yet</p>
+                    <button
+                      className="mt-4 text-app-blue hover:text-app-blue-dark font-medium flex items-center justify-center mx-auto"
+                      onClick={addAdjustment}
+                    >
+                      <Plus size={18} className="mr-1" /> Add your first adjustment factor
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {plan.measurementRules.adjustments.map((adjustment, index) => (
+                      <GlassCard key={index} variant="outlined" className="p-4">
+                        <div className="flex justify-between items-start">
+                          <div className="flex-1 grid grid-cols-1 sm:grid-cols-12 gap-4">
+                            <div className="sm:col-span-5">
+                              <label className="block text-sm font-medium text-app-gray-700 mb-2">Condition</label>
+                              <input 
+                                type="text" 
+                                className="form-input w-full"
+                                value={adjustment.condition}
+                                onChange={(e) => {
+                                  const newAdjustments = [...plan.measurementRules.adjustments];
+                                  newAdjustments[index].condition = e.target.value;
+                                  updatePlan('measurementRules', {
+                                    ...plan.measurementRules,
+                                    adjustments: newAdjustments
+                                  });
+                                }}
+                                placeholder="e.g., discount > 20%"
+                              />
+                            </div>
+                            
+                            <div className="sm:col-span-3">
+                              <label className="block text-sm font-medium text-app-gray-700 mb-2">Factor</label>
+                              <input 
+                                type="number" 
+                                step="0.1"
+                                className="form-input w-full"
+                                value={adjustment.factor}
+                                onChange={(e) => {
+                                  const newAdjustments = [...plan.measurementRules.adjustments];
+                                  newAdjustments[index].factor = parseFloat(e.target.value);
+                                  updatePlan('measurementRules', {
+                                    ...plan.measurementRules,
+                                    adjustments: newAdjustments
+                                  });
+                                }}
+                              />
+                            </div>
+                            
+                            <div className="sm:col-span-4">
+                              <label className="block text-sm font-medium text-app-gray-700 mb-2">Description</label>
+                              <input 
+                                type="text" 
+                                className="form-input w-full"
+                                value={adjustment.description}
+                                onChange={(e) => {
+                                  const newAdjustments = [...plan.measurementRules.adjustments];
+                                  newAdjustments[index].description = e.target.value;
+                                  updatePlan('measurementRules', {
+                                    ...plan.measurementRules,
+                                    adjustments: newAdjustments
+                                  });
+                                }}
+                              />
+                            </div>
+                          </div>
+                          
+                          <button 
+                            className="p-1 rounded-full hover:bg-app-gray-100 text-app-gray-500 hover:text-app-red transition-colors duration-200 ml-3"
+                            onClick={() => removeAdjustment(index)}
+                          >
+                            <Trash2 size={18} />
+                          </button>
+                        </div>
+                      </GlassCard>
+                    ))}
+                  </div>
+                )}
+              </TabsContent>
+              
+              <TabsContent value="exclusions" className="mt-0">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-base font-medium text-app-gray-700">Exclusion Rules</h3>
+                  <ActionButton 
+                    variant="outline"
+                    size="sm"
+                    onClick={addExclusion}
+                  >
+                    <PlusCircle size={16} className="mr-1" /> Add Exclusion
+                  </ActionButton>
+                </div>
+                
+                {plan.measurementRules.exclusions.length === 0 ? (
+                  <div className="text-center py-8 border border-dashed rounded-lg">
+                    <p className="text-app-gray-500">No exclusion rules defined yet</p>
+                    <button
+                      className="mt-4 text-app-blue hover:text-app-blue-dark font-medium flex items-center justify-center mx-auto"
+                      onClick={addExclusion}
+                    >
+                      <Plus size={18} className="mr-1" /> Add your first exclusion rule
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {plan.measurementRules.exclusions.map((exclusion, index) => (
+                      <GlassCard key={index} variant="outlined" className="p-4">
+                        <div className="flex justify-between items-start">
+                          <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                              <label className="block text-sm font-medium text-app-gray-700 mb-2">Condition</label>
+                              <input 
+                                type="text" 
+                                className="form-input w-full"
+                                value={exclusion.condition}
+                                onChange={(e) => {
+                                  const newExclusions = [...plan.measurementRules.exclusions];
+                                  newExclusions[index].condition = e.target.value;
+                                  updatePlan('measurementRules', {
+                                    ...plan.measurementRules,
+                                    exclusions: newExclusions
+                                  });
+                                }}
+                                placeholder="e.g., overdue > 60 days"
+                              />
+                            </div>
+                            
+                            <div>
+                              <label className="block text-sm font-medium text-app-gray-700 mb-2">Description</label>
+                              <input 
+                                type="text" 
+                                className="form-input w-full"
+                                value={exclusion.description}
+                                onChange={(e) => {
+                                  const newExclusions = [...plan.measurementRules.exclusions];
+                                  newExclusions[index].description = e.target.value;
+                                  updatePlan('measurementRules', {
+                                    ...plan.measurementRules,
+                                    exclusions: newExclusions
+                                  });
+                                }}
+                              />
+                            </div>
+                          </div>
+                          
+                          <button 
+                            className="p-1 rounded-full hover:bg-app-gray-100 text-app-gray-500 hover:text-app-red transition-colors duration-200 ml-3"
+                            onClick={() => removeExclusion(index)}
+                          >
+                            <Trash2 size={18} />
+                          </button>
+                        </div>
+                      </GlassCard>
+                    ))}
+                  </div>
+                )}
+              </TabsContent>
+            </Tabs>
+          </div>
+        </SectionPanel>
+        
+        <SectionPanel 
+          title="Credit Rules" 
+          badge={
+            <div className="chip chip-blue">{plan.creditRules.roles.length}</div>
+          }
+        >
+          <div className="space-y-6">
+            <div className="flex justify-between items-center">
+              <h3 className="text-base font-medium text-app-gray-700">Sales Credit Allocation</h3>
+              <ActionButton 
+                variant="outline"
+                size="sm"
+                onClick={addCreditRole}
+              >
+                <PlusCircle size={16} className="mr-1" /> Add Role
+              </ActionButton>
+            </div>
+            
+            <p className="text-sm text-app-gray-500">Define how credit is split between sales roles</p>
+            
+            <div className="overflow-hidden rounded-xl border border-app-gray-200">
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-app-gray-200">
+                  <thead>
+                    <tr className="bg-app-gray-50">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-app-gray-500 uppercase tracking-wider">Role</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-app-gray-500 uppercase tracking-wider">Credit Percentage (%)</th>
+                      <th className="px-6 py-3 text-right text-xs font-medium text-app-gray-500 uppercase tracking-wider">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-app-gray-200">
+                    {plan.creditRules.roles.map((role, index) => (
+                      <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-app-gray-50 bg-opacity-30'}>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="relative">
+                            <input 
+                              type="text" 
+                              className="form-input pl-8 py-2"
+                              value={role.role}
+                              onChange={(e) => {
+                                const newRoles = [...plan.creditRules.roles];
+                                newRoles[index].role = e.target.value;
+                                updatePlan('creditRules', {
+                                  ...plan.creditRules,
+                                  roles: newRoles
+                                });
+                              }}
+                            />
+                            <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                              <User size={16} className="text-app-gray-400" />
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="relative">
+                            <input 
+                              type="number" 
+                              min="0"
+                              max="100"
+                              className="form-input pl-8 py-2"
+                              value={role.percentage}
+                              onChange={(e) => {
+                                const newRoles = [...plan.creditRules.roles];
+                                newRoles[index].percentage = parseInt(e.target.value);
+                                updatePlan('creditRules', {
+                                  ...plan.creditRules,
+                                  roles: newRoles
+                                });
+                              }}
+                            />
+                            <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                              <Percent size={16} className="text-app-gray-400" />
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-right">
+                          <button 
+                            className="text-app-red hover:text-opacity-80 transition-colors duration-200 disabled:opacity-50"
+                            onClick={() => removeCreditRole(index)}
+                            disabled={plan.creditRules.roles.length <= 1}
+                          >
+                            <Trash2 size={18} />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            
+            <div className="flex items-center justify-between p-4 bg-app-gray-50 rounded-lg">
+              <div className="text-sm font-medium text-app-gray-700">Total percentage:</div>
+              <div className="text-sm font-medium">
+                {plan.creditRules.roles.reduce((sum, role) => sum + role.percentage, 0)}%
+                {plan.creditRules.roles.reduce((sum, role) => sum + role.percentage, 0) === 100 ? (
+                  <Check size={16} className="inline-block ml-2 text-app-green" />
+                ) : (
+                  <X size={16} className="inline-block ml-2 text-app-red" />
+                )}
+              </div>
+            </div>
+            
+            <p className="text-sm text-app-gray-500">
+              Total credit allocation should equal 100%
+            </p>
+          </div>
+        </SectionPanel>
+        
+        <SectionPanel title="Payout Schedule">
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-medium text-app-gray-700 mb-2">Payment Frequency</label>
+                <select 
+                  className="form-input"
+                  value={plan.payoutSchedule.frequency}
+                  onChange={(e) => updatePlan('payoutSchedule', {
+                    ...plan.payoutSchedule,
+                    frequency: e.target.value
+                  })}
+                >
+                  <option value="Weekly">Weekly</option>
+                  <option value="Bi-weekly">Bi-weekly</option>
+                  <option value="Monthly">Monthly</option>
+                  <option value="Quarterly">Quarterly</option>
+                  <option value="Annual">Annual</option>
+                </select>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-app-gray-700 mb-2">Processing Day</label>
+                <div className="relative">
+                  <input 
+                    type="number" 
+                    min="1" 
+                    max="31"
+                    className="form-input pl-10"
+                    value={plan.payoutSchedule.processingDay}
+                    onChange={(e) => updatePlan('payoutSchedule', {
+                      ...plan.payoutSchedule,
+                      processingDay: parseInt(e.target.value)
+                    })}
+                  />
+                  <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                    <Calendar size={18} className="text-app-gray-400" />
+                  </div>
+                </div>
+                <p className="text-sm text-app-gray-500 mt-2">
+                  Day of the period when commissions are processed
+                </p>
+              </div>
+            </div>
+            
+            <GlassCard className="p-4">
+              <div className="flex items-center text-app-gray-700">
+                <Clock size={20} className="mr-2 text-app-blue" />
+                <span className="font-medium">Summary:</span>
+                <span className="ml-2">
+                  Commissions will be calculated and paid {plan.payoutSchedule.frequency.toLowerCase()}, 
+                  processed on the {plan.payoutSchedule.processingDay}{getOrdinalSuffix(plan.payoutSchedule.processingDay)} 
+                  {plan.payoutSchedule.frequency === 'Monthly' ? ' of the following month' : ''}
+                </span>
+              </div>
+            </GlassCard>
+          </div>
+        </SectionPanel>
+        
         <SectionPanel 
           title="Bonus Conditions" 
           badge={
@@ -521,7 +1003,6 @@ const IncentivePlanDesigner: React.FC = () => {
           </div>
         </SectionPanel>
         
-        {/* Action Buttons */}
         <div className="flex flex-col sm:flex-row justify-center gap-4 mt-12">
           <ActionButton 
             variant="primary"
@@ -544,4 +1025,5 @@ const IncentivePlanDesigner: React.FC = () => {
   );
 };
 
-export default IncentivePlanDesigner;
+const
+
