@@ -850,3 +850,227 @@ const IncentivePlanDesigner: React.FC = () => {
                                 value={adjustment.description}
                                 onChange={(e) => {
                                   const newAdjustments = [...plan.measurementRules.adjustments];
+                                  newAdjustments[index].description = e.target.value;
+                                  updatePlan('measurementRules', {
+                                    ...plan.measurementRules,
+                                    adjustments: newAdjustments
+                                  });
+                                }}
+                              />
+                            </div>
+                          </div>
+                          
+                          <button 
+                            className="p-1 rounded-full hover:bg-app-gray-100 text-app-gray-500 hover:text-app-red transition-colors duration-200 ml-3"
+                            onClick={() => removeAdjustment(index)}
+                          >
+                            <Trash2 size={18} />
+                          </button>
+                        </div>
+                      </GlassCard>
+                    ))}
+                  </div>
+                )}
+              </TabsContent>
+              
+              <TabsContent value="exclusions" className="mt-0">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-base font-medium text-app-gray-700">Exclusions</h3>
+                  <ActionButton 
+                    variant="outline"
+                    size="sm"
+                    onClick={addExclusion}
+                  >
+                    <PlusCircle size={16} className="mr-1" /> Add Exclusion
+                  </ActionButton>
+                </div>
+                
+                {plan.measurementRules.exclusions.length === 0 ? (
+                  <div className="text-center py-8 border border-dashed rounded-lg">
+                    <p className="text-app-gray-500">No exclusions defined yet</p>
+                    <button
+                      className="mt-4 text-app-blue hover:text-app-blue-dark font-medium flex items-center justify-center mx-auto"
+                      onClick={addExclusion}
+                    >
+                      <Plus size={18} className="mr-1" /> Add your first exclusion
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {plan.measurementRules.exclusions.map((exclusion, index) => (
+                      <GlassCard key={index} variant="outlined" className="p-4">
+                        <div className="flex justify-between items-start">
+                          <div className="flex-1 grid grid-cols-1 sm:grid-cols-12 gap-4">
+                            <div className="sm:col-span-3">
+                              <label className="block text-sm font-medium text-app-gray-700 mb-2">Field</label>
+                              <Select 
+                                value={exclusion.field}
+                                onValueChange={(value) => {
+                                  const newExclusions = [...plan.measurementRules.exclusions];
+                                  newExclusions[index].field = value;
+                                  updatePlan('measurementRules', {
+                                    ...plan.measurementRules,
+                                    exclusions: newExclusions
+                                  });
+                                }}
+                              >
+                                <SelectTrigger className="w-full">
+                                  <SelectValue placeholder="Select field" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {getDbFields().map(field => (
+                                    <SelectItem key={field} value={field}>{field}</SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            
+                            <div className="sm:col-span-2">
+                              <label className="block text-sm font-medium text-app-gray-700 mb-2">Operator</label>
+                              <Select 
+                                value={exclusion.operator}
+                                onValueChange={(value) => {
+                                  const newExclusions = [...plan.measurementRules.exclusions];
+                                  newExclusions[index].operator = value;
+                                  updatePlan('measurementRules', {
+                                    ...plan.measurementRules,
+                                    exclusions: newExclusions
+                                  });
+                                }}
+                              >
+                                <SelectTrigger className="w-full">
+                                  <SelectValue placeholder="Operator" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {OPERATORS.map(op => (
+                                    <SelectItem key={op.value} value={op.value}>{op.label}</SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            
+                            <div className="sm:col-span-2">
+                              <label className="block text-sm font-medium text-app-gray-700 mb-2">Value</label>
+                              <Input 
+                                type="number" 
+                                value={exclusion.value}
+                                onChange={(e) => {
+                                  const newExclusions = [...plan.measurementRules.exclusions];
+                                  newExclusions[index].value = parseFloat(e.target.value);
+                                  updatePlan('measurementRules', {
+                                    ...plan.measurementRules,
+                                    exclusions: newExclusions
+                                  });
+                                }}
+                              />
+                            </div>
+                          </div>
+                          
+                          <button 
+                            className="p-1 rounded-full hover:bg-app-gray-100 text-app-gray-500 hover:text-app-red transition-colors duration-200 ml-3"
+                            onClick={() => removeExclusion(index)}
+                          >
+                            <Trash2 size={18} />
+                          </button>
+                        </div>
+                      </GlassCard>
+                    ))}
+                  </div>
+                )}
+              </TabsContent>
+            </Tabs>
+          </div>
+        </SectionPanel>
+        
+        <SectionPanel title="Credit Rules">
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+              <div>
+                <label className="block text-sm font-medium text-app-gray-700 mb-2">Credit Levels</label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {plan.creditRules.levels.map((level, index) => (
+                    <div key={index} className="p-4 border rounded-lg hover:bg-app-gray-50 cursor-pointer transition-colors">
+                      <div className="flex justify-between items-center">
+                        <div className="flex-1">
+                          <div className="flex items-center">
+                            <div className="chip chip-blue mr-2">{level.level}</div>
+                            <p className="text-app-gray-500">{level.description}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center">
+                          <input 
+                            type="number" 
+                            className="form-input pl-8 py-2"
+                            value={level.percentage}
+                            onChange={(e) => updateCreditPercentage(index, e.target.value)}
+                          />
+                          <p className="text-app-gray-500 ml-2">%</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </SectionPanel>
+        
+        <SectionPanel title="Payout Schedule">
+          <div className="space-y-6">
+            <div>
+              <label className="block text-sm font-medium text-app-gray-700 mb-2">Payout Frequency</label>
+              <Select 
+                value={plan.payoutSchedule.frequency}
+                onValueChange={(value) => updatePlan('payoutSchedule', {
+                  ...plan.payoutSchedule,
+                  frequency: value
+                })}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select frequency" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Monthly">Monthly</SelectItem>
+                  <SelectItem value="Weekly">Weekly</SelectItem>
+                  <SelectItem value="Daily">Daily</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-app-gray-700 mb-2">Processing Day</label>
+              <Input 
+                type="number" 
+                value={plan.payoutSchedule.processingDay}
+                onChange={(e) => updatePlan('payoutSchedule', {
+                  ...plan.payoutSchedule,
+                  processingDay: parseInt(e.target.value)
+                })}
+              />
+            </div>
+          </div>
+        </SectionPanel>
+        
+        <div className="mt-10 flex justify-end space-x-4">
+          <ActionButton
+            variant="outline" 
+            size="lg"
+            onClick={simulatePlan}
+          >
+            <PlayCircle size={18} className="mr-2" /> Simulate
+          </ActionButton>
+          
+          <ActionButton
+            variant="primary" 
+            size="lg"
+            onClick={savePlan}
+          >
+            <Save size={18} className="mr-2" /> Save Plan
+          </ActionButton>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default IncentivePlanDesigner;
