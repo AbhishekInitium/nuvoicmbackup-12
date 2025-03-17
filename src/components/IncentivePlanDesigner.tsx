@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { PlusCircle, Trash2, Save, PlayCircle, Plus, X, Check, Percent, DollarSign, Calendar, Clock, User } from 'lucide-react';
 import SectionPanel from './ui-custom/SectionPanel';
@@ -836,4 +837,193 @@ const IncentivePlanDesigner: React.FC = () => {
                     type="number" 
                     min="1" 
                     max="31"
-                    className="form-input pl-
+                    className="form-input pl-10"
+                    value={plan.payoutSchedule.processingDay}
+                    onChange={(e) => updatePlan('payoutSchedule', {
+                      ...plan.payoutSchedule,
+                      processingDay: parseInt(e.target.value)
+                    })}
+                  />
+                  <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                    <Calendar size={18} className="text-app-gray-400" />
+                  </div>
+                </div>
+                <p className="text-sm text-app-gray-500 mt-2">
+                  Day of the period when commissions are processed
+                </p>
+              </div>
+            </div>
+            
+            <GlassCard className="p-4">
+              <div className="flex items-center text-app-gray-700">
+                <Clock size={20} className="mr-2 text-app-blue" />
+                <span className="font-medium">Summary:</span>
+                <span className="ml-2">
+                  Commissions will be calculated and paid {plan.payoutSchedule.frequency.toLowerCase()}, 
+                  processed on the {plan.payoutSchedule.processingDay}{getOrdinalSuffix(plan.payoutSchedule.processingDay)} 
+                  {plan.payoutSchedule.frequency === 'Monthly' ? ' of the following month' : ''}
+                </span>
+              </div>
+            </GlassCard>
+          </div>
+        </SectionPanel>
+        
+        <SectionPanel 
+          title="Bonus Conditions" 
+          badge={
+            <div className="chip chip-blue">{plan.bonusConditions.length}</div>
+          }
+        >
+          <div className="space-y-6">
+            <div className="flex justify-between items-center">
+              <h3 className="text-base font-medium text-app-gray-700">Performance Bonuses</h3>
+              <ActionButton 
+                variant="outline"
+                size="sm"
+                onClick={addBonus}
+              >
+                <PlusCircle size={16} className="mr-1" /> Add Bonus
+              </ActionButton>
+            </div>
+            
+            {plan.bonusConditions.length === 0 ? (
+              <div className="text-center py-8">
+                <p className="text-app-gray-500">No bonus conditions defined yet</p>
+                <button
+                  className="mt-4 text-app-blue hover:text-app-blue-dark font-medium flex items-center justify-center mx-auto"
+                  onClick={addBonus}
+                >
+                  <Plus size={18} className="mr-1" /> Add your first bonus condition
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-6">
+                {plan.bonusConditions.map((bonus, index) => (
+                  <GlassCard key={index} variant="outlined" className="p-6">
+                    <div className="flex justify-between items-start">
+                      <div className="flex-1 space-y-5">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                          <div>
+                            <label className="block text-sm font-medium text-app-gray-700 mb-2">Metric</label>
+                            <input 
+                              type="text" 
+                              className="form-input"
+                              value={bonus.metric}
+                              onChange={(e) => {
+                                const newBonuses = [...plan.bonusConditions];
+                                newBonuses[index].metric = e.target.value;
+                                updatePlan('bonusConditions', newBonuses);
+                              }}
+                            />
+                          </div>
+                          
+                          <div>
+                            <label className="block text-sm font-medium text-app-gray-700 mb-2">Frequency</label>
+                            <select 
+                              className="form-input"
+                              value={bonus.frequency}
+                              onChange={(e) => {
+                                const newBonuses = [...plan.bonusConditions];
+                                newBonuses[index].frequency = e.target.value;
+                                updatePlan('bonusConditions', newBonuses);
+                              }}
+                            >
+                              <option value="Monthly">Monthly</option>
+                              <option value="Quarterly">Quarterly</option>
+                              <option value="Annual">Annual</option>
+                            </select>
+                          </div>
+                        </div>
+                        
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                          <div>
+                            <label className="block text-sm font-medium text-app-gray-700 mb-2">Threshold</label>
+                            <div className="relative">
+                              <input 
+                                type="number" 
+                                className="form-input pl-8"
+                                value={bonus.threshold}
+                                onChange={(e) => {
+                                  const newBonuses = [...plan.bonusConditions];
+                                  newBonuses[index].threshold = parseInt(e.target.value);
+                                  updatePlan('bonusConditions', newBonuses);
+                                }}
+                              />
+                              <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                                <DollarSign size={16} className="text-app-gray-400" />
+                              </div>
+                            </div>
+                          </div>
+                          
+                          <div>
+                            <label className="block text-sm font-medium text-app-gray-700 mb-2">Bonus Amount</label>
+                            <div className="relative">
+                              <input 
+                                type="number" 
+                                className="form-input pl-8"
+                                value={bonus.amount}
+                                onChange={(e) => {
+                                  const newBonuses = [...plan.bonusConditions];
+                                  newBonuses[index].amount = parseInt(e.target.value);
+                                  updatePlan('bonusConditions', newBonuses);
+                                }}
+                              />
+                              <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                                <DollarSign size={16} className="text-app-gray-400" />
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div>
+                          <label className="block text-sm font-medium text-app-gray-700 mb-2">Description</label>
+                          <textarea 
+                            className="form-input min-h-[80px]"
+                            value={bonus.description}
+                            onChange={(e) => {
+                              const newBonuses = [...plan.bonusConditions];
+                              newBonuses[index].description = e.target.value;
+                              updatePlan('bonusConditions', newBonuses);
+                            }}
+                            rows={2}
+                          />
+                        </div>
+                      </div>
+                      
+                      <button 
+                        className="p-2 rounded-full hover:bg-app-gray-100 text-app-gray-500 hover:text-app-red transition-colors duration-200 ml-4"
+                        onClick={() => removeBonus(index)}
+                      >
+                        <Trash2 size={18} />
+                      </button>
+                    </div>
+                  </GlassCard>
+                ))}
+              </div>
+            )}
+          </div>
+        </SectionPanel>
+        
+        <div className="flex flex-col sm:flex-row justify-center gap-4 mt-12">
+          <ActionButton 
+            variant="primary"
+            onClick={simulatePlan}
+            className="order-2 sm:order-1"
+          >
+            <PlayCircle size={20} className="mr-2" /> Simulate Plan
+          </ActionButton>
+          
+          <ActionButton 
+            variant="secondary"
+            onClick={savePlan}
+            className="order-1 sm:order-2"
+          >
+            <Save size={20} className="mr-2" /> Save Plan
+          </ActionButton>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default IncentivePlanDesigner;
