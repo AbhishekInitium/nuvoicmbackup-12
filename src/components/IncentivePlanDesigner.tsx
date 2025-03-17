@@ -33,6 +33,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 
 // Mock data for existing schemes
 const MOCK_SCHEMES = [
@@ -336,7 +337,7 @@ const IncentivePlanDesigner: React.FC = () => {
       toast({
         title: "Warning",
         description: `Total percentage is ${sum}%. It should equal 100%.`,
-        variant: "warning"
+        variant: "default"
       });
     }
     
