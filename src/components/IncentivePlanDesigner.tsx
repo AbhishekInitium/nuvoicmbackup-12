@@ -115,9 +115,9 @@ const IncentivePlanDesigner: React.FC = () => {
     description: 'Commission plan for North America sales team',
     effectiveStart: '2025-01-01',
     effectiveEnd: '2025-12-31',
-    currency: 'USD', // New: Currency code
+    currency: 'USD', // Currency code
     revenueBase: 'salesOrders',
-    territories: ['USA', 'Canada', 'Mexico'],
+    participants: ['USA', 'Canada', 'Mexico'], // Renamed from territories
     commissionStructure: {
       tiers: [
         { from: 0, to: 100000, rate: 3 }, // Base tier
@@ -150,11 +150,7 @@ const IncentivePlanDesigner: React.FC = () => {
         action: 'qualify',
         active: true
       }
-    ],
-    payoutSchedule: {
-      frequency: 'Monthly',
-      processingDay: 5
-    }
+    ]
   });
 
   // Find currency symbol for the selected currency
@@ -234,8 +230,8 @@ const IncentivePlanDesigner: React.FC = () => {
   const updateTier = (index, field, value) => {
     const newTiers = [...plan.commissionStructure.tiers];
     
-    // Parse the value as a number
-    const numValue = parseFloat(value);
+    // Parse the value as a number with 2 decimal places
+    const numValue = parseFloat(parseFloat(value).toFixed(2));
     
     // Validate tier boundaries
     if (field === 'from' || field === 'to') {
@@ -281,12 +277,6 @@ const IncentivePlanDesigner: React.FC = () => {
     
     // Update the field
     newTiers[index][field] = numValue;
-    
-    // If updating a 'to' value and not the last tier, also update the next tier's 'from' value
-    // This ensures the 'from' is exactly 1 more than the previous tier's 'to'
-    if (field === 'to' && index < newTiers.length - 1) {
-      newTiers[index + 1].from = numValue + 1;
-    }
     
     updatePlan('commissionStructure', {
       ...plan.commissionStructure,
@@ -500,16 +490,6 @@ const IncentivePlanDesigner: React.FC = () => {
     });
   };
 
-  const getOrdinalSuffix = (day) => {
-    if (day > 3 && day < 21) return 'th';
-    switch (day % 10) {
-      case 1: return 'st';
-      case 2: return 'nd';
-      case 3: return 'rd';
-      default: return 'th';
-    }
-  };
-
   const getQualificationLabel = () => {
     return plan.measurementRules.primaryMetric === 'revenue' 
       ? `Minimum Qualification (${getCurrencySymbol()})` 
@@ -518,6 +498,11 @@ const IncentivePlanDesigner: React.FC = () => {
 
   const getDbFields = () => {
     return DB_FIELDS[plan.revenueBase] || [];
+  };
+
+  // Format currency with 2 decimal places
+  const formatCurrency = (value) => {
+    return parseFloat(value).toFixed(2);
   };
 
   return (
@@ -650,27 +635,27 @@ const IncentivePlanDesigner: React.FC = () => {
         </SectionPanel>
         
         <SectionPanel 
-          title="Territories" 
+          title="Participants" 
           badge={
-            <div className="chip chip-blue">{plan.territories.length}</div>
+            <div className="chip chip-blue">{plan.participants.length}</div>
           }
         >
           <div>
-            <label className="block text-sm font-medium text-app-gray-700 mb-3">Assigned Territories</label>
+            <label className="block text-sm font-medium text-app-gray-700 mb-3">Assigned Participants</label>
             <div className="flex flex-wrap gap-2 mb-4">
-              {plan.territories.map((territory, index) => (
+              {plan.participants.map((participant, index) => (
                 <div 
                   key={index} 
                   className="chip chip-blue group hover:pr-2 transition-all duration-200"
                 >
-                  {territory}
+                  {participant}
                   <button 
                     className="ml-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
                     onClick={(e) => {
                       e.stopPropagation();
-                      const newTerritories = [...plan.territories];
-                      newTerritories.splice(index, 1);
-                      updatePlan('territories', newTerritories);
+                      const newParticipants = [...plan.participants];
+                      newParticipants.splice(index, 1);
+                      updatePlan('participants', newParticipants);
                     }}
                   >
                     <X size={14} />
@@ -682,14 +667,14 @@ const IncentivePlanDesigner: React.FC = () => {
             <div className="flex items-center">
               <Input 
                 type="text" 
-                placeholder="Add new territory..." 
-                id="new-territory"
+                placeholder="Add new participant..." 
+                id="new-participant"
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
                     const input = e.target as HTMLInputElement;
-                    const territory = input.value.trim();
-                    if (territory) {
-                      updatePlan('territories', [...plan.territories, territory]);
+                    const participant = input.value.trim();
+                    if (participant) {
+                      updatePlan('participants', [...plan.participants, participant]);
                       input.value = '';
                     }
                   }
@@ -698,10 +683,10 @@ const IncentivePlanDesigner: React.FC = () => {
               <button 
                 className="ml-3 flex items-center justify-center h-12 w-12 rounded-full bg-app-blue text-white shadow-sm hover:bg-app-blue-dark transition-colors duration-200"
                 onClick={() => {
-                  const input = document.getElementById('new-territory') as HTMLInputElement;
-                  const territory = input.value.trim();
-                  if (territory) {
-                    updatePlan('territories', [...plan.territories, territory]);
+                  const input = document.getElementById('new-participant') as HTMLInputElement;
+                  const participant = input.value.trim();
+                  if (participant) {
+                    updatePlan('participants', [...plan.participants, participant]);
                     input.value = '';
                   }
                 }}
@@ -746,9 +731,12 @@ const IncentivePlanDesigner: React.FC = () => {
                               <input 
                                 type="number" 
                                 className="form-input pl-8 py-2"
-                                value={tier.from}
+                                value={formatCurrency(tier.from)}
                                 onChange={(e) => updateTier(index, 'from', e.target.value)}
-                                disabled={index > 0} // Only first tier's "from" can be edited directly
+                                disabled={index > 0} // First tier's "from" can be edited, others are derived
+                                step="0.01"
+                                min="0"
+                                max="999999999999999.99"
                               />
                               <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                                 <span className="text-app-gray-400">{getCurrencySymbol()}</span>
@@ -760,8 +748,11 @@ const IncentivePlanDesigner: React.FC = () => {
                               <input 
                                 type="number" 
                                 className="form-input pl-8 py-2"
-                                value={tier.to}
+                                value={formatCurrency(tier.to)}
                                 onChange={(e) => updateTier(index, 'to', e.target.value)}
+                                step="0.01"
+                                min="0"
+                                max="999999999999999.99"
                               />
                               <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                                 <span className="text-app-gray-400">{getCurrencySymbol()}</span>
@@ -804,7 +795,7 @@ const IncentivePlanDesigner: React.FC = () => {
                 </div>
               </div>
               <p className="text-sm text-app-gray-500 mt-3">
-                Sales within each tier range will be commissioned at the corresponding rate. Each tier automatically starts 1 {getCurrencySymbol()} after the previous tier ends.
+                Sales within each tier range will be commissioned at the corresponding rate.
               </p>
             </div>
           </div>
@@ -841,11 +832,14 @@ const IncentivePlanDesigner: React.FC = () => {
                   <input 
                     type="number" 
                     className="form-input pl-8"
-                    value={plan.measurementRules.minQualification}
+                    value={formatCurrency(plan.measurementRules.minQualification)}
                     onChange={(e) => updatePlan('measurementRules', {
                       ...plan.measurementRules,
-                      minQualification: parseInt(e.target.value)
+                      minQualification: parseFloat(e.target.value)
                     })}
+                    step="0.01"
+                    min="0"
+                    max="999999999999999.99"
                   />
                   <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                     {plan.measurementRules.primaryMetric === 'revenue' ? (
@@ -956,6 +950,7 @@ const IncentivePlanDesigner: React.FC = () => {
                                     adjustments: newAdjustments
                                   });
                                 }}
+                                step="0.01"
                               />
                             </div>
                             
@@ -963,7 +958,7 @@ const IncentivePlanDesigner: React.FC = () => {
                               <label className="block text-sm font-medium text-app-gray-700 mb-2">Factor</label>
                               <Input 
                                 type="number" 
-                                step="0.1"
+                                step="0.01"
                                 value={adjustment.factor}
                                 onChange={(e) => {
                                   const newAdjustments = [...plan.measurementRules.adjustments];
@@ -1095,6 +1090,7 @@ const IncentivePlanDesigner: React.FC = () => {
                                     exclusions: newExclusions
                                   });
                                 }}
+                                step="0.01"
                               />
                             </div>
                             
@@ -1350,6 +1346,7 @@ const IncentivePlanDesigner: React.FC = () => {
                                       className="form-input pl-8 w-full"
                                       value={condition.value}
                                       onChange={(e) => updateCustomRuleCondition(ruleIndex, condIndex, 'value', parseFloat(e.target.value))}
+                                      step="0.01"
                                     />
                                     <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                                       <span className="text-app-gray-400">{getCurrencySymbol()}</span>
@@ -1393,48 +1390,6 @@ const IncentivePlanDesigner: React.FC = () => {
                 ))}
               </div>
             )}
-          </div>
-        </SectionPanel>
-        
-        <SectionPanel title="Payout Schedule">
-          <div className="space-y-6">
-            <div>
-              <label className="block text-sm font-medium text-app-gray-700 mb-2">Payout Frequency</label>
-              <Select 
-                value={plan.payoutSchedule.frequency}
-                onValueChange={(value) => updatePlan('payoutSchedule', {
-                  ...plan.payoutSchedule,
-                  frequency: value
-                })}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select frequency" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Monthly">Monthly</SelectItem>
-                  <SelectItem value="Weekly">Weekly</SelectItem>
-                  <SelectItem value="Quarterly">Quarterly</SelectItem>
-                  <SelectItem value="Annually">Annually</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-app-gray-700 mb-2">Processing Day</label>
-              <Input 
-                type="number" 
-                min="1"
-                max="31"
-                value={plan.payoutSchedule.processingDay}
-                onChange={(e) => updatePlan('payoutSchedule', {
-                  ...plan.payoutSchedule,
-                  processingDay: parseInt(e.target.value)
-                })}
-              />
-              <p className="text-sm text-app-gray-500 mt-1">
-                Day of the {plan.payoutSchedule.frequency.toLowerCase()} when payouts will be processed
-              </p>
-            </div>
           </div>
         </SectionPanel>
         
