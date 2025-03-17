@@ -500,9 +500,23 @@ const IncentivePlanDesigner: React.FC = () => {
     return DB_FIELDS[plan.revenueBase] || [];
   };
 
-  // Format currency with 2 decimal places
+  // Format currency with 2 decimal places - ensure max 15 digits total including decimals
   const formatCurrency = (value) => {
-    return parseFloat(value).toFixed(2);
+    // Ensure the value is a number
+    const numValue = typeof value === 'number' ? value : parseFloat(value) || 0;
+    
+    // Convert to string with 2 decimal places
+    let formatted = numValue.toFixed(2);
+    
+    // Check if total length exceeds 15 (including decimal point)
+    if (formatted.replace('.', '').length > 15) {
+      // Truncate to 15 digits total (13 digits before decimal, 2 after)
+      const maxBeforeDecimal = 13;
+      const beforeDecimal = Math.floor(numValue).toString().slice(0, maxBeforeDecimal);
+      formatted = parseFloat(beforeDecimal).toFixed(2);
+    }
+    
+    return formatted;
   };
 
   return (
@@ -736,7 +750,7 @@ const IncentivePlanDesigner: React.FC = () => {
                                 disabled={index > 0} // First tier's "from" can be edited, others are derived
                                 step="0.01"
                                 min="0"
-                                max="999999999999999.99"
+                                max="9999999999999.99"
                               />
                               <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                                 <span className="text-app-gray-400">{getCurrencySymbol()}</span>
@@ -752,7 +766,7 @@ const IncentivePlanDesigner: React.FC = () => {
                                 onChange={(e) => updateTier(index, 'to', e.target.value)}
                                 step="0.01"
                                 min="0"
-                                max="999999999999999.99"
+                                max="9999999999999.99"
                               />
                               <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                                 <span className="text-app-gray-400">{getCurrencySymbol()}</span>
@@ -839,7 +853,7 @@ const IncentivePlanDesigner: React.FC = () => {
                     })}
                     step="0.01"
                     min="0"
-                    max="999999999999999.99"
+                    max="9999999999999.99"
                   />
                   <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                     {plan.measurementRules.primaryMetric === 'revenue' ? (
@@ -1416,3 +1430,4 @@ const IncentivePlanDesigner: React.FC = () => {
 };
 
 export default IncentivePlanDesigner;
+
