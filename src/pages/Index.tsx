@@ -1,11 +1,15 @@
+
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { User, Settings, BarChart3, Database, ArrowRight } from 'lucide-react';
 import Container from '@/components/layout/Container';
 import NavBar from '@/components/layout/NavBar';
 import GlassCard from '@/components/ui-custom/GlassCard';
+import { usePortalContext } from '@/contexts/PortalContext';
 
 const Index = () => {
+  const { setActivePortal } = usePortalContext();
+
   const portalCards = [
     {
       title: 'Sales Agent Portal',
@@ -13,6 +17,7 @@ const Index = () => {
       icon: <User className="h-16 w-16 text-app-blue" />,
       path: '/agent',
       color: 'bg-gradient-to-br from-blue-50 to-indigo-50',
+      portalType: 'agent' as const,
     },
     {
       title: 'Manager Portal',
@@ -20,6 +25,7 @@ const Index = () => {
       icon: <Settings className="h-16 w-16 text-app-green" />,
       path: '/manager',
       color: 'bg-gradient-to-br from-green-50 to-teal-50',
+      portalType: 'manager' as const,
     },
     {
       title: 'Operations & Finance',
@@ -27,6 +33,7 @@ const Index = () => {
       icon: <BarChart3 className="h-16 w-16 text-app-purple" />,
       path: '/operations',
       color: 'bg-gradient-to-br from-purple-50 to-fuchsia-50',
+      portalType: 'operations' as const,
     },
     {
       title: 'SAP Integration',
@@ -34,8 +41,13 @@ const Index = () => {
       icon: <Database className="h-16 w-16 text-app-orange" />,
       path: '/integration',
       color: 'bg-gradient-to-br from-amber-50 to-orange-50',
+      portalType: 'integration' as const,
     },
   ];
+
+  const handlePortalClick = (portalType) => {
+    setActivePortal(portalType);
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-app-gray-50 to-white">
@@ -54,7 +66,11 @@ const Index = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
             {portalCards.map((card, index) => (
-              <Link key={index} to={card.path}>
+              <Link 
+                key={index} 
+                to={card.path}
+                onClick={() => handlePortalClick(card.portalType)}
+              >
                 <GlassCard className={`h-full ${card.color} hover:shadow-md transition-all`}>
                   <div className="p-8 flex flex-col items-center text-center h-full">
                     <div className="mb-6">
@@ -74,7 +90,11 @@ const Index = () => {
           </div>
           
           <div className="mt-16 text-center">
-            <Link to="/manager/incentive-designer" className="inline-flex items-center justify-center bg-app-blue text-white font-medium px-6 py-3 rounded-lg shadow-sm hover:bg-app-blue-dark transition-colors">
+            <Link 
+              to="/manager/incentive-designer"
+              onClick={() => setActivePortal('manager')}
+              className="inline-flex items-center justify-center bg-app-blue text-white font-medium px-6 py-3 rounded-lg shadow-sm hover:bg-app-blue-dark transition-colors"
+            >
               Go to Incentive Plan Designer <ArrowRight className="ml-2 h-4 w-4" />
             </Link>
           </div>
