@@ -1,9 +1,9 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { PlayCircle, Save } from 'lucide-react';
 import SectionPanel from './ui-custom/SectionPanel';
 import ActionButton from './ui-custom/ActionButton';
 import { useToast } from "@/hooks/use-toast";
+import { useS4HanaData } from '@/hooks/useS4HanaData';
 
 // Import constants and types
 import { DEFAULT_PLAN } from '@/constants/incentiveConstants';
@@ -20,9 +20,26 @@ import CustomRules from './incentive/CustomRules';
 
 const IncentivePlanDesigner: React.FC = () => {
   const { toast } = useToast();
+  const { 
+    incentivePlans, 
+    loadingPlans, 
+    savePlan, 
+    isSaving,
+    simulatePlan,
+    isSimulating
+  } = useS4HanaData();
   
   const [showExistingSchemes, setShowExistingSchemes] = useState(false);
   const [plan, setPlan] = useState<IncentivePlan>(DEFAULT_PLAN);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    if (!loadingPlans && incentivePlans && incentivePlans.length > 0) {
+      setIsLoading(false);
+    } else if (!loadingPlans) {
+      setIsLoading(false);
+    }
+  }, [loadingPlans, incentivePlans]);
 
   const updatePlan = (section: string, value: any) => {
     setPlan({
@@ -32,36 +49,69 @@ const IncentivePlanDesigner: React.FC = () => {
   };
 
   const copyExistingScheme = (schemeId: number) => {
-    // In a real app, this would fetch the scheme from the backend
-    const selectedScheme = {
-      id: schemeId,
-      name: `Copy of ${plan.name}`,
-      description: plan.description
-    };
-    
-    // In a real implementation, we would get the full scheme data
-    // For now, just update the name and description
-    updatePlan('name', `Copy of ${selectedScheme.name}`);
-    updatePlan('description', selectedScheme.description);
+    if (incentivePlans && incentivePlans.length > 0) {
+      const selectedScheme = incentivePlans.find((p, index) => index === schemeId - 1);
+      
+      if (selectedScheme) {
+        setPlan(selectedScheme);
+        toast({
+          title: "Plan Loaded",
+          description: `Loaded plan: ${selectedScheme.name}`,
+          variant: "default"
+        });
+      }
+    }
   };
 
-  const savePlan = () => {
-    console.log('Saving plan:', plan);
-    toast({
-      title: "Success",
-      description: "Plan saved successfully!",
-      variant: "default"
+  const savePlanToS4 = () => {
+    savePlan(plan, {
+      onSuccess: () => {
+        toast({
+          title: "Success",
+          description: "Plan saved successfully to SAP S/4 HANA!",
+          variant: "default"
+        });
+      },
+      onError: (error) => {
+        console.error('Error saving plan:', error);
+        toast({
+          title: "Error",
+          description: "Failed to save plan to SAP S/4 HANA. Please try again.",
+          variant: "destructive"
+        });
+      }
     });
   };
 
-  const simulatePlan = () => {
-    console.log('Simulating plan:', plan);
-    toast({
-      title: "Redirecting",
-      description: "Opening simulation module...",
-      variant: "default"
+  const simulatePlanInS4 = () => {
+    simulatePlan({
+      planId: plan.name,
+      employeeId: "EMP001",
+      startDate: plan.effectiveStart,
+      endDate: plan.effectiveEnd
+    }, {
+      onSuccess: (data) => {
+        console.log('Simulation results:', data);
+        toast({
+          title: "Simulation Complete",
+          description: "Opening simulation results from S/4 HANA...",
+          variant: "default"
+        });
+      },
+      onError: (error) => {
+        console.error('Simulation error:', error);
+        toast({
+          title: "Simulation Error",
+          description: "Failed to simulate plan. Please check inputs and try again.",
+          variant: "destructive"
+        });
+      }
     });
   };
+
+  if (isLoading) {
+    return <div className="flex justify-center items-center h-screen">Loading plans from SAP S/4 HANA...</div>;
+  }
 
   return (
     <div className="py-12 sm:py-16 px-4 md:px-8 min-h-screen">
@@ -71,7 +121,7 @@ const IncentivePlanDesigner: React.FC = () => {
           Incentive Plan Designer
         </h1>
         <p className="text-app-gray-500 max-w-2xl mx-auto">
-          Create and customize your sales incentive structure with precision and clarity
+          Create and customize your sales incentive structure with SAP S/4 HANA integration
         </p>
       </header>
 
@@ -144,17 +194,21 @@ const IncentivePlanDesigner: React.FC = () => {
           <ActionButton
             variant="outline" 
             size="lg"
-            onClick={simulatePlan}
+            onClick={simulatePlanInS4}
+            disabled={isSimulating}
           >
-            <PlayCircle size={18} className="mr-2" /> Simulate
+            <PlayCircle size={18} className="mr-2" /> 
+            {isSimulating ? "Simulating..." : "Simulate (S/4 HANA)"}
           </ActionButton>
           
           <ActionButton
             variant="primary" 
             size="lg"
-            onClick={savePlan}
+            onClick={savePlanToS4}
+            disabled={isSaving}
           >
-            <Save size={18} className="mr-2" /> Save Plan
+            <Save size={18} className="mr-2" /> 
+            {isSaving ? "Saving..." : "Save to S/4 HANA"}
           </ActionButton>
         </div>
       </div>

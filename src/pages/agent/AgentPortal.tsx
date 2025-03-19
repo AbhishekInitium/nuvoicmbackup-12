@@ -1,15 +1,83 @@
-
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { BadgeDollarSign, TrendingUp, Target, Users, ListChecks, CalendarDays } from 'lucide-react';
+import { BadgeDollarSign, TrendingUp, Target, Users, CalendarDays } from 'lucide-react';
 import NavBar from '@/components/layout/NavBar';
 import Container from '@/components/layout/Container';
 import GlassCard from '@/components/ui-custom/GlassCard';
 import { SalesCommissionChart } from '@/components/agent/SalesCommissionChart';
 import { LeaderboardTable } from '@/components/agent/LeaderboardTable';
 import { PerformanceMetrics } from '@/components/agent/PerformanceMetrics';
+import { useS4HanaData } from '@/hooks/useS4HanaData';
+import { useToast } from '@/hooks/use-toast';
 
 const AgentPortal = () => {
+  const [period, setPeriod] = useState('quarter');
+  const [employeeData, setEmployeeData] = useState<any>(null);
+  const [salesData, setSalesData] = useState<any>(null);
+  const { toast } = useToast();
+  
+  const { 
+    incentivePlans,
+    loadingPlans,
+    fetchEmployeeData,
+    fetchSalesData
+  } = useS4HanaData();
+  
+  const employeeId = "EMP001";
+  
+  const {
+    data: empData,
+    isLoading: empLoading,
+    error: empError
+  } = fetchEmployeeData(employeeId);
+  
+  const {
+    data: salesResult,
+    isLoading: salesLoading,
+    error: salesError
+  } = fetchSalesData(
+    employeeId,
+    new Date(new Date().getFullYear(), 0, 1).toISOString(),
+    new Date().toISOString()
+  );
+  
+  useEffect(() => {
+    if (empData && !empLoading) {
+      setEmployeeData(empData.value?.[0] || null);
+    }
+    
+    if (empError) {
+      console.error('Error loading employee data:', empError);
+      toast({
+        title: "Connection Error",
+        description: "Unable to fetch employee data from SAP S/4 HANA",
+        variant: "destructive"
+      });
+    }
+  }, [empData, empLoading, empError, toast]);
+  
+  useEffect(() => {
+    if (salesResult && !salesLoading) {
+      setSalesData(salesResult.value || []);
+    }
+    
+    if (salesError) {
+      console.error('Error loading sales data:', salesError);
+      toast({
+        title: "Connection Error",
+        description: "Unable to fetch sales data from SAP S/4 HANA",
+        variant: "destructive"
+      });
+    }
+  }, [salesResult, salesLoading, salesError, toast]);
+
+  const agentPlan = incentivePlans && incentivePlans.length > 0 
+    ? incentivePlans.find(plan => 
+        plan.participants.includes('USA') || 
+        plan.participants.includes('ALL')
+      ) 
+    : null;
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-app-gray-50 to-white">
       <NavBar />
@@ -21,10 +89,16 @@ const AgentPortal = () => {
               <h1 className="text-3xl font-bold text-app-gray-900">Agent Dashboard</h1>
               <div className="chip-label">Q3 2025</div>
             </div>
-            <p className="text-app-gray-600">Welcome back, Alex Morgan</p>
+            <p className="text-app-gray-600">
+              Welcome back, {employeeData ? `${employeeData.FirstName} ${employeeData.LastName}` : 'Alex Morgan'}
+            </p>
+            {(empLoading || salesLoading) && (
+              <p className="text-sm text-app-gray-500 mt-1">
+                Loading data from SAP S/4 HANA...
+              </p>
+            )}
           </header>
           
-          {/* Quick Stats Row */}
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-8">
             <GlassCard className="bg-blue-50">
               <div className="p-4">
@@ -79,9 +153,7 @@ const AgentPortal = () => {
             </GlassCard>
           </div>
           
-          {/* Main Content */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Left Column */}
             <div className="lg:col-span-2 space-y-8">
               <GlassCard>
                 <div className="p-6">
@@ -96,10 +168,14 @@ const AgentPortal = () => {
                     <h2 className="text-lg font-semibold">Your Performance</h2>
                     <div className="flex items-center text-sm">
                       <span className="text-app-gray-600 mr-2">Period:</span>
-                      <select className="text-app-gray-800 bg-app-gray-100 rounded px-2 py-1">
-                        <option>This Quarter</option>
-                        <option>This Year</option>
-                        <option>Last Quarter</option>
+                      <select 
+                        className="text-app-gray-800 bg-app-gray-100 rounded px-2 py-1"
+                        value={period}
+                        onChange={(e) => setPeriod(e.target.value)}
+                      >
+                        <option value="quarter">This Quarter</option>
+                        <option value="year">This Year</option>
+                        <option value="lastQuarter">Last Quarter</option>
                       </select>
                     </div>
                   </div>
@@ -108,26 +184,43 @@ const AgentPortal = () => {
               </GlassCard>
             </div>
             
-            {/* Right Column */}
             <div className="space-y-8">
               <GlassCard>
                 <div className="p-6">
                   <h2 className="text-lg font-semibold mb-4">Incentive Plan</h2>
-                  <div className="text-app-blue font-medium mb-3">North America Sales Plan</div>
+                  <div className="text-app-blue font-medium mb-3">
+                    {agentPlan ? agentPlan.name : 'North America Sales Plan'}
+                  </div>
                   
                   <div className="space-y-3">
-                    <div>
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-app-gray-600">Base Commission</span>
-                        <span className="font-medium">3%</span>
+                    {agentPlan && agentPlan.commissionStructure.tiers.map((tier, index) => (
+                      <div key={index}>
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-app-gray-600">
+                            {index === 0 ? 'Base Commission' : `Tier ${index} (${agentPlan.currency} ${tier.from.toLocaleString()}+)`}
+                          </span>
+                          <span className="font-medium">{tier.rate}%</span>
+                        </div>
                       </div>
-                    </div>
-                    <div>
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-app-gray-600">Tier 1 ($100k+)</span>
-                        <span className="font-medium">4%</span>
-                      </div>
-                    </div>
+                    ))}
+                    
+                    {!agentPlan && (
+                      <>
+                        <div>
+                          <div className="flex items-center justify-between text-sm">
+                            <span className="text-app-gray-600">Base Commission</span>
+                            <span className="font-medium">3%</span>
+                          </div>
+                        </div>
+                        <div>
+                          <div className="flex items-center justify-between text-sm">
+                            <span className="text-app-gray-600">Tier 1 ($100k+)</span>
+                            <span className="font-medium">4%</span>
+                          </div>
+                        </div>
+                      </>
+                    )}
+                    
                     <div>
                       <div className="flex items-center justify-between text-sm">
                         <span className="text-app-gray-600">Q3 Bonus Target</span>
