@@ -1,7 +1,9 @@
 
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
-import * as s4HanaService from '@/services/s4HanaService';
+import { getIncentivePlans, saveIncentivePlan, simulateIncentivePlan } from '@/services/incentive/incentivePlanService';
+import { getSalesData } from '@/services/sales/salesService';
+import { getEmployeeData } from '@/services/hr/employeeService';
 import { IncentivePlan } from '@/types/incentiveTypes';
 
 /**
@@ -16,13 +18,13 @@ export const useS4HanaData = () => {
     refetch: refetchPlans
   } = useQuery({
     queryKey: ['incentivePlans'],
-    queryFn: s4HanaService.getIncentivePlans,
+    queryFn: getIncentivePlans,
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
   // Mutation for saving an incentive plan
   const savePlanMutation = useMutation({
-    mutationFn: (plan: IncentivePlan) => s4HanaService.saveIncentivePlan(plan),
+    mutationFn: (plan: IncentivePlan) => saveIncentivePlan(plan),
     onSuccess: () => {
       refetchPlans();
     },
@@ -32,7 +34,7 @@ export const useS4HanaData = () => {
   const fetchSalesData = (employeeId?: string, startDate?: string, endDate?: string) => {
     return useQuery({
       queryKey: ['salesData', employeeId, startDate, endDate],
-      queryFn: () => s4HanaService.getSalesData(employeeId, startDate, endDate),
+      queryFn: () => getSalesData(employeeId, startDate, endDate),
       staleTime: 5 * 60 * 1000,
       enabled: !!employeeId, // Only run if employeeId is provided
     });
@@ -42,7 +44,7 @@ export const useS4HanaData = () => {
   const fetchEmployeeData = (employeeId?: string) => {
     return useQuery({
       queryKey: ['employeeData', employeeId],
-      queryFn: () => s4HanaService.getEmployeeData(employeeId),
+      queryFn: () => getEmployeeData(employeeId),
       staleTime: 30 * 60 * 1000, // 30 minutes
       enabled: !!employeeId, // Only run if employeeId is provided
     });
@@ -60,7 +62,7 @@ export const useS4HanaData = () => {
       employeeId: string;
       startDate: string;
       endDate: string;
-    }) => s4HanaService.simulateIncentivePlan(planId, employeeId, startDate, endDate),
+    }) => simulateIncentivePlan(planId, employeeId, startDate, endDate),
   });
 
   return {
