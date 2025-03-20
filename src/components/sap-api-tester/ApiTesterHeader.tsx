@@ -18,10 +18,17 @@ const ApiTesterHeader: React.FC<ApiTesterHeaderProps> = ({ onShowHelp }) => {
       
       <Alert className="mb-6">
         <Info className="h-4 w-4" />
-        <AlertTitle>How to use this tool</AlertTitle>
-        <AlertDescription>
-          You can enter either a path like <code>/sap/opu/odata/sap/API_SERVICE/Entity</code> or a 
-          full URL like <code>https://my418390-api.s4hana.cloud.sap/sap/opu/odata/sap/API_SERVICE/Entity</code>.
+        <AlertTitle>Important: The proxy server must be running</AlertTitle>
+        <AlertDescription className="space-y-2">
+          <p>
+            To successfully connect to SAP APIs, you must run both the development 
+            server and the proxy server together using:
+          </p>
+          <p className="bg-muted p-2 rounded text-sm font-mono">node start-with-proxy.js</p>
+          <p>
+            You can enter either a path like <code className="bg-muted px-1 py-0.5 rounded-sm text-sm">/sap/opu/odata/sap/API_SERVICE/Entity</code> or a 
+            full URL like <code className="bg-muted px-1 py-0.5 rounded-sm text-sm">https://my418390-api.s4hana.cloud.sap/sap/opu/odata/sap/API_SERVICE/Entity</code>
+          </p>
           <Button 
             variant="link" 
             onClick={onShowHelp}

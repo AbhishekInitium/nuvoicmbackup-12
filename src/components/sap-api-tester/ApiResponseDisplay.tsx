@@ -43,6 +43,17 @@ const ApiResponseDisplay: React.FC<ApiResponseDisplayProps> = ({
         <div className="p-4 rounded-md bg-destructive/10 text-destructive">
           <p className="font-medium">Error:</p>
           <p>{error}</p>
+          {error.includes('Network Error') && (
+            <div className="mt-2 p-3 bg-muted rounded-md text-sm">
+              <p className="font-medium">Troubleshooting tips:</p>
+              <ul className="list-disc pl-5 mt-1">
+                <li>Make sure the proxy server is running. Try running <code>node start-with-proxy.js</code></li>
+                <li>Check that your SAP credentials are correct</li>
+                <li>Confirm the endpoint URL is valid and accessible</li>
+                <li>Browser security policies may be blocking cross-origin requests</li>
+              </ul>
+            </div>
+          )}
         </div>
       )}
       

@@ -46,19 +46,24 @@ app.all('/api/inspect-request', (req, res) => {
 
 // URL validator middleware
 const validateSapUrl = (req, res, next) => {
-  let targetPath = req.url.replace(/^\/api\/sap/, '');
-  
-  // If the path contains a full URL (starts with http:// or https://)
-  if (targetPath.match(/^https?:\/\//)) {
+  // Handle the targetUrl query parameter for full URLs
+  if (req.query.targetUrl) {
     try {
-      // Parse the URL to extract the actual path
-      const parsedUrl = new URL(targetPath);
-      // Store the full target URL for the proxy
-      req.targetUrl = targetPath;
-      // Update the path to just be the pathname portion
-      req.url = `/api/sap${parsedUrl.pathname}${parsedUrl.search || ''}`;
-      console.log(`[Proxy] Converted full URL to: ${req.url}`);
-      console.log(`[Proxy] Will forward to: ${req.targetUrl}`);
+      const targetUrl = decodeURIComponent(req.query.targetUrl);
+      console.log(`[Proxy] Using full URL target: ${targetUrl}`);
+      const parsedUrl = new URL(targetUrl);
+      
+      // Set the target URL for the proxy middleware to use
+      req.targetUrl = targetUrl;
+      
+      // Get just the pathname and search parts
+      const pathWithSearch = parsedUrl.pathname + (parsedUrl.search ? parsedUrl.search : '');
+      req.targetPath = pathWithSearch;
+      
+      // If the path already starts with the original path, don't add it again
+      req.url = pathWithSearch;
+      
+      console.log(`[Proxy] Will forward to: ${req.targetUrl} with path: ${req.url}`);
     } catch (error) {
       console.error('[Proxy] Error parsing URL:', error);
       return res.status(400).json({
@@ -66,6 +71,30 @@ const validateSapUrl = (req, res, next) => {
         message: 'Invalid URL format',
         error: error.message
       });
+    }
+  } else {
+    // Legacy path handling for partial URLs
+    let targetPath = req.url.replace(/^\/api\/sap/, '');
+    
+    // If the path contains a full URL (starts with http:// or https://)
+    if (targetPath.match(/^https?:\/\//)) {
+      try {
+        // Parse the URL to extract the actual path
+        const parsedUrl = new URL(targetPath);
+        // Store the full target URL for the proxy
+        req.targetUrl = targetPath;
+        // Update the path to just be the pathname portion
+        req.url = parsedUrl.pathname + (parsedUrl.search || '');
+        console.log(`[Proxy] Legacy: Converted full URL to path: ${req.url}`);
+        console.log(`[Proxy] Legacy: Will forward to: ${req.targetUrl}`);
+      } catch (error) {
+        console.error('[Proxy] Error parsing URL:', error);
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid URL format',
+          error: error.message
+        });
+      }
     }
   }
   
@@ -81,16 +110,26 @@ const sapProxy = createProxyMiddleware({
     // If a full URL was provided, use that as the target
     if (req.targetUrl) {
       // Extract just the origin part of the URL
-      const parsedUrl = new URL(req.targetUrl);
-      return `${parsedUrl.origin}`;
+      try {
+        const parsedUrl = new URL(req.targetUrl);
+        return `${parsedUrl.origin}`;
+      } catch (e) {
+        console.error('[Proxy] Error parsing target URL:', e);
+        return 'https://my418390-api.s4hana.cloud.sap';
+      }
     }
     // Otherwise use the default target
     return 'https://my418390-api.s4hana.cloud.sap';
   },
   changeOrigin: true,
-  pathRewrite: {
-    // Keep the path as is, we've already modified it in the middleware if needed
-    '^/api/sap': '', 
+  pathRewrite: (path, req) => {
+    // If we have a specific target path from the middleware, use it
+    if (req.targetPath) {
+      return req.targetPath;
+    }
+    
+    // Otherwise use the standard path rewrite
+    return path.replace(/^\/api\/sap/, '');
   },
   onProxyReq: (proxyReq, req) => {
     // Forward the authorization header if it exists
@@ -100,14 +139,21 @@ const sapProxy = createProxyMiddleware({
     
     // Log proxy requests for debugging
     console.log(`[Proxy] Forwarding to: ${proxyReq.path}`);
+    console.log(`[Proxy] With headers:`, req.headers);
   },
   onError: (err, req, res) => {
     console.error('[Proxy] Error:', err);
-    res.status(500).send('Proxy Error: ' + err.message);
+    res.status(500).json({
+      success: false,
+      message: 'Proxy Error',
+      error: err.message,
+      code: err.code
+    });
   },
   // Add logging for debugging
   onProxyRes: (proxyRes, req, res) => {
     console.log(`[Proxy] Response status: ${proxyRes.statusCode}`);
+    console.log(`[Proxy] Response headers:`, proxyRes.headers);
   }
 });
 

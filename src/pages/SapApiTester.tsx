@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import axios, { AxiosRequestConfig, AxiosError } from 'axios';
@@ -32,10 +33,17 @@ const SapApiTester = () => {
         // Check if the endpoint is already a full URL
         const isFullUrl = url.match(/^https?:\/\//);
         
-        // If it's a full URL and we're using the proxy, keep it as is
-        // The proxy server will handle the conversion
         if (isFullUrl) {
-          url = `/api/sap${url}`;
+          // Extract just the path portion for the proxy
+          try {
+            const urlObj = new URL(url);
+            // Format for proxy: /api/sap?targetUrl=<full-url>
+            url = `/api/sap?targetUrl=${encodeURIComponent(url)}`;
+            console.log('Converted URL for proxy:', url);
+          } catch (e) {
+            console.error('Failed to parse URL:', e);
+            url = `/api/sap/${url}`;
+          }
         } else {
           // If it's a path, add the /api/sap prefix
           // Make sure there's no double slash
@@ -76,14 +84,25 @@ const SapApiTester = () => {
       // Handle axios errors
       if (axios.isAxiosError(err)) {
         const axiosError = err as AxiosError;
-        setError(`Error ${axiosError.response?.status || ''}: ${axiosError.message}`);
-        setResponse(axiosError.response?.data || {});
-        setShowResponse(true);
+        let errorMessage = `Error ${axiosError.response?.status || ''}: ${axiosError.message}`;
+        
+        // Add more context for network errors
+        if (axiosError.message === 'Network Error') {
+          errorMessage += " - This could be due to CORS restrictions, proxy server not running, or the endpoint being unreachable";
+        }
+        
+        setError(errorMessage);
+        
+        // Still show the error response if available
+        if (axiosError.response?.data) {
+          setResponse(axiosError.response.data);
+          setShowResponse(true);
+        }
         
         toast({
           variant: 'destructive',
           title: 'API Request Failed',
-          description: `Status: ${axiosError.response?.status || 'Unknown'} - ${axiosError.message}`,
+          description: `Status: ${axiosError.response?.status || 'Network Error'} - ${axiosError.message}`,
         });
       } else {
         setError(`Unexpected error: ${(err as Error).message}`);
