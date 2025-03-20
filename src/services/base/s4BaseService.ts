@@ -10,6 +10,7 @@ import { SAP_CONFIG } from '@/config/sapConfig';
 
 // Base URL for S/4 HANA API - using a constant instead of process.env
 export const S4_API_BASE_URL = 'https://s4hana.example.com';
+export const SAP_API_URL = 'https://api.sap.com';
 
 /**
  * Create full API URL for S/4 HANA endpoints

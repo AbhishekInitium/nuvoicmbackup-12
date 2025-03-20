@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { PlayCircle, Save } from 'lucide-react';
 import SectionPanel from './ui-custom/SectionPanel';
@@ -30,7 +31,10 @@ const IncentivePlanDesigner: React.FC = () => {
   } = useS4HanaData();
   
   const [showExistingSchemes, setShowExistingSchemes] = useState(false);
-  const [plan, setPlan] = useState<IncentivePlan>(DEFAULT_PLAN);
+  const [plan, setPlan] = useState<IncentivePlan>({
+    ...DEFAULT_PLAN,
+    participants: [] // Initialize with empty array instead of pre-populated values
+  });
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {

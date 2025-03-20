@@ -1,4 +1,3 @@
-
 // Mock data for existing schemes
 export const MOCK_SCHEMES = [
   { id: 1, name: 'Enterprise Sales Plan 2024', description: 'For enterprise sales team' },
@@ -76,7 +75,7 @@ export const DEFAULT_PLAN = {
   effectiveEnd: '2025-12-31',
   currency: 'USD',
   revenueBase: 'salesOrders',
-  participants: ['USA', 'Canada', 'Mexico'],
+  participants: [], // Empty by default, will be populated from SAP API
   commissionStructure: {
     tiers: [
       { from: 0, to: 100000, rate: 3 },
