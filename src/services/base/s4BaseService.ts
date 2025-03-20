@@ -40,12 +40,15 @@ export const s4Request = async <T>(
       url,
       data,
       params,
-      timeout: API_TIMEOUT, // Add timeout to prevent hanging requests
-      // Enable proxy options for CORS handling in dev environment
-      proxy: false
+      timeout: API_TIMEOUT,
+      // CORS handling
+      withCredentials: false
     });
     
     console.log('Request headers:', config.headers);
+    
+    // Add CORS handling headers
+    if (!config.headers) config.headers = {};
     
     const response = await axios(config);
     console.log('Request succeeded');
@@ -55,7 +58,8 @@ export const s4Request = async <T>(
     
     // Check if the error is related to CORS
     if (error.message && error.message.includes('Network Error')) {
-      console.warn('This may be a CORS issue. Check the server configuration or use a proxy.');
+      console.error('CORS issue detected. This is likely because the server does not have CORS headers configured.');
+      console.error('For production, the server needs to include the appropriate CORS headers.');
     }
     
     // Check for timeout

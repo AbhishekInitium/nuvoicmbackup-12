@@ -72,14 +72,16 @@ export const getSAPAuthToken = async (config: SAPAuthConfig = defaultAuthConfig)
           throw new Error('Missing Basic Auth configuration');
         }
         
-        // Ensure we're creating the Basic Auth header correctly
-        const base64Credentials = btoa(`${config.username}:${config.password}`);
+        // Create basic auth token exactly as expected by the server
+        // The format must be: "Basic " + base64(username:password)
+        const credentials = `${config.username}:${config.password}`;
+        const base64Credentials = btoa(credentials);
         authToken = `Basic ${base64Credentials}`;
         
         // Basic auth doesn't expire, but we'll refresh it periodically anyway
         tokenExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
         
-        console.log('Created Basic Auth token:', config.username);
+        console.log('Created Basic Auth token for:', config.username);
         return authToken;
       }
       
@@ -100,13 +102,14 @@ export const createAuthenticatedRequest = async (
 ): Promise<AxiosRequestConfig> => {
   const token = await getSAPAuthToken();
   
+  // Create the correct headers for the authenticated request
   return {
     ...config,
     headers: {
       ...config.headers,
-      Authorization: token,
+      'Authorization': token,
       'Content-Type': 'application/json',
-      Accept: 'application/json'
+      'Accept': 'application/json'
     }
   };
 };

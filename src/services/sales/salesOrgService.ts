@@ -37,6 +37,7 @@ export const getSalesOrganizations = async (): Promise<SalesOrganization[]> => {
     
     console.log('Fetching sales areas from endpoint:', endpoint);
     
+    // Match Postman request format exactly
     const response = await s4Request<{ value: SalesArea[] }>(
       'GET',
       endpoint,
@@ -54,11 +55,9 @@ export const getSalesOrganizations = async (): Promise<SalesOrganization[]> => {
     }
     
     // Transform the sales areas to the expected SalesOrganization format
-    // This maintains compatibility with existing code
     const salesOrgs: SalesOrganization[] = response.value.map(area => ({
       SalesOrganization: area.SalesOrganization,
       SalesOrganizationName: area.SalesOrgName || area.SalesOrganization,
-      // Include distribution channel and division in the name for clarity
       CompanyCode: `${area.DistributionChannel} / ${area.Division}`,
       Country: area.SalesAreaID
     }));
