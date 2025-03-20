@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 
 // Define form schema
 const apiFormSchema = z.object({
@@ -34,7 +35,7 @@ const ApiRequestForm: React.FC<ApiRequestFormProps> = ({ onSubmit, loading }) =>
     resolver: zodResolver(apiFormSchema),
     defaultValues: {
       method: 'GET',
-      endpoint: '/sap/opu/odata/sap/API_SALESORGANIZATION_SRV/A_SalesOrganization',
+      endpoint: '/sap/opu/odata4/sap/api_salesarea/srvd_a2x/sap/salesarea/0001/SalesArea',
       usesProxy: true,
       username: 'S4HANA_BASIC',
       password: 'GGWYYnbPqPWmpcuCHt9zuht<NFnlkbQYJEHvkfLi',
@@ -48,6 +49,31 @@ const ApiRequestForm: React.FC<ApiRequestFormProps> = ({ onSubmit, loading }) =>
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <Card className="p-4 bg-amber-50 border-amber-200">
+          <div className="flex items-center justify-between">
+            <FormField
+              control={form.control}
+              name="usesProxy"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-center justify-between space-x-2 mb-0">
+                  <div className="space-y-0.5">
+                    <FormLabel className="text-base">Use Proxy Server</FormLabel>
+                    <FormDescription>
+                      Turn on for SAP APIs with CORS restrictions, off for direct access
+                    </FormDescription>
+                  </div>
+                  <FormControl>
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+          </div>
+        </Card>
+
         <div className="flex space-x-2">
           <FormField
             control={form.control}
@@ -76,49 +102,33 @@ const ApiRequestForm: React.FC<ApiRequestFormProps> = ({ onSubmit, loading }) =>
               <FormItem className="flex-1">
                 <FormLabel>Endpoint</FormLabel>
                 <FormControl>
-                  <Input placeholder="/sap/opu/odata/sap/API_SERVICE/Entity" {...field} />
+                  <Input placeholder="/sap/opu/odata4/sap/api_salesarea/srvd_a2x/sap/salesarea/0001/SalesArea" {...field} />
                 </FormControl>
                 <FormDescription>
-                  The SAP API endpoint to test
+                  {form.watch('usesProxy') 
+                    ? "Enter the SAP API path or full URL" 
+                    : "Enter the full URL including https://"}
                 </FormDescription>
               </FormItem>
             )}
           />
         </div>
         
-        <div className="flex items-center space-x-4">
-          <FormField
-            control={form.control}
-            name="usesProxy"
-            render={({ field }) => (
-              <FormItem className="flex items-center space-x-2">
-                <FormControl>
-                  <Switch
-                    checked={field.value}
-                    onCheckedChange={field.onChange}
-                  />
-                </FormControl>
-                <FormLabel>Use Proxy Server</FormLabel>
-              </FormItem>
-            )}
-          />
-          
-          <FormField
-            control={form.control}
-            name="useAuth"
-            render={({ field }) => (
-              <FormItem className="flex items-center space-x-2">
-                <FormControl>
-                  <Switch
-                    checked={field.value}
-                    onCheckedChange={field.onChange}
-                  />
-                </FormControl>
-                <FormLabel>Use Authentication</FormLabel>
-              </FormItem>
-            )}
-          />
-        </div>
+        <FormField
+          control={form.control}
+          name="useAuth"
+          render={({ field }) => (
+            <FormItem className="flex items-center space-x-2">
+              <FormControl>
+                <Switch
+                  checked={field.value}
+                  onCheckedChange={field.onChange}
+                />
+              </FormControl>
+              <FormLabel>Use Authentication</FormLabel>
+            </FormItem>
+          )}
+        />
         
         {form.watch('useAuth') && (
           <div className="grid grid-cols-2 gap-4">

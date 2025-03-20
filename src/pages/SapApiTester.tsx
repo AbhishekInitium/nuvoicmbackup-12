@@ -39,6 +39,7 @@ const SapApiTester = () => {
           title: 'Invalid Headers JSON',
           description: 'Please check your headers format',
         });
+        setLoading(false);
         return;
       }
       
@@ -51,6 +52,7 @@ const SapApiTester = () => {
           title: 'Invalid Query Parameters JSON',
           description: 'Please check your parameters format',
         });
+        setLoading(false);
         return;
       }
       
@@ -64,6 +66,7 @@ const SapApiTester = () => {
             title: 'Invalid Body JSON',
             description: 'Please check your request body format',
           });
+          setLoading(false);
           return;
         }
       }
@@ -71,27 +74,27 @@ const SapApiTester = () => {
       // Prepare the URL
       let url = data.endpoint;
       
-      // When using proxy, we need to add the /api/sap prefix
+      // Handle direct URLs vs proxy URLs
       if (data.usesProxy) {
         // Check if the endpoint is already a full URL
         const isFullUrl = url.match(/^https?:\/\//);
         
         if (isFullUrl) {
-          // Extract just the path portion for the proxy
-          try {
-            const urlObj = new URL(url);
-            // Format for proxy: /api/sap?targetUrl=<full-url>
-            url = `/api/sap?targetUrl=${encodeURIComponent(url)}`;
-            console.log('Converted URL for proxy:', url);
-          } catch (e) {
-            console.error('Failed to parse URL:', e);
-            url = `/api/sap/${url}`;
-          }
+          // Use the cleaner targetUrl approach for full URLs
+          url = `/api/sap?targetUrl=${encodeURIComponent(url)}`;
+          console.log('Using proxy with full URL:', url);
         } else {
-          // If it's a path, add the /api/sap prefix
-          // Make sure there's no double slash
+          // For paths, add the /api/sap prefix
           url = `/api/sap${url.startsWith('/') ? '' : '/'}${url}`;
+          console.log('Using proxy with path:', url);
         }
+      } else {
+        // Direct request to SAP without proxy
+        // Make sure the URL is absolute
+        if (!url.match(/^https?:\/\//)) {
+          url = `https://my418390-api.s4hana.cloud.sap${url.startsWith('/') ? '' : '/'}${url}`;
+        }
+        console.log('Making direct request (no proxy) to:', url);
       }
       
       // Build request config
@@ -139,6 +142,7 @@ const SapApiTester = () => {
         // Add more context for network errors
         if (axiosError.message === 'Network Error') {
           errorMessage += " - This could be due to CORS restrictions, proxy server not running, or the endpoint being unreachable";
+          errorMessage += "\n\nConsider trying without the proxy option for direct SAP endpoints that support CORS.";
         }
         
         setError(errorMessage);
@@ -187,6 +191,7 @@ const SapApiTester = () => {
           error={error}
           showResponse={showResponse}
           loading={loading}
+          rawInfo={rawResponseInfo}
         />
       </div>
     </div>

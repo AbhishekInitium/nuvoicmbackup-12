@@ -18,6 +18,13 @@ export interface SalesArea {
   DivisionName?: string;
 }
 
+// Response type for OData V4 format
+interface ODataResponse<T> {
+  "@odata.context": string;
+  "@odata.metadataEtag"?: string;
+  "value": T[];
+}
+
 // Fallback data in case the API is not available
 const FALLBACK_SALES_ORGS: SalesOrganization[] = [
   { SalesOrganization: "1000", SalesOrganizationName: "North America Sales", CompanyCode: "1000", Country: "US" },
@@ -38,11 +45,7 @@ export const getSalesOrganizations = async (): Promise<SalesOrganization[]> => {
     console.log('Fetching sales areas from endpoint:', endpoint);
     
     // Match Postman request format exactly with proper headers and parameters
-    const response = await s4Request<{
-      "@odata.context": string;
-      "@odata.metadataEtag"?: string;
-      "value": SalesArea[];
-    }>(
+    const response = await s4Request<ODataResponse<SalesArea>>(
       'GET',
       endpoint,
       undefined,

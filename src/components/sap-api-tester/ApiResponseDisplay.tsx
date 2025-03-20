@@ -5,19 +5,27 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { InfoIcon } from 'lucide-react';
 
 interface ApiResponseDisplayProps {
   response: any;
   error: string | null;
   showResponse: boolean;
   loading: boolean;
+  rawInfo?: {
+    status?: number;
+    statusText?: string;
+    headers?: Record<string, string>;
+  };
 }
 
 const ApiResponseDisplay: React.FC<ApiResponseDisplayProps> = ({
   response,
   error,
   showResponse,
-  loading
+  loading,
+  rawInfo = {}
 }) => {
   const [viewMode, setViewMode] = useState<'raw' | 'formatted'>('raw');
 
@@ -81,6 +89,49 @@ const ApiResponseDisplay: React.FC<ApiResponseDisplayProps> = ({
     );
   };
 
+  // Display status and headers if available
+  const renderResponseInfo = () => {
+    if (!rawInfo || (!rawInfo.status && !rawInfo.headers)) return null;
+    
+    return (
+      <div className="mb-4">
+        <Card className="bg-slate-50 border-slate-200">
+          <CardHeader className="py-2">
+            <CardTitle className="text-sm font-semibold">Response Details</CardTitle>
+          </CardHeader>
+          <CardContent className="py-2">
+            <div className="space-y-2 text-xs">
+              {rawInfo.status && (
+                <div className="grid grid-cols-2">
+                  <span className="font-medium">Status:</span>
+                  <span className="text-slate-600">
+                    {rawInfo.status} {rawInfo.statusText}
+                  </span>
+                </div>
+              )}
+              
+              {rawInfo.headers && Object.keys(rawInfo.headers).length > 0 && (
+                <div>
+                  <p className="font-medium mb-1">Headers:</p>
+                  <div className="pl-2 space-y-1">
+                    {Object.entries(rawInfo.headers)
+                      .filter(([key]) => ['content-type', 'date', 'server', 'x-content-type-options'].includes(key.toLowerCase()))
+                      .map(([key, value]) => (
+                        <div key={key} className="grid grid-cols-2">
+                          <span className="font-medium">{key}:</span>
+                          <span className="text-slate-600">{value}</span>
+                        </div>
+                      ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  };
+
   // Display the original, unmodified response to ensure we see the exact API output
   return (
     <div className="rounded-lg border p-6 bg-card text-card-foreground shadow-sm space-y-4">
@@ -123,6 +174,7 @@ const ApiResponseDisplay: React.FC<ApiResponseDisplayProps> = ({
               <p className="font-medium">Troubleshooting tips:</p>
               <ul className="list-disc pl-5 mt-1">
                 <li>Make sure the proxy server is running. Try running <code>node start-with-proxy.js</code></li>
+                <li>Try turning OFF the "Use Proxy Server" option for direct access to endpoints that support CORS</li>
                 <li>Check that your SAP credentials are correct</li>
                 <li>Confirm the endpoint URL is valid and accessible</li>
                 <li>Browser security policies may be blocking cross-origin requests</li>
@@ -131,6 +183,23 @@ const ApiResponseDisplay: React.FC<ApiResponseDisplayProps> = ({
           )}
         </div>
       )}
+      
+      {!error && (
+        <Alert className="border-amber-300 bg-amber-50 text-amber-800">
+          <InfoIcon className="h-4 w-4" />
+          <AlertTitle>About CORS and the Proxy</AlertTitle>
+          <AlertDescription>
+            <p>SAP APIs typically don't support CORS for browser requests. The proxy server helps bypass this limitation.</p>
+            <ul className="list-disc pl-5 mt-1">
+              <li>Direct browser access (<code>https://my418390-api.s4hana.cloud.sap/...</code>) may work in your browser because you're authenticated</li>
+              <li>Our app requires the proxy server for most SAP API calls</li>
+              <li>If direct calls work for you, try turning OFF the "Use Proxy Server" option</li>
+            </ul>
+          </AlertDescription>
+        </Alert>
+      )}
+      
+      {renderResponseInfo()}
       
       {showResponse && !error && (
         <div className="p-4 rounded-md bg-muted">
