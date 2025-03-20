@@ -19,6 +19,23 @@ To verify the proxy server is working correctly:
 2. Navigate to `http://localhost:5000/api/test` in your browser or use a tool like Postman
 3. You should receive a JSON response confirming the proxy is working
 
+## SAP API Tester Tool
+
+The application includes a built-in API testing tool similar to Postman:
+
+1. Start the application with the proxy server using `node start-with-proxy.js`
+2. Navigate to `/api-tester` in your browser
+3. Configure and test your SAP API calls directly from the browser
+
+The API Tester allows you to:
+- Select HTTP methods (GET, POST, PUT, DELETE, PATCH)
+- Specify endpoint URLs
+- Add request headers
+- Configure query parameters
+- Add a request body for POST/PUT/PATCH requests
+- Toggle authentication
+- View detailed responses
+
 ## How It Works
 
 The proxy server:
@@ -31,6 +48,7 @@ The proxy server:
 
 - `/api/test` - Test endpoint that returns a 200 response with request details
 - `/api/health` - Health check endpoint that confirms the proxy is running
+- `/api/inspect-request` - Endpoint that returns details about the incoming request (useful for debugging)
 - `/api/sap/*` - All requests to this path are forwarded to the SAP backend
 
 ## Configuring the Proxy

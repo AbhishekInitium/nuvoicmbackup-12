@@ -24,6 +24,26 @@ app.get('/api/test', (req, res) => {
   });
 });
 
+// Request details endpoint - helpful for debugging
+app.all('/api/inspect-request', (req, res) => {
+  // Extract relevant request information
+  const requestInfo = {
+    method: req.method,
+    url: req.url,
+    headers: req.headers,
+    query: req.query,
+    body: req.body,
+    timestamp: new Date().toISOString()
+  };
+  
+  console.log('[Proxy] Request inspection:', requestInfo);
+  res.status(200).json({
+    success: true,
+    message: 'Request details captured',
+    request: requestInfo
+  });
+});
+
 // Proxy middleware for SAP S/4HANA
 const sapProxy = createProxyMiddleware({
   target: 'https://my418390-api.s4hana.cloud.sap',
