@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import axios, { AxiosRequestConfig, AxiosResponse, AxiosError } from 'axios';
@@ -6,12 +5,14 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
 import { Switch } from '@/components/ui/switch';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel } from '@/components/ui/form';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Info } from 'lucide-react';
 
 // Define form schema
 const apiFormSchema = z.object({
@@ -34,6 +35,7 @@ const SapApiTester = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showResponse, setShowResponse] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
 
   const form = useForm<ApiFormValues>({
     resolver: zodResolver(apiFormSchema),
@@ -60,10 +62,29 @@ const SapApiTester = () => {
       const params = JSON.parse(data.params || '{}');
       const body = data.body ? JSON.parse(data.body) : undefined;
       
+      // Prepare the URL
+      let url = data.endpoint;
+      
+      // When using proxy, we need to add the /api/sap prefix
+      if (data.usesProxy) {
+        // Check if the endpoint is already a full URL
+        const isFullUrl = url.match(/^https?:\/\//);
+        
+        // If it's a full URL and we're using the proxy, keep it as is
+        // The proxy server will handle the conversion
+        if (isFullUrl) {
+          url = `/api/sap${url}`;
+        } else {
+          // If it's a path, add the /api/sap prefix
+          // Make sure there's no double slash
+          url = `/api/sap${url.startsWith('/') ? '' : '/'}${url}`;
+        }
+      }
+      
       // Build request config
       const config: AxiosRequestConfig = {
         method: data.method,
-        url: data.usesProxy ? `/api/sap${data.endpoint}` : data.endpoint,
+        url,
         headers,
         params,
         data: body,
@@ -118,9 +139,61 @@ const SapApiTester = () => {
   return (
     <div className="container mx-auto py-8">
       <h1 className="text-3xl font-bold mb-6">SAP API Tester</h1>
-      <p className="text-gray-500 mb-8">
+      <p className="text-gray-500 mb-4">
         Test your SAP API endpoints before implementing them in your application.
       </p>
+      
+      <Alert className="mb-6">
+        <Info className="h-4 w-4" />
+        <AlertTitle>How to use this tool</AlertTitle>
+        <AlertDescription>
+          You can enter either a path like <code>/sap/opu/odata/sap/API_SERVICE/Entity</code> or a 
+          full URL like <code>https://my418390-api.s4hana.cloud.sap/sap/opu/odata/sap/API_SERVICE/Entity</code>.
+          <Button 
+            variant="link" 
+            onClick={() => setShowHelp(true)}
+            className="p-0 h-auto text-blue-500 font-normal"
+          >
+            View formatting tips
+          </Button>
+        </AlertDescription>
+      </Alert>
+
+      <Dialog open={showHelp} onOpenChange={setShowHelp}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>API Testing Tips</DialogTitle>
+            <DialogDescription>
+              How to format your API requests correctly
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <h3 className="font-semibold">When using proxy (recommended):</h3>
+              <ul className="list-disc pl-5 space-y-2 mt-2">
+                <li>You can use either full URLs or relative paths</li>
+                <li>Example path: <code className="bg-muted px-1 rounded">/sap/opu/odata/sap/API_SERVICE/Entity</code></li>
+                <li>Example URL: <code className="bg-muted px-1 rounded">https://my418390-api.s4hana.cloud.sap/sap/opu/odata/sap/API_SERVICE/Entity</code></li>
+              </ul>
+            </div>
+            <div>
+              <h3 className="font-semibold">When not using proxy:</h3>
+              <ul className="list-disc pl-5 space-y-2 mt-2">
+                <li>You must use full URLs including the protocol (https://)</li>
+                <li>CORS issues may prevent direct access from the browser</li>
+              </ul>
+            </div>
+            <div>
+              <h3 className="font-semibold">Common request parameters:</h3>
+              <ul className="list-disc pl-5 space-y-2 mt-2">
+                <li><code className="bg-muted px-1 rounded">$format=json</code> - Request JSON format response</li>
+                <li><code className="bg-muted px-1 rounded">$top=10</code> - Limit results to 10 items</li>
+                <li><code className="bg-muted px-1 rounded">$filter=PropertyName eq 'Value'</code> - Filter results</li>
+              </ul>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         <div className="space-y-6">
@@ -339,3 +412,4 @@ const SapApiTester = () => {
 };
 
 export default SapApiTester;
+

@@ -1,7 +1,7 @@
-
 const express = require('express');
 const cors = require('cors');
 const { createProxyMiddleware } = require('http-proxy-middleware');
+const url = require('url');
 
 const app = express();
 
@@ -44,12 +44,53 @@ app.all('/api/inspect-request', (req, res) => {
   });
 });
 
-// Proxy middleware for SAP S/4HANA
+// URL validator middleware
+const validateSapUrl = (req, res, next) => {
+  let targetPath = req.url.replace(/^\/api\/sap/, '');
+  
+  // If the path contains a full URL (starts with http:// or https://)
+  if (targetPath.match(/^https?:\/\//)) {
+    try {
+      // Parse the URL to extract the actual path
+      const parsedUrl = new URL(targetPath);
+      // Store the full target URL for the proxy
+      req.targetUrl = targetPath;
+      // Update the path to just be the pathname portion
+      req.url = `/api/sap${parsedUrl.pathname}${parsedUrl.search || ''}`;
+      console.log(`[Proxy] Converted full URL to: ${req.url}`);
+      console.log(`[Proxy] Will forward to: ${req.targetUrl}`);
+    } catch (error) {
+      console.error('[Proxy] Error parsing URL:', error);
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid URL format',
+        error: error.message
+      });
+    }
+  }
+  
+  next();
+};
+
+// Apply URL validator middleware to /api/sap routes
+app.use('/api/sap', validateSapUrl);
+
+// Proxy middleware for SAP S/4HANA - now with dynamic target
 const sapProxy = createProxyMiddleware({
-  target: 'https://my418390-api.s4hana.cloud.sap',
+  router: (req) => {
+    // If a full URL was provided, use that as the target
+    if (req.targetUrl) {
+      // Extract just the origin part of the URL
+      const parsedUrl = new URL(req.targetUrl);
+      return `${parsedUrl.origin}`;
+    }
+    // Otherwise use the default target
+    return 'https://my418390-api.s4hana.cloud.sap';
+  },
   changeOrigin: true,
   pathRewrite: {
-    '^/api/sap': '', // Remove /api/sap prefix when forwarding
+    // Keep the path as is, we've already modified it in the middleware if needed
+    '^/api/sap': '', 
   },
   onProxyReq: (proxyReq, req) => {
     // Forward the authorization header if it exists
@@ -63,6 +104,10 @@ const sapProxy = createProxyMiddleware({
   onError: (err, req, res) => {
     console.error('[Proxy] Error:', err);
     res.status(500).send('Proxy Error: ' + err.message);
+  },
+  // Add logging for debugging
+  onProxyRes: (proxyRes, req, res) => {
+    console.log(`[Proxy] Response status: ${proxyRes.statusCode}`);
   }
 });
 
