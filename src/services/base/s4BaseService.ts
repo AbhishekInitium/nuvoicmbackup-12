@@ -8,8 +8,8 @@ import { SAP_CONFIG } from '@/config/sapConfig';
  * Common utilities for S/4 HANA service interactions
  */
 
-// Base URL for S/4 HANA API - using a constant instead of process.env
-export const S4_API_BASE_URL = 'https://s4hana.example.com';
+// Base URL for S/4 HANA API - using updated URL from user credentials
+export const S4_API_BASE_URL = 'https://my418390-api.s4hana.cloud.sap';
 export const SAP_API_URL = 'https://api.sap.com';
 
 /**

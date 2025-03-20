@@ -1,4 +1,3 @@
-
 import axios, { AxiosRequestConfig, AxiosResponse } from 'axios';
 import { SAP_CONFIG } from '@/config/sapConfig';
 
@@ -20,12 +19,11 @@ interface SAPAuthConfig {
   tokenUrl?: string;
 }
 
-// Default auth configuration - should be updated with actual values
+// Default auth configuration with user provided credentials
 const defaultAuthConfig: SAPAuthConfig = {
-  type: 'oauth',
-  clientId: 'SAP_CLIENT_ID', // Replace with actual client ID
-  clientSecret: 'SAP_CLIENT_SECRET', // Replace with actual client secret
-  tokenUrl: `https://oauth.${SAP_CONFIG.btp.region}.hana.ondemand.com/oauth/token`
+  type: 'basic',
+  username: 'S4HANA_BASIC',
+  password: 'GGWYYnbPqPWmpcuCHt9zuht<NFnlkbQYJEHvkfLi'
 };
 
 // Auth token storage
@@ -101,7 +99,7 @@ export const createAuthenticatedRequest = async (
     ...config,
     headers: {
       ...config.headers,
-      Authorization: `Bearer ${token}`,
+      Authorization: token, // For Basic Auth, use the token directly without 'Bearer '
       'Content-Type': 'application/json',
       Accept: 'application/json'
     }

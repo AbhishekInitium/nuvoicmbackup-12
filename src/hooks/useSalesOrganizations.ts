@@ -12,6 +12,7 @@ export function useSalesOrganizations() {
     queryKey: ['salesOrganizations'],
     queryFn: getSalesOrganizations,
     staleTime: 5 * 60 * 1000, // 5 minutes
+    retry: 1, // Only retry once to avoid excessive failed requests
   });
 
   return {
