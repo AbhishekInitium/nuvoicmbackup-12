@@ -31,7 +31,7 @@ const ApiTesterHeader: React.FC<ApiTesterHeaderProps> = ({ onShowHelp }) => {
           </p>
           <p>
             For OData services, add <code className="bg-muted px-1 py-0.5 rounded-sm text-sm">$format=json</code> as a parameter and 
-            <code className="bg-muted px-1 py-0.5 rounded-sm text-sm">{"Content-Type": "application/json", "Accept": "application/json"}</code> as headers.
+            <code className="bg-muted px-1 py-0.5 rounded-sm text-sm">{'{"Content-Type": "application/json", "Accept": "application/json"}'}</code> as headers.
           </p>
           <p>
             Use the Raw/Formatted toggle to view the response in different formats:
