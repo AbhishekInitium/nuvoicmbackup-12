@@ -7,6 +7,7 @@ import AgentPortal from '@/pages/agent/AgentPortal';
 import ManagerPortal from '@/pages/manager/ManagerPortal';
 import IncentiveDesigner from '@/pages/manager/IncentiveDesigner';
 import SapApiTester from '@/pages/SapApiTester';
+import IntegrationPortal from '@/pages/integration/IntegrationPortal';
 import { PortalProvider } from '@/contexts/PortalContext';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
@@ -27,6 +28,9 @@ function App() {
             {/* Manager Routes */}
             <Route path="/manager" element={<ManagerPortal />} />
             <Route path="/manager/incentive-designer" element={<IncentiveDesigner />} />
+            
+            {/* Integration Routes */}
+            <Route path="/integration" element={<IntegrationPortal />} />
             
             {/* Utility Routes */}
             <Route path="/api-tester" element={<SapApiTester />} />
