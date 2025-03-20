@@ -1,7 +1,9 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 interface ApiResponseDisplayProps {
   response: any;
@@ -16,60 +18,65 @@ const ApiResponseDisplay: React.FC<ApiResponseDisplayProps> = ({
   showResponse,
   loading
 }) => {
-  // Format the response by extracting the actual data
-  const formatResponse = (responseData: any) => {
-    if (!responseData) return null;
-    
-    // For OData responses, the actual data is often in the "d" or "value" property
-    if (responseData.d) {
-      // OData V2 format
-      return responseData.d.results ? responseData.d.results : responseData.d;
-    } else if (responseData.value) {
-      // OData V4 format
-      return responseData.value;
-    } else {
-      // Return the original response if we can't determine the format
-      return responseData;
-    }
+  const [viewMode, setViewMode] = useState<'raw' | 'formatted'>('raw');
+
+  // A function to detect if the response follows OData format
+  const isODataResponse = (data: any): boolean => {
+    return (
+      data && 
+      (data['@odata.context'] !== undefined || 
+       data.d !== undefined || 
+       data.value !== undefined)
+    );
   };
 
-  // Get the formatted response data
-  const formattedResponse = formatResponse(response);
-  
-  // Display the raw response in the dialog, but the formatted data in the main view
+  // Function to try to extract array data from OData responses
+  const extractArrayData = (data: any): any[] | null => {
+    if (!data) return null;
+    
+    // OData V4 format with 'value' array
+    if (Array.isArray(data.value)) {
+      return data.value;
+    }
+    
+    // OData V2 format with d.results array
+    if (data.d && Array.isArray(data.d.results)) {
+      return data.d.results;
+    }
+    
+    // OData V2 format without results (direct entity)
+    if (data.d && typeof data.d === 'object') {
+      return [data.d];
+    }
+    
+    return null;
+  };
+
+  // Display the original, unmodified response to ensure we see the exact API output
   return (
     <div className="rounded-lg border p-6 bg-card text-card-foreground shadow-sm space-y-4">
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-semibold">Response</h2>
         {response && (
           <div className="flex space-x-2">
+            <Tabs defaultValue={viewMode} onValueChange={(value) => setViewMode(value as 'raw' | 'formatted')}>
+              <TabsList>
+                <TabsTrigger value="raw">Raw</TabsTrigger>
+                <TabsTrigger value="formatted">Formatted</TabsTrigger>
+              </TabsList>
+            </Tabs>
+            
             <Dialog>
               <DialogTrigger asChild>
-                <Button variant="outline">View Raw Response</Button>
+                <Button variant="outline">Expand View</Button>
               </DialogTrigger>
               <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
                 <DialogHeader>
-                  <DialogTitle>Raw API Response</DialogTitle>
+                  <DialogTitle>Full API Response</DialogTitle>
                 </DialogHeader>
                 <div className="bg-muted p-4 rounded-md">
                   <pre className="text-sm overflow-auto whitespace-pre-wrap">
                     {JSON.stringify(response, null, 2)}
-                  </pre>
-                </div>
-              </DialogContent>
-            </Dialog>
-
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button variant="outline">View Formatted Response</Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
-                <DialogHeader>
-                  <DialogTitle>Formatted API Response</DialogTitle>
-                </DialogHeader>
-                <div className="bg-muted p-4 rounded-md">
-                  <pre className="text-sm overflow-auto whitespace-pre-wrap">
-                    {JSON.stringify(formattedResponse, null, 2)}
                   </pre>
                 </div>
               </DialogContent>
@@ -100,44 +107,65 @@ const ApiResponseDisplay: React.FC<ApiResponseDisplayProps> = ({
         <div className="p-4 rounded-md bg-muted">
           <p className="font-medium mb-2">Status: {loading ? 'Sending...' : 'Success'}</p>
           
-          {formattedResponse && Array.isArray(formattedResponse) ? (
+          {isODataResponse(response) && viewMode === 'formatted' ? (
             <div>
-              <p className="text-sm text-muted-foreground mb-2">Found {formattedResponse.length} items in the response</p>
-              <div className="overflow-auto h-[500px]">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-100">
-                    <tr>
-                      {formattedResponse.length > 0 && Object.keys(formattedResponse[0]).map((key) => (
-                        <th key={key} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          {key}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {formattedResponse.map((item, index) => (
-                      <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                        {Object.values(item).map((value: any, valIndex) => (
-                          <td key={valIndex} className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {typeof value === 'object' ? JSON.stringify(value) : String(value)}
-                          </td>
+              {/* Display metadata if available */}
+              {response['@odata.context'] && (
+                <div className="mb-4 p-2 bg-slate-100 rounded text-sm">
+                  <p className="font-medium">OData Context:</p>
+                  <p className="text-slate-600">{response['@odata.context']}</p>
+                  {response['@odata.metadataEtag'] && (
+                    <p className="text-slate-600 mt-1">Metadata ETag: {response['@odata.metadataEtag']}</p>
+                  )}
+                </div>
+              )}
+              
+              {/* Display array data in a table if possible */}
+              {extractArrayData(response) ? (
+                <div>
+                  <p className="text-sm text-muted-foreground mb-2">
+                    Found {extractArrayData(response)?.length} items in the response
+                  </p>
+                  <div className="overflow-auto max-h-[400px]">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          {extractArrayData(response)?.[0] && 
+                            Object.keys(extractArrayData(response)[0]).map((key) => (
+                              <TableHead key={key}>{key}</TableHead>
+                            ))}
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {extractArrayData(response)?.map((item, index) => (
+                          <TableRow key={index}>
+                            {Object.values(item).map((value: any, valIndex) => (
+                              <TableCell key={valIndex}>
+                                {typeof value === 'object' ? JSON.stringify(value) : String(value)}
+                              </TableCell>
+                            ))}
+                          </TableRow>
                         ))}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                      </TableBody>
+                    </Table>
+                  </div>
+                </div>
+              ) : (
+                <pre className="text-sm overflow-auto max-h-[400px] whitespace-pre-wrap">
+                  {JSON.stringify(response, null, 2)}
+                </pre>
+              )}
             </div>
           ) : (
-            <pre className="text-sm overflow-auto h-[500px] whitespace-pre-wrap">
-              {JSON.stringify(formattedResponse || response, null, 2)}
+            <pre className="text-sm overflow-auto max-h-[400px] whitespace-pre-wrap">
+              {JSON.stringify(response, null, 2)}
             </pre>
           )}
         </div>
       )}
       
       {!showResponse && !error && (
-        <div className="flex flex-col items-center justify-center h-[500px] text-muted-foreground">
+        <div className="flex flex-col items-center justify-center h-[400px] text-muted-foreground">
           <p>Send a request to see the response here</p>
         </div>
       )}

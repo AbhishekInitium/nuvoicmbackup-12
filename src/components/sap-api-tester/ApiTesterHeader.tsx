@@ -30,9 +30,16 @@ const ApiTesterHeader: React.FC<ApiTesterHeaderProps> = ({ onShowHelp }) => {
             full URL like <code className="bg-muted px-1 py-0.5 rounded-sm text-sm">https://my418390-api.s4hana.cloud.sap/sap/opu/odata/sap/API_SERVICE/Entity</code>
           </p>
           <p>
-            The tester will automatically detect OData responses and format them for better viewing.
-            You can view both the raw response and the formatted data using the buttons above the response area.
+            For OData services, add <code className="bg-muted px-1 py-0.5 rounded-sm text-sm">$format=json</code> as a parameter and 
+            <code className="bg-muted px-1 py-0.5 rounded-sm text-sm">{"Content-Type": "application/json", "Accept": "application/json"}</code> as headers.
           </p>
+          <p>
+            Use the Raw/Formatted toggle to view the response in different formats:
+          </p>
+          <ul className="list-disc pl-5">
+            <li><strong>Raw:</strong> Shows the complete API response exactly as returned by SAP</li>
+            <li><strong>Formatted:</strong> Detects OData format and displays in a readable table when possible</li>
+          </ul>
           <Button 
             variant="link" 
             onClick={onShowHelp}
