@@ -1,5 +1,5 @@
 
-import { s4Request, SAP_API_URL } from '../base/s4BaseService';
+import { s4Request, S4_API_BASE_URL } from '../base/s4BaseService';
 
 export interface SalesOrganization {
   SalesOrganization: string;
@@ -8,30 +8,55 @@ export interface SalesOrganization {
   Country?: string;
 }
 
+export interface SalesArea {
+  SalesOrganization: string;
+  DistributionChannel: string;
+  Division: string;
+  SalesAreaID: string;
+  SalesOrgName?: string;
+  DistributionChannelName?: string;
+  DivisionName?: string;
+}
+
 /**
- * Fetch sales organizations from SAP S/4 HANA
+ * Fetch sales areas from SAP S/4 HANA
  */
 export const getSalesOrganizations = async (): Promise<SalesOrganization[]> => {
   try {
-    // Using the direct API_SALESORGANIZATION_SRV endpoint
-    const endpoint = `${SAP_API_URL}/api/API_SALESORGANIZATION_SRV/A_SalesOrganization`;
+    // Using the new SalesArea API endpoint
+    const endpoint = `${S4_API_BASE_URL}/sap/opu/odata4/sap/api_salesarea/srvd_a2x/sap/salesarea/0001/SalesArea`;
     
-    console.log('Fetching sales organizations from endpoint:', endpoint);
+    console.log('Fetching sales areas from endpoint:', endpoint);
     
-    const response = await s4Request<{ d: { results: SalesOrganization[] } }>(
+    const response = await s4Request<{ value: SalesArea[] }>(
       'GET',
       endpoint,
       undefined,
       {
-        $select: 'SalesOrganization,SalesOrganizationName,CompanyCode,Country',
         $format: 'json'
       }
     );
     
-    console.log('Sales organizations response:', response);
-    return response.d.results;
+    console.log('Sales areas response:', response);
+    
+    // Transform the sales areas to the expected SalesOrganization format
+    // This maintains compatibility with existing code
+    const salesOrgs: SalesOrganization[] = response.value.map(area => ({
+      SalesOrganization: area.SalesOrganization,
+      SalesOrganizationName: area.SalesOrgName || area.SalesOrganization,
+      // Include distribution channel and division in the name for clarity
+      CompanyCode: `${area.DistributionChannel} / ${area.Division}`,
+      Country: area.SalesAreaID
+    }));
+    
+    // Remove duplicates based on SalesOrganization
+    const uniqueSalesOrgs = Array.from(new Map(
+      salesOrgs.map(item => [item.SalesOrganization, item])
+    ).values());
+    
+    return uniqueSalesOrgs;
   } catch (error) {
-    console.error('Error fetching sales organizations:', error);
+    console.error('Error fetching sales areas:', error);
     return [];
   }
 };
