@@ -12,6 +12,9 @@ import { SAP_CONFIG } from '@/config/sapConfig';
 export const S4_API_BASE_URL = 'https://my418390-api.s4hana.cloud.sap';
 export const SAP_API_URL = 'https://api.sap.com';
 
+// Timeout for S/4 HANA API requests in milliseconds (10 seconds)
+const API_TIMEOUT = 10000;
+
 /**
  * Create full API URL for S/4 HANA endpoints
  */
@@ -33,13 +36,25 @@ export const s4Request = async <T>(
       method,
       url,
       data,
-      params
+      params,
+      timeout: API_TIMEOUT // Add timeout to prevent hanging requests
     });
     
     const response = await axios(config);
     return response.data as T;
   } catch (error) {
     console.error(`S/4 HANA API Error (${url}):`, error);
+    
+    // Check if the error is related to CORS
+    if (error.message && error.message.includes('Network Error')) {
+      console.warn('This may be a CORS issue. Check the server configuration or use a proxy.');
+    }
+    
+    // Check for timeout
+    if (error.code === 'ECONNABORTED') {
+      console.warn('Request timed out. The server might be slow or unavailable.');
+    }
+    
     throw error;
   }
 };

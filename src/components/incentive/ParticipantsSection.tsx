@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Plus, X, Check } from 'lucide-react';
+import { Plus, X, AlertTriangle } from 'lucide-react';
 import { Input } from "@/components/ui/input";
 import { useSalesOrganizations } from '@/hooks/useSalesOrganizations';
 import { 
@@ -17,7 +17,7 @@ interface ParticipantsSectionProps {
 }
 
 const ParticipantsSection: React.FC<ParticipantsSectionProps> = ({ participants, updatePlan }) => {
-  const { salesOrgs, isLoading, error } = useSalesOrganizations();
+  const { salesOrgs, isLoading, error, isUsingFallback } = useSalesOrganizations();
   const [selectedOrg, setSelectedOrg] = useState<string>('');
 
   const handleAddParticipant = () => {
@@ -33,7 +33,14 @@ const ParticipantsSection: React.FC<ParticipantsSectionProps> = ({ participants,
       
       {error && (
         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4">
-          Error loading sales organizations from SAP. Please try again later.
+          Error connecting to SAP S/4 HANA. Using fallback sales organizations.
+        </div>
+      )}
+      
+      {isUsingFallback && !error && (
+        <div className="bg-yellow-50 border border-yellow-200 text-yellow-700 px-4 py-3 rounded mb-4 flex items-center">
+          <AlertTriangle size={18} className="mr-2" />
+          Using demo sales organization data. Cannot connect to SAP S/4 HANA at this time.
         </div>
       )}
       

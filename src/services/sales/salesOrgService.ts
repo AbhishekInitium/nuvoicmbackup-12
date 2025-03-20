@@ -18,6 +18,15 @@ export interface SalesArea {
   DivisionName?: string;
 }
 
+// Fallback data in case the API is not available
+const FALLBACK_SALES_ORGS: SalesOrganization[] = [
+  { SalesOrganization: "1000", SalesOrganizationName: "North America Sales", CompanyCode: "1000", Country: "US" },
+  { SalesOrganization: "2000", SalesOrganizationName: "EMEA Sales", CompanyCode: "2000", Country: "DE" },
+  { SalesOrganization: "3000", SalesOrganizationName: "APAC Sales", CompanyCode: "3000", Country: "SG" },
+  { SalesOrganization: "4000", SalesOrganizationName: "LATAM Sales", CompanyCode: "4000", Country: "BR" },
+  { SalesOrganization: "5000", SalesOrganizationName: "Global Enterprise", CompanyCode: "5000", Country: "US" }
+];
+
 /**
  * Fetch sales areas from SAP S/4 HANA
  */
@@ -39,6 +48,11 @@ export const getSalesOrganizations = async (): Promise<SalesOrganization[]> => {
     
     console.log('Sales areas response:', response);
     
+    if (!response || !response.value || !Array.isArray(response.value)) {
+      console.warn('Invalid response format from S4 HANA API, using fallback data');
+      return FALLBACK_SALES_ORGS;
+    }
+    
     // Transform the sales areas to the expected SalesOrganization format
     // This maintains compatibility with existing code
     const salesOrgs: SalesOrganization[] = response.value.map(area => ({
@@ -54,9 +68,10 @@ export const getSalesOrganizations = async (): Promise<SalesOrganization[]> => {
       salesOrgs.map(item => [item.SalesOrganization, item])
     ).values());
     
-    return uniqueSalesOrgs;
+    return uniqueSalesOrgs.length > 0 ? uniqueSalesOrgs : FALLBACK_SALES_ORGS;
   } catch (error) {
     console.error('Error fetching sales areas:', error);
-    return [];
+    console.log('Using fallback sales organization data');
+    return FALLBACK_SALES_ORGS;
   }
 };
