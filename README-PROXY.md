@@ -11,6 +11,14 @@ To start both the development server and the proxy server:
 node start-with-proxy.js
 ```
 
+## Testing the Proxy
+
+To verify the proxy server is working correctly:
+
+1. Start the proxy server using the command above
+2. Navigate to `http://localhost:5000/api/test` in your browser or use a tool like Postman
+3. You should receive a JSON response confirming the proxy is working
+
 ## How It Works
 
 The proxy server:
@@ -18,6 +26,12 @@ The proxy server:
 2. Forwards all `/api/sap/*` requests to the SAP backend
 3. Handles CORS headers automatically
 4. Preserves authentication headers
+
+## Available Endpoints
+
+- `/api/test` - Test endpoint that returns a 200 response with request details
+- `/api/health` - Health check endpoint that confirms the proxy is running
+- `/api/sap/*` - All requests to this path are forwarded to the SAP backend
 
 ## Configuring the Proxy
 

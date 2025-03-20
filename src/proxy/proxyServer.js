@@ -14,6 +14,16 @@ app.use((req, res, next) => {
   next();
 });
 
+// Test endpoint to verify the proxy server is working
+app.get('/api/test', (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: 'Proxy server is working correctly!',
+    timestamp: new Date().toISOString(),
+    headers: req.headers
+  });
+});
+
 // Proxy middleware for SAP S/4HANA
 const sapProxy = createProxyMiddleware({
   target: 'https://my418390-api.s4hana.cloud.sap',
@@ -48,4 +58,6 @@ app.get('/api/health', (req, res) => {
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`Proxy server running on port ${PORT}`);
+  console.log(`Test endpoint available at: http://localhost:${PORT}/api/test`);
+  console.log(`Health check available at: http://localhost:${PORT}/api/health`);
 });
