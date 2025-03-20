@@ -12,7 +12,7 @@ export interface SalesArea {
   SalesOrganization: string;
   DistributionChannel: string;
   Division: string;
-  SalesAreaID: string;
+  SalesAreaID?: string;
   SalesOrgName?: string;
   DistributionChannelName?: string;
   DivisionName?: string;
@@ -37,8 +37,12 @@ export const getSalesOrganizations = async (): Promise<SalesOrganization[]> => {
     
     console.log('Fetching sales areas from endpoint:', endpoint);
     
-    // Match Postman request format exactly
-    const response = await s4Request<{ value: SalesArea[] }>(
+    // Match Postman request format exactly with proper headers and parameters
+    const response = await s4Request<{
+      "@odata.context": string;
+      "@odata.metadataEtag"?: string;
+      "value": SalesArea[];
+    }>(
       'GET',
       endpoint,
       undefined,
@@ -57,9 +61,9 @@ export const getSalesOrganizations = async (): Promise<SalesOrganization[]> => {
     // Transform the sales areas to the expected SalesOrganization format
     const salesOrgs: SalesOrganization[] = response.value.map(area => ({
       SalesOrganization: area.SalesOrganization,
-      SalesOrganizationName: area.SalesOrgName || area.SalesOrganization,
+      SalesOrganizationName: area.SalesOrgName || `${area.SalesOrganization} (${area.DistributionChannel}/${area.Division})`,
       CompanyCode: `${area.DistributionChannel} / ${area.Division}`,
-      Country: area.SalesAreaID
+      Country: area.SalesAreaID || 'N/A'
     }));
     
     // Remove duplicates based on SalesOrganization

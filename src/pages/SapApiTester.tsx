@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import axios, { AxiosRequestConfig, AxiosError } from 'axios';
+import axios, { AxiosRequestConfig, AxiosError, AxiosResponse } from 'axios';
 import ApiRequestForm, { ApiFormValues } from '@/components/sap-api-tester/ApiRequestForm';
 import ApiResponseDisplay from '@/components/sap-api-tester/ApiResponseDisplay';
 import ApiHelpDialog from '@/components/sap-api-tester/ApiHelpDialog';
@@ -14,6 +14,11 @@ const SapApiTester = () => {
   const [error, setError] = useState<string | null>(null);
   const [showResponse, setShowResponse] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
+  const [rawResponseInfo, setRawResponseInfo] = useState<{
+    status?: number;
+    statusText?: string;
+    headers?: Record<string, string>;
+  }>({});
 
   const handleSubmit = async (data: ApiFormValues) => {
     setLoading(true);
@@ -21,9 +26,47 @@ const SapApiTester = () => {
     
     try {
       // Parse JSON strings
-      const headers = JSON.parse(data.headers || '{}');
-      const params = JSON.parse(data.params || '{}');
-      const body = data.body ? JSON.parse(data.body) : undefined;
+      let headers: Record<string, string> = {};
+      let params: Record<string, string> = {};
+      let body: any = undefined;
+      
+      try {
+        headers = JSON.parse(data.headers || '{}');
+      } catch (e) {
+        console.error('Failed to parse headers JSON:', e);
+        toast({
+          variant: 'destructive',
+          title: 'Invalid Headers JSON',
+          description: 'Please check your headers format',
+        });
+        return;
+      }
+      
+      try {
+        params = JSON.parse(data.params || '{}');
+      } catch (e) {
+        console.error('Failed to parse params JSON:', e);
+        toast({
+          variant: 'destructive',
+          title: 'Invalid Query Parameters JSON',
+          description: 'Please check your parameters format',
+        });
+        return;
+      }
+      
+      if (data.body) {
+        try {
+          body = JSON.parse(data.body);
+        } catch (e) {
+          console.error('Failed to parse body JSON:', e);
+          toast({
+            variant: 'destructive',
+            title: 'Invalid Body JSON',
+            description: 'Please check your request body format',
+          });
+          return;
+        }
+      }
       
       // Prepare the URL
       let url = data.endpoint;
@@ -57,7 +100,7 @@ const SapApiTester = () => {
         url,
         headers,
         params,
-        data: body,
+        data: data.method !== 'GET' ? body : undefined,
       };
       
       // Add Basic Auth if needed
@@ -71,7 +114,14 @@ const SapApiTester = () => {
       
       // Make the request
       const response = await axios(config);
+      
+      // Store the raw response data without any processing
       setResponse(response.data);
+      setRawResponseInfo({
+        status: response.status,
+        statusText: response.statusText,
+        headers: response.headers as Record<string, string>,
+      });
       setShowResponse(true);
       
       toast({
@@ -96,6 +146,11 @@ const SapApiTester = () => {
         // Still show the error response if available
         if (axiosError.response?.data) {
           setResponse(axiosError.response.data);
+          setRawResponseInfo({
+            status: axiosError.response.status,
+            statusText: axiosError.response.statusText,
+            headers: axiosError.response.headers as Record<string, string>,
+          });
           setShowResponse(true);
         }
         

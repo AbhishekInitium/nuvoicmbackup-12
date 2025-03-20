@@ -4,6 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 interface ApiResponseDisplayProps {
   response: any;
@@ -50,6 +51,34 @@ const ApiResponseDisplay: React.FC<ApiResponseDisplayProps> = ({
     }
     
     return null;
+  };
+
+  // Shows metadata properties for OData responses
+  const renderODataMetadata = (data: any) => {
+    if (!data) return null;
+    
+    const metadataEntries = Object.entries(data)
+      .filter(([key]) => key.startsWith('@odata') || key === '__metadata');
+    
+    if (metadataEntries.length === 0) return null;
+    
+    return (
+      <Card className="mb-4 bg-slate-50 border-slate-200">
+        <CardHeader className="py-2">
+          <CardTitle className="text-sm font-semibold">OData Metadata</CardTitle>
+        </CardHeader>
+        <CardContent className="py-2">
+          <div className="space-y-1 text-xs">
+            {metadataEntries.map(([key, value]) => (
+              <div key={key} className="grid grid-cols-2">
+                <span className="font-medium">{key}:</span>
+                <span className="text-slate-600">{typeof value === 'string' ? value : JSON.stringify(value)}</span>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    );
   };
 
   // Display the original, unmodified response to ensure we see the exact API output
@@ -107,43 +136,48 @@ const ApiResponseDisplay: React.FC<ApiResponseDisplayProps> = ({
         <div className="p-4 rounded-md bg-muted">
           <p className="font-medium mb-2">Status: {loading ? 'Sending...' : 'Success'}</p>
           
-          {isODataResponse(response) && viewMode === 'formatted' ? (
+          {viewMode === 'raw' ? (
+            <div>
+              <div className="text-sm text-muted-foreground mb-2">
+                <span className="font-medium">Raw Response:</span> Showing exactly what was returned by the API
+              </div>
+              <pre className="text-sm overflow-auto max-h-[400px] whitespace-pre-wrap bg-slate-100 p-4 rounded-md">
+                {JSON.stringify(response, null, 2)}
+              </pre>
+            </div>
+          ) : isODataResponse(response) ? (
             <div>
               {/* Display metadata if available */}
-              {response['@odata.context'] && (
-                <div className="mb-4 p-2 bg-slate-100 rounded text-sm">
-                  <p className="font-medium">OData Context:</p>
-                  <p className="text-slate-600">{response['@odata.context']}</p>
-                  {response['@odata.metadataEtag'] && (
-                    <p className="text-slate-600 mt-1">Metadata ETag: {response['@odata.metadataEtag']}</p>
-                  )}
-                </div>
-              )}
+              {renderODataMetadata(response)}
               
               {/* Display array data in a table if possible */}
               {extractArrayData(response) ? (
                 <div>
-                  <p className="text-sm text-muted-foreground mb-2">
-                    Found {extractArrayData(response)?.length} items in the response
-                  </p>
+                  <div className="text-sm text-muted-foreground mb-2">
+                    <span className="font-medium">Formatted Response:</span> Found {extractArrayData(response)?.length} items in the response
+                  </div>
                   <div className="overflow-auto max-h-[400px]">
                     <Table>
                       <TableHeader>
                         <TableRow>
                           {extractArrayData(response)?.[0] && 
-                            Object.keys(extractArrayData(response)[0]).map((key) => (
-                              <TableHead key={key}>{key}</TableHead>
-                            ))}
+                            Object.keys(extractArrayData(response)[0])
+                              .filter(key => !key.startsWith('@') && key !== '__metadata')
+                              .map((key) => (
+                                <TableHead key={key}>{key}</TableHead>
+                              ))}
                         </TableRow>
                       </TableHeader>
                       <TableBody>
                         {extractArrayData(response)?.map((item, index) => (
                           <TableRow key={index}>
-                            {Object.values(item).map((value: any, valIndex) => (
-                              <TableCell key={valIndex}>
-                                {typeof value === 'object' ? JSON.stringify(value) : String(value)}
-                              </TableCell>
-                            ))}
+                            {Object.entries(item)
+                              .filter(([key]) => !key.startsWith('@') && key !== '__metadata')
+                              .map(([key, value]) => (
+                                <TableCell key={key}>
+                                  {typeof value === 'object' ? JSON.stringify(value) : String(value)}
+                                </TableCell>
+                              ))}
                           </TableRow>
                         ))}
                       </TableBody>
@@ -151,15 +185,25 @@ const ApiResponseDisplay: React.FC<ApiResponseDisplayProps> = ({
                   </div>
                 </div>
               ) : (
-                <pre className="text-sm overflow-auto max-h-[400px] whitespace-pre-wrap">
-                  {JSON.stringify(response, null, 2)}
-                </pre>
+                <div>
+                  <div className="text-sm text-muted-foreground mb-2">
+                    <span className="font-medium">Formatted Response:</span> Single entity or custom format
+                  </div>
+                  <pre className="text-sm overflow-auto max-h-[400px] whitespace-pre-wrap bg-slate-100 p-4 rounded-md">
+                    {JSON.stringify(response, null, 2)}
+                  </pre>
+                </div>
               )}
             </div>
           ) : (
-            <pre className="text-sm overflow-auto max-h-[400px] whitespace-pre-wrap">
-              {JSON.stringify(response, null, 2)}
-            </pre>
+            <div>
+              <div className="text-sm text-muted-foreground mb-2">
+                <span className="font-medium">Response:</span> Non-OData format
+              </div>
+              <pre className="text-sm overflow-auto max-h-[400px] whitespace-pre-wrap bg-slate-100 p-4 rounded-md">
+                {JSON.stringify(response, null, 2)}
+              </pre>
+            </div>
           )}
         </div>
       )}
