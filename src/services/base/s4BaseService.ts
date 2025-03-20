@@ -8,9 +8,9 @@ import { SAP_CONFIG } from '@/config/sapConfig';
  * Common utilities for service interactions
  */
 
-// Base URL for API - using updated URL from user credentials
-export const S4_API_BASE_URL = 'https://my418390-api.s4hana.cloud.sap';
-export const SAP_API_URL = 'https://api.sap.com';
+// Base URL for API - now using the proxy server for CORS handling
+export const S4_API_BASE_URL = '/api/sap';
+export const SAP_API_URL = '/api/sap';
 
 // Timeout for API requests in milliseconds (10 seconds)
 const API_TIMEOUT = 10000;
@@ -41,14 +41,11 @@ export const s4Request = async <T>(
       data,
       params,
       timeout: API_TIMEOUT,
-      // CORS handling
+      // CORS is now handled by our proxy server
       withCredentials: false
     });
     
     console.log('Request headers:', config.headers);
-    
-    // Add CORS handling headers
-    if (!config.headers) config.headers = {};
     
     const response = await axios(config);
     console.log('Request succeeded');
@@ -56,10 +53,14 @@ export const s4Request = async <T>(
   } catch (error) {
     console.error(`API Error (${url}):`, error);
     
-    // Check if the error is related to CORS
-    if (error.message && error.message.includes('Network Error')) {
-      console.error('CORS issue detected. This is likely because the server does not have CORS headers configured.');
-      console.error('For production, the server needs to include the appropriate CORS headers.');
+    // Check for specific error types
+    if (error.response) {
+      // The request was made and the server responded with a status code
+      // that falls out of the range of 2xx
+      console.error('Server responded with error:', error.response.status, error.response.data);
+    } else if (error.request) {
+      // The request was made but no response was received
+      console.error('No response received from server');
     }
     
     // Check for timeout

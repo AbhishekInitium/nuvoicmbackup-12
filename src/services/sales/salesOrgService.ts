@@ -1,4 +1,3 @@
-
 import { s4Request, S4_API_BASE_URL } from '../base/s4BaseService';
 
 export interface SalesOrganization {
@@ -32,15 +31,15 @@ const FALLBACK_SALES_ORGS: SalesOrganization[] = [
  */
 export const getSalesOrganizations = async (): Promise<SalesOrganization[]> => {
   try {
-    // Using the SalesArea API endpoint
-    const endpoint = `${S4_API_BASE_URL}/sap/opu/odata4/sap/api_salesarea/srvd_a2x/sap/salesarea/0001/SalesArea`;
+    // Using the SalesArea API endpoint through our proxy
+    const endpoint = `/sap/opu/odata4/sap/api_salesarea/srvd_a2x/sap/salesarea/0001/SalesArea`;
     
-    console.log('Fetching sales areas from endpoint:', endpoint);
+    console.log('Fetching sales areas from endpoint:', S4_API_BASE_URL + endpoint);
     
     // Match Postman request format exactly
     const response = await s4Request<{ value: SalesArea[] }>(
       'GET',
-      endpoint,
+      S4_API_BASE_URL + endpoint,
       undefined,
       {
         '$format': 'json'
