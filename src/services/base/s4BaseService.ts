@@ -4,26 +4,26 @@ import { createAuthenticatedRequest } from '@/utils/sapAuth';
 import { SAP_CONFIG } from '@/config/sapConfig';
 
 /**
- * S/4 HANA Base Service
- * Common utilities for S/4 HANA service interactions
+ * Base Service
+ * Common utilities for service interactions
  */
 
-// Base URL for S/4 HANA API - using updated URL from user credentials
+// Base URL for API - using updated URL from user credentials
 export const S4_API_BASE_URL = 'https://my418390-api.s4hana.cloud.sap';
 export const SAP_API_URL = 'https://api.sap.com';
 
-// Timeout for S/4 HANA API requests in milliseconds (10 seconds)
+// Timeout for API requests in milliseconds (10 seconds)
 const API_TIMEOUT = 10000;
 
 /**
- * Create full API URL for S/4 HANA endpoints
+ * Create full API URL for endpoints
  */
 export const getS4Url = (service: string, entity: string): string => {
   return `${S4_API_BASE_URL}${SAP_CONFIG.s4hana.apiBasePath}/${service}/${entity}`;
 };
 
 /**
- * Generic API request function for S/4 HANA
+ * Generic API request function
  */
 export const s4Request = async <T>(
   method: string,
@@ -32,18 +32,26 @@ export const s4Request = async <T>(
   params?: any
 ): Promise<T> => {
   try {
+    console.log(`Making ${method} request to: ${url}`);
+    
+    // Get the authenticated request config
     const config: AxiosRequestConfig = await createAuthenticatedRequest({
       method,
       url,
       data,
       params,
-      timeout: API_TIMEOUT // Add timeout to prevent hanging requests
+      timeout: API_TIMEOUT, // Add timeout to prevent hanging requests
+      // Enable proxy options for CORS handling in dev environment
+      proxy: false
     });
     
+    console.log('Request headers:', config.headers);
+    
     const response = await axios(config);
+    console.log('Request succeeded');
     return response.data as T;
   } catch (error) {
-    console.error(`S/4 HANA API Error (${url}):`, error);
+    console.error(`API Error (${url}):`, error);
     
     // Check if the error is related to CORS
     if (error.message && error.message.includes('Network Error')) {

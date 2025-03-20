@@ -1,9 +1,10 @@
+
 import axios, { AxiosRequestConfig, AxiosResponse } from 'axios';
 import { SAP_CONFIG } from '@/config/sapConfig';
 
 /**
  * SAP Authentication Utilities
- * Handles authentication with SAP systems including S/4 HANA and BTP services
+ * Handles authentication with SAP systems including backend services
  */
 
 // Authentication types supported by SAP systems
@@ -71,10 +72,14 @@ export const getSAPAuthToken = async (config: SAPAuthConfig = defaultAuthConfig)
           throw new Error('Missing Basic Auth configuration');
         }
         
-        authToken = `Basic ${btoa(`${config.username}:${config.password}`)}`;
+        // Ensure we're creating the Basic Auth header correctly
+        const base64Credentials = btoa(`${config.username}:${config.password}`);
+        authToken = `Basic ${base64Credentials}`;
+        
         // Basic auth doesn't expire, but we'll refresh it periodically anyway
         tokenExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
         
+        console.log('Created Basic Auth token:', config.username);
         return authToken;
       }
       
@@ -82,7 +87,7 @@ export const getSAPAuthToken = async (config: SAPAuthConfig = defaultAuthConfig)
         throw new Error(`Auth type ${config.type} not implemented`);
     }
   } catch (error) {
-    console.error('Failed to obtain SAP authentication token:', error);
+    console.error('Failed to obtain authentication token:', error);
     throw new Error('Authentication failed');
   }
 };
@@ -99,7 +104,7 @@ export const createAuthenticatedRequest = async (
     ...config,
     headers: {
       ...config.headers,
-      Authorization: token, // For Basic Auth, use the token directly without 'Bearer '
+      Authorization: token,
       'Content-Type': 'application/json',
       Accept: 'application/json'
     }

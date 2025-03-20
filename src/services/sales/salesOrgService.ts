@@ -28,11 +28,11 @@ const FALLBACK_SALES_ORGS: SalesOrganization[] = [
 ];
 
 /**
- * Fetch sales areas from SAP S/4 HANA
+ * Fetch sales areas from backend system
  */
 export const getSalesOrganizations = async (): Promise<SalesOrganization[]> => {
   try {
-    // Using the new SalesArea API endpoint
+    // Using the SalesArea API endpoint
     const endpoint = `${S4_API_BASE_URL}/sap/opu/odata4/sap/api_salesarea/srvd_a2x/sap/salesarea/0001/SalesArea`;
     
     console.log('Fetching sales areas from endpoint:', endpoint);
@@ -42,14 +42,14 @@ export const getSalesOrganizations = async (): Promise<SalesOrganization[]> => {
       endpoint,
       undefined,
       {
-        $format: 'json'
+        '$format': 'json'
       }
     );
     
     console.log('Sales areas response:', response);
     
     if (!response || !response.value || !Array.isArray(response.value)) {
-      console.warn('Invalid response format from S4 HANA API, using fallback data');
+      console.warn('Invalid response format from API, using fallback data');
       return FALLBACK_SALES_ORGS;
     }
     
