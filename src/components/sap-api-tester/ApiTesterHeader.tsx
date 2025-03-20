@@ -29,6 +29,10 @@ const ApiTesterHeader: React.FC<ApiTesterHeaderProps> = ({ onShowHelp }) => {
             You can enter either a path like <code className="bg-muted px-1 py-0.5 rounded-sm text-sm">/sap/opu/odata/sap/API_SERVICE/Entity</code> or a 
             full URL like <code className="bg-muted px-1 py-0.5 rounded-sm text-sm">https://my418390-api.s4hana.cloud.sap/sap/opu/odata/sap/API_SERVICE/Entity</code>
           </p>
+          <p>
+            The tester will automatically detect OData responses and format them for better viewing.
+            You can view both the raw response and the formatted data using the buttons above the response area.
+          </p>
           <Button 
             variant="link" 
             onClick={onShowHelp}
