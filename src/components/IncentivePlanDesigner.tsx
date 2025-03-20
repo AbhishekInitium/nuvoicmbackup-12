@@ -72,7 +72,7 @@ const IncentivePlanDesigner: React.FC = () => {
       onSuccess: () => {
         toast({
           title: "Success",
-          description: "Plan saved successfully to SAP S/4 HANA!",
+          description: "Plan saved successfully!",
           variant: "default"
         });
       },
@@ -80,7 +80,7 @@ const IncentivePlanDesigner: React.FC = () => {
         console.error('Error saving plan:', error);
         toast({
           title: "Error",
-          description: "Failed to save plan to SAP S/4 HANA. Please try again.",
+          description: "Failed to save plan. Please try again.",
           variant: "destructive"
         });
       }
@@ -98,7 +98,7 @@ const IncentivePlanDesigner: React.FC = () => {
         console.log('Simulation results:', data);
         toast({
           title: "Simulation Complete",
-          description: "Opening simulation results from S/4 HANA...",
+          description: "Opening simulation results...",
           variant: "default"
         });
       },
@@ -114,7 +114,7 @@ const IncentivePlanDesigner: React.FC = () => {
   };
 
   if (isLoading) {
-    return <div className="flex justify-center items-center h-screen">Loading plans from SAP S/4 HANA...</div>;
+    return <div className="flex justify-center items-center h-screen">Loading plans...</div>;
   }
 
   return (
@@ -125,7 +125,7 @@ const IncentivePlanDesigner: React.FC = () => {
           Incentive Plan Designer
         </h1>
         <p className="text-app-gray-500 max-w-2xl mx-auto">
-          Create and customize your sales incentive structure with SAP S/4 HANA integration
+          Create and customize your sales incentive structure with backend integration
         </p>
       </header>
 
@@ -202,7 +202,7 @@ const IncentivePlanDesigner: React.FC = () => {
             disabled={isSimulating}
           >
             <PlayCircle size={18} className="mr-2" /> 
-            {isSimulating ? "Simulating..." : "Simulate (S/4 HANA)"}
+            {isSimulating ? "Simulating..." : "Simulate"}
           </ActionButton>
           
           <ActionButton
@@ -212,7 +212,7 @@ const IncentivePlanDesigner: React.FC = () => {
             disabled={isSaving}
           >
             <Save size={18} className="mr-2" /> 
-            {isSaving ? "Saving..." : "Save to S/4 HANA"}
+            {isSaving ? "Saving..." : "Save"}
           </ActionButton>
         </div>
       </div>
