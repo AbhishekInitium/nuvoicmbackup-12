@@ -1,0 +1,64 @@
+
+import React from 'react';
+import { PlusCircle, Plus } from 'lucide-react';
+import ActionButton from '../ui-custom/ActionButton';
+import { Exclusion } from '@/types/incentiveTypes';
+import ExclusionForm from './ExclusionForm';
+
+interface ExclusionsListProps {
+  exclusions: Exclusion[];
+  dbFields: string[];
+  onAddExclusion: () => void;
+  onUpdateExclusion: (index: number, field: keyof Exclusion, value: string | number) => void;
+  onRemoveExclusion: (index: number) => void;
+}
+
+const ExclusionsList: React.FC<ExclusionsListProps> = ({
+  exclusions,
+  dbFields,
+  onAddExclusion,
+  onUpdateExclusion,
+  onRemoveExclusion
+}) => {
+  return (
+    <>
+      <div className="flex justify-between items-center mb-4">
+        <h3 className="text-base font-medium text-app-gray-700">Exclusions</h3>
+        <ActionButton 
+          variant="outline"
+          size="sm"
+          onClick={onAddExclusion}
+        >
+          <PlusCircle size={16} className="mr-1" /> Add Exclusion
+        </ActionButton>
+      </div>
+      
+      {exclusions.length === 0 ? (
+        <div className="text-center py-8 border border-dashed rounded-lg">
+          <p className="text-app-gray-500">No exclusions defined yet</p>
+          <button
+            className="mt-4 text-app-blue hover:text-app-blue-dark font-medium flex items-center justify-center mx-auto"
+            onClick={onAddExclusion}
+          >
+            <Plus size={18} className="mr-1" /> Add your first exclusion
+          </button>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {exclusions.map((exclusion, index) => (
+            <ExclusionForm
+              key={index}
+              exclusion={exclusion}
+              index={index}
+              dbFields={dbFields}
+              onUpdate={onUpdateExclusion}
+              onRemove={onRemoveExclusion}
+            />
+          ))}
+        </div>
+      )}
+    </>
+  );
+};
+
+export default ExclusionsList;
