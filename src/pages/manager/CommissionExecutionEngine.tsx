@@ -34,8 +34,6 @@ const CommissionExecutionEngine: React.FC = () => {
   const [executionMode, setExecutionMode] = useState<ExecutionMode>('SIMULATE');
   const [selectedPlanId, setSelectedPlanId] = useState<string>('');
   const [executionDate, setExecutionDate] = useState<string>(new Date().toISOString().split('T')[0]);
-  const [periodStart, setPeriodStart] = useState<string>(new Date().toISOString().split('T')[0]);
-  const [periodEnd, setPeriodEnd] = useState<string>(new Date().toISOString().split('T')[0]);
   const [description, setDescription] = useState<string>('');
   const [isExecuting, setIsExecuting] = useState<boolean>(false);
   const [executionResult, setExecutionResult] = useState<CommissionExecutionResult | null>(null);
@@ -46,9 +44,6 @@ const CommissionExecutionEngine: React.FC = () => {
       const plan = incentivePlans.find(p => p.name === selectedPlanId);
       if (plan) {
         setSelectedPlan(plan);
-        // Set period dates based on plan's effective dates
-        setPeriodStart(plan.effectiveStart);
-        setPeriodEnd(plan.effectiveEnd);
       }
     }
   }, [selectedPlanId, incentivePlans]);
@@ -70,8 +65,8 @@ const CommissionExecutionEngine: React.FC = () => {
         planId: selectedPlan.name,
         executionMode,
         executionDate,
-        periodStart,
-        periodEnd,
+        periodStart: selectedPlan.effectiveStart, // Get date from selected plan
+        periodEnd: selectedPlan.effectiveEnd, // Get date from selected plan
         participants: selectedPlan.participants,
         description
       };
@@ -187,28 +182,21 @@ const CommissionExecutionEngine: React.FC = () => {
                     </div>
                   </div>
                   
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-app-gray-700 mb-2">
-                        Period Start
-                      </label>
-                      <Input
-                        type="date"
-                        value={periodStart}
-                        onChange={(e) => setPeriodStart(e.target.value)}
-                      />
+                  {selectedPlan && (
+                    <div className="p-4 bg-app-gray-50 rounded-md">
+                      <h3 className="text-sm font-medium text-app-gray-700 mb-2">Plan Period</h3>
+                      <div className="flex justify-between text-sm">
+                        <div>
+                          <span className="font-medium">Start: </span>
+                          {new Date(selectedPlan.effectiveStart).toLocaleDateString()}
+                        </div>
+                        <div>
+                          <span className="font-medium">End: </span>
+                          {new Date(selectedPlan.effectiveEnd).toLocaleDateString()}
+                        </div>
+                      </div>
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium text-app-gray-700 mb-2">
-                        Period End
-                      </label>
-                      <Input
-                        type="date"
-                        value={periodEnd}
-                        onChange={(e) => setPeriodEnd(e.target.value)}
-                      />
-                    </div>
-                  </div>
+                  )}
                   
                   <div>
                     <label className="block text-sm font-medium text-app-gray-700 mb-2">
