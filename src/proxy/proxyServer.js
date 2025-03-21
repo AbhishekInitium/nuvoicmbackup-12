@@ -1,3 +1,4 @@
+
 const express = require('express');
 const cors = require('cors');
 const { createProxyMiddleware } = require('http-proxy-middleware');
@@ -61,9 +62,9 @@ const validateSapUrl = (req, res, next) => {
       req.targetPath = pathWithSearch;
       
       // If the path already starts with the original path, don't add it again
-      req.url = pathWithSearch;
+      req.url = req.targetPath;
       
-      console.log(`[Proxy] Will forward to: ${req.targetUrl} with path: ${req.url}`);
+      console.log(`[Proxy] Will forward to: ${parsedUrl.origin} with path: ${req.url}`);
     } catch (error) {
       console.error('[Proxy] Error parsing URL:', error);
       return res.status(400).json({
@@ -137,6 +138,9 @@ const sapProxy = createProxyMiddleware({
       proxyReq.setHeader('Authorization', req.headers.authorization);
     }
     
+    // Add proper headers for JSON responses
+    proxyReq.setHeader('Accept', 'application/json');
+    
     // Log proxy requests for debugging
     console.log(`[Proxy] Forwarding to: ${proxyReq.path}`);
     console.log(`[Proxy] With headers:`, req.headers);
@@ -154,6 +158,25 @@ const sapProxy = createProxyMiddleware({
   onProxyRes: (proxyRes, req, res) => {
     console.log(`[Proxy] Response status: ${proxyRes.statusCode}`);
     console.log(`[Proxy] Response headers:`, proxyRes.headers);
+    
+    // Log a preview of the response body for JSON responses
+    if (proxyRes.headers['content-type']?.includes('application/json')) {
+      let responseBody = '';
+      
+      proxyRes.on('data', (chunk) => {
+        responseBody += chunk.toString('utf8');
+      });
+      
+      proxyRes.on('end', () => {
+        try {
+          // Only log a preview (first 300 characters) to avoid flooding the console
+          const preview = responseBody.substring(0, 300) + (responseBody.length > 300 ? '...' : '');
+          console.log(`[Proxy] Response body preview:`, preview);
+        } catch (e) {
+          console.error('[Proxy] Error parsing response body:', e);
+        }
+      });
+    }
   }
 });
 

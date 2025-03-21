@@ -35,7 +35,7 @@ const ApiRequestForm: React.FC<ApiRequestFormProps> = ({ onSubmit, loading }) =>
     resolver: zodResolver(apiFormSchema),
     defaultValues: {
       method: 'GET',
-      endpoint: '/sap/opu/odata4/sap/api_salesarea/srvd_a2x/sap/salesarea/0001/SalesArea',
+      endpoint: '/sap/opu/odata4/sap/api_supplierquotation_2/srvd_a2x/sap/supplierquotation/0001/SupplierQuotationItem/8000000005/10',
       usesProxy: true,
       username: 'S4HANA_BASIC',
       password: 'GGWYYnbPqPWmpcuCHt9zuht<NFnlkbQYJEHvkfLi',
@@ -102,7 +102,7 @@ const ApiRequestForm: React.FC<ApiRequestFormProps> = ({ onSubmit, loading }) =>
               <FormItem className="flex-1">
                 <FormLabel>Endpoint</FormLabel>
                 <FormControl>
-                  <Input placeholder="/sap/opu/odata4/sap/api_salesarea/srvd_a2x/sap/salesarea/0001/SalesArea" {...field} />
+                  <Input placeholder="/sap/opu/odata4/sap/api_supplierquotation_2/srvd_a2x/sap/supplierquotation/0001/SupplierQuotationItem/8000000005/10" {...field} />
                 </FormControl>
                 <FormDescription>
                   {form.watch('usesProxy') 

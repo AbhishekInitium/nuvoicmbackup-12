@@ -8,12 +8,12 @@ import { SAP_CONFIG } from '@/config/sapConfig';
  * Common utilities for service interactions
  */
 
-// Base URL for API - now using the proxy server for CORS handling
+// Base URL for API - configuring the proxy correctly
 export const S4_API_BASE_URL = '/api/sap';
 export const SAP_API_URL = '/api/sap';
 
-// Timeout for API requests in milliseconds (10 seconds)
-const API_TIMEOUT = 10000;
+// Timeout for API requests in milliseconds (15 seconds - increased to handle slower connections)
+const API_TIMEOUT = 15000;
 
 /**
  * Create full API URL for endpoints
@@ -34,22 +34,44 @@ export const s4Request = async <T>(
   try {
     console.log(`Making ${method} request to: ${url}`);
     
+    // Create the full URL to ensure we're correctly targeting the SAP system
+    const fullUrl = url.startsWith('http') ? url : `${S4_API_BASE_URL}${url.startsWith('/') ? '' : '/'}${url}`;
+    console.log('Full URL for request:', fullUrl);
+    
     // Get the authenticated request config
     const config: AxiosRequestConfig = await createAuthenticatedRequest({
       method,
-      url,
+      url: fullUrl,
       data,
       params,
       timeout: API_TIMEOUT,
       // CORS is now handled by our proxy server
-      withCredentials: false
+      withCredentials: false,
+      // Add proper headers to ensure we get the right response format
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      }
     });
     
     console.log('Request headers:', config.headers);
+    console.log('Request parameters:', params);
     
     const response = await axios(config);
-    console.log('Request succeeded');
-    return response.data as T;
+    console.log('Response status:', response.status);
+    console.log('Response headers:', response.headers);
+    
+    if (response.status >= 200 && response.status < 300) {
+      console.log('Request succeeded - response data type:', typeof response.data);
+      // Log a small preview of the response data to debug
+      if (typeof response.data === 'object') {
+        console.log('Response data preview:', JSON.stringify(response.data).substring(0, 200) + '...');
+      }
+      return response.data as T;
+    } else {
+      console.error('Non-success status code:', response.status);
+      throw new Error(`Request failed with status ${response.status}`);
+    }
   } catch (error) {
     console.error(`API Error (${url}):`, error);
     

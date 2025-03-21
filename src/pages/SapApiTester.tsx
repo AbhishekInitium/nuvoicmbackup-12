@@ -80,7 +80,7 @@ const SapApiTester = () => {
         const isFullUrl = url.match(/^https?:\/\//);
         
         if (isFullUrl) {
-          // Use the cleaner targetUrl approach for full URLs
+          // Use the targetUrl approach for full URLs
           url = `/api/sap?targetUrl=${encodeURIComponent(url)}`;
           console.log('Using proxy with full URL:', url);
         } else {
@@ -104,6 +104,8 @@ const SapApiTester = () => {
         headers,
         params,
         data: data.method !== 'GET' ? body : undefined,
+        // Add a proper timeout to avoid long-running requests
+        timeout: 30000
       };
       
       // Add Basic Auth if needed
@@ -113,10 +115,22 @@ const SapApiTester = () => {
         config.headers.Authorization = `Basic ${base64Credentials}`;
       }
       
-      console.log('Request config:', config);
+      console.log('Request config:', {
+        method: config.method,
+        url: config.url,
+        headers: config.headers,
+        params: config.params,
+        // Don't log full body, but log its presence
+        hasBody: config.data !== undefined
+      });
       
       // Make the request
       const response = await axios(config);
+      
+      // Log important parts of the response for debugging
+      console.log('Response status:', response.status);
+      console.log('Response headers:', response.headers);
+      console.log('Response data type:', typeof response.data);
       
       // Store the raw response data without any processing
       setResponse(response.data);

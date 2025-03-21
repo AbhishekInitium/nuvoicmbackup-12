@@ -35,31 +35,48 @@ const FALLBACK_SALES_ORGS: SalesOrganization[] = [
 ];
 
 /**
- * Fetch sales areas from backend system
+ * Fetch sales organizations from backend system
  */
 export const getSalesOrganizations = async (): Promise<SalesOrganization[]> => {
   try {
-    // Using the SalesArea API endpoint through our proxy
+    // Using the SalesArea API endpoint
     const endpoint = '/sap/opu/odata4/sap/api_salesarea/srvd_a2x/sap/salesarea/0001/SalesArea';
     
     console.log('Fetching sales areas from endpoint:', endpoint);
     
-    // Match Postman request format exactly with proper headers and parameters
+    // Add explicit format parameter which is crucial for OData responses
     const response = await s4Request<ODataResponse<SalesArea>>(
       'GET',
       endpoint,
       undefined,
       {
-        '$format': 'json'
+        '$format': 'json',
+        // Adding $select to get only the fields we need
+        '$select': 'SalesOrganization,DistributionChannel,Division,SalesOrgName'
       }
     );
     
-    console.log('Sales areas response:', response);
+    console.log('Raw sales areas response:', JSON.stringify(response).substring(0, 500));
     
-    if (!response || !response.value || !Array.isArray(response.value)) {
-      console.warn('Invalid response format from API, using fallback data');
+    // Validate the OData response format
+    if (!response || typeof response !== 'object') {
+      console.warn('Invalid response format - not an object');
       return FALLBACK_SALES_ORGS;
     }
+    
+    // Check for OData structure
+    if (!response["@odata.context"] && !response.value) {
+      console.warn('Response is not in OData format, missing @odata.context or value array');
+      return FALLBACK_SALES_ORGS;
+    }
+    
+    // Ensure value is an array
+    if (!Array.isArray(response.value)) {
+      console.warn('Response value is not an array');
+      return FALLBACK_SALES_ORGS;
+    }
+    
+    console.log(`Found ${response.value.length} sales areas in response`);
     
     // Transform the sales areas to the expected SalesOrganization format
     const salesOrgs: SalesOrganization[] = response.value.map(area => ({
