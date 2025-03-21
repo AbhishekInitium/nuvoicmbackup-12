@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { getIncentivePlans, saveIncentivePlan, simulateIncentivePlan } from '@/services/incentive/incentivePlanService';
+import { getIncentivePlans, saveIncentivePlan } from '@/services/incentive/incentivePlanService';
 import { getSalesData } from '@/services/sales/salesService';
 import { getEmployeeData } from '@/services/hr/employeeService';
 import { IncentivePlan } from '@/types/incentiveTypes';
@@ -50,21 +50,6 @@ export const useS4HanaData = () => {
     });
   };
 
-  // Mutation for simulating an incentive plan
-  const simulatePlanMutation = useMutation({
-    mutationFn: ({
-      planId, 
-      employeeId, 
-      startDate, 
-      endDate
-    }: {
-      planId: string;
-      employeeId: string;
-      startDate: string;
-      endDate: string;
-    }) => simulateIncentivePlan(planId, employeeId, startDate, endDate),
-  });
-
   return {
     incentivePlans,
     loadingPlans,
@@ -73,10 +58,6 @@ export const useS4HanaData = () => {
     isSaving: savePlanMutation.isPending,
     saveError: savePlanMutation.error,
     fetchSalesData,
-    fetchEmployeeData,
-    simulatePlan: simulatePlanMutation.mutate,
-    isSimulating: simulatePlanMutation.isPending,
-    simulationError: simulatePlanMutation.error,
-    simulationResult: simulatePlanMutation.data,
+    fetchEmployeeData
   };
 };

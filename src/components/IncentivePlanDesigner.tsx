@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { PlayCircle, Save } from 'lucide-react';
+import { Save } from 'lucide-react';
 import SectionPanel from './ui-custom/SectionPanel';
 import ActionButton from './ui-custom/ActionButton';
 import { useToast } from "@/hooks/use-toast";
@@ -25,9 +25,7 @@ const IncentivePlanDesigner: React.FC = () => {
     incentivePlans, 
     loadingPlans, 
     savePlan, 
-    isSaving,
-    simulatePlan,
-    isSimulating
+    isSaving
   } = useS4HanaData();
   
   const [showExistingSchemes, setShowExistingSchemes] = useState(false);
@@ -81,32 +79,6 @@ const IncentivePlanDesigner: React.FC = () => {
         toast({
           title: "Error",
           description: "Failed to save plan. Please try again.",
-          variant: "destructive"
-        });
-      }
-    });
-  };
-
-  const simulatePlanInS4 = () => {
-    simulatePlan({
-      planId: plan.name,
-      employeeId: "EMP001",
-      startDate: plan.effectiveStart,
-      endDate: plan.effectiveEnd
-    }, {
-      onSuccess: (data) => {
-        console.log('Simulation results:', data);
-        toast({
-          title: "Simulation Complete",
-          description: "Opening simulation results...",
-          variant: "default"
-        });
-      },
-      onError: (error) => {
-        console.error('Simulation error:', error);
-        toast({
-          title: "Simulation Error",
-          description: "Failed to simulate plan. Please check inputs and try again.",
           variant: "destructive"
         });
       }
@@ -195,16 +167,6 @@ const IncentivePlanDesigner: React.FC = () => {
         </SectionPanel>
         
         <div className="mt-10 flex justify-end space-x-4">
-          <ActionButton
-            variant="outline" 
-            size="lg"
-            onClick={simulatePlanInS4}
-            disabled={isSimulating}
-          >
-            <PlayCircle size={18} className="mr-2" /> 
-            {isSimulating ? "Simulating..." : "Simulate"}
-          </ActionButton>
-          
           <ActionButton
             variant="primary" 
             size="lg"
