@@ -1,4 +1,3 @@
-
 const express = require('express');
 const cors = require('cors');
 const { createProxyMiddleware } = require('http-proxy-middleware');
@@ -166,67 +165,19 @@ app.use('/api/proxy', (req, res, next) => {
   proxy(req, res, next);
 });
 
-// FIX: Improved SAP proxy support
+// Update SAP proxy support to use the direct URL method
 app.use('/api/sap', (req, res, next) => {
-  // Get the path after /api/sap
-  const path = req.url;
-  console.log(`[SAP Proxy] Original path: ${path}`);
+  // Redirect to the proxy route with the full SAP URL
+  const fullPath = req.originalUrl.replace('/api/sap', '');
+  const targetUrl = `https://my418390-api.s4hana.cloud.sap/sap${fullPath}`;
   
-  // Prevent path duplication - if path already starts with /sap, don't add it again
-  let sapPath = path;
-  if (!path.startsWith('/sap') && !path.startsWith('?')) {
-    sapPath = `/sap${path}`;
-  }
+  console.log(`[SAP Proxy] Redirecting to proxy with target URL: ${targetUrl}`);
   
-  // Create the target URL
-  const targetUrl = `https://my418390-api.s4hana.cloud.sap${sapPath}`;
-  console.log(`[SAP Proxy] Forwarding to: ${targetUrl}`);
+  // Modify the request to use the proxy route
+  req.url = `/api/proxy?targetUrl=${encodeURIComponent(targetUrl)}`;
   
-  // Create proxy middleware on the fly for this specific request
-  const proxy = createProxyMiddleware({
-    target: 'https://my418390-api.s4hana.cloud.sap',
-    changeOrigin: true,
-    pathRewrite: (path) => sapPath,
-    onProxyReq: (proxyReq, req) => {
-      // Forward all headers from the original request
-      Object.keys(req.headers).forEach(key => {
-        // Skip host header to avoid conflicts
-        if (key.toLowerCase() !== 'host') {
-          proxyReq.setHeader(key, req.headers[key]);
-        }
-      });
-      
-      // Ensure Cookie header is preserved - especially important for SAP client context
-      if (req.headers.cookie) {
-        console.log(`[SAP Proxy] Forwarding cookies: ${req.headers.cookie}`);
-      }
-      
-      console.log(`[SAP Proxy] With headers:`, req.headers);
-      
-      // If this is a POST/PUT/PATCH with a body, we need to restream it
-      if (['POST', 'PUT', 'PATCH'].includes(req.method) && req.body) {
-        const bodyData = JSON.stringify(req.body);
-        proxyReq.setHeader('Content-Length', Buffer.byteLength(bodyData));
-        proxyReq.write(bodyData);
-      }
-    },
-    onProxyRes: (proxyRes, req, res) => {
-      console.log(`[SAP Proxy] Response from SAP: ${proxyRes.statusCode}`);
-      console.log(`[SAP Proxy] Response headers:`, proxyRes.headers);
-    },
-    onError: (err, req, res) => {
-      console.error('[SAP Proxy] Error during proxy request:', err);
-      res.status(500).json({
-        success: false,
-        message: 'Proxy Error',
-        error: err.message,
-        code: err.code
-      });
-    }
-  });
-  
-  // Apply the dynamically configured proxy to this request
-  proxy(req, res, next);
+  // Forward to the proxy middleware
+  app._router.handle(req, res, next);
 });
 
 // Health check endpoint

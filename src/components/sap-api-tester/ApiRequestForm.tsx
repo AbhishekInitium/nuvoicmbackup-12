@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -15,7 +14,7 @@ import { AlertCircle, Send, Eye, EyeOff } from 'lucide-react';
 const apiFormSchema = z.object({
   method: z.string().default('GET'),
   endpoint: z.string().min(1, { message: 'Endpoint is required' }),
-  usesProxy: z.boolean().default(false), // Default to false for direct API calls
+  usesProxy: z.boolean().default(true), // Default to using proxy
   username: z.string().optional(),
   password: z.string().optional(),
   useAuth: z.boolean().default(true),
@@ -47,7 +46,7 @@ const ApiRequestForm: React.FC<ApiRequestFormProps> = ({
     defaultValues: {
       method: 'GET',
       endpoint: 'https://my418390-api.s4hana.cloud.sap/sap/opu/odata4/sap/api_supplierquotation_2/srvd_a2x/sap/supplierquotation/0001/SupplierQuotationItem/8000000005/10',
-      usesProxy: false, // Default to direct calls
+      usesProxy: true, // Default to using proxy
       username: 'S4HANA_BASIC',
       password: 'GGWYYnbPqPWmpcuCHt9zuht<NFnlkbQYJEHvkfLi',
       useAuth: true,
@@ -126,7 +125,7 @@ const ApiRequestForm: React.FC<ApiRequestFormProps> = ({
                   />
                 </FormControl>
                 <FormDescription className="text-xs ml-2 inline">
-                  (Disabled for direct API calls)
+                  (Recommended to avoid CORS issues)
                 </FormDescription>
               </FormItem>
             )}
@@ -298,8 +297,9 @@ const ApiRequestForm: React.FC<ApiRequestFormProps> = ({
             <span className="font-semibold">Tips:</span>
           </div>
           <ul className="list-disc pl-5 space-y-1">
-            <li>Use complete URLs for direct API calls (e.g., <code>https://my418390-api.s4hana.cloud.sap/sap/opu/odata4/...</code>)</li>
-            <li>Direct API calls might be subject to browser CORS restrictions</li>
+            <li>Use complete URLs for API calls (e.g., <code>https://my418390-api.s4hana.cloud.sap/sap/opu/odata4/...</code>)</li>
+            <li>Enable "Use Proxy" to avoid browser CORS restrictions</li>
+            <li>Make sure the proxy server is running with <code>node start-with-proxy.js</code></li>
             <li>All JSON must be properly formatted with double quotes</li>
             <li>SAP systems require a specific client number (default: 080)</li>
           </ul>
