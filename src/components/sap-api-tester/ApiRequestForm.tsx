@@ -1,5 +1,4 @@
-
-import React from 'react';
+import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -10,9 +9,8 @@ import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { AlertCircle, Send } from 'lucide-react';
+import { AlertCircle, Send, Eye, EyeOff } from 'lucide-react';
 
-// Define form schema
 const apiFormSchema = z.object({
   method: z.string().default('GET'),
   endpoint: z.string().min(1, { message: 'Endpoint is required' }),
@@ -40,6 +38,8 @@ const ApiRequestForm: React.FC<ApiRequestFormProps> = ({
   activeTab, 
   onTabChange 
 }) => {
+  const [showPassword, setShowPassword] = useState(false);
+  
   const form = useForm<ApiFormValues>({
     resolver: zodResolver(apiFormSchema),
     defaultValues: {
@@ -58,10 +58,13 @@ const ApiRequestForm: React.FC<ApiRequestFormProps> = ({
   const watchUseProxy = form.watch('usesProxy');
   const watchMethod = form.watch('method');
 
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
+  };
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        {/* URL Bar */}
         <div className="flex items-center space-x-2">
           <div className="w-28">
             <FormField
@@ -106,7 +109,6 @@ const ApiRequestForm: React.FC<ApiRequestFormProps> = ({
           </Button>
         </div>
         
-        {/* Settings/Options Bar */}
         <div className="flex items-center justify-between border rounded-md p-2 bg-gray-50">
           <FormField
             control={form.control}
@@ -141,7 +143,6 @@ const ApiRequestForm: React.FC<ApiRequestFormProps> = ({
           />
         </div>
         
-        {/* Request Details Tabs */}
         <Tabs value={activeTab} onValueChange={onTabChange}>
           <TabsList className="grid grid-cols-4 w-full mb-2">
             <TabsTrigger value="params">Params</TabsTrigger>
@@ -150,7 +151,6 @@ const ApiRequestForm: React.FC<ApiRequestFormProps> = ({
             <TabsTrigger value="body">Body</TabsTrigger>
           </TabsList>
           
-          {/* Params Tab */}
           <TabsContent value="params" className="border rounded-md p-4">
             <FormField
               control={form.control}
@@ -173,7 +173,6 @@ const ApiRequestForm: React.FC<ApiRequestFormProps> = ({
             />
           </TabsContent>
           
-          {/* Auth Tab */}
           <TabsContent value="auth" className="border rounded-md p-4">
             {form.watch('useAuth') ? (
               <div className="space-y-4">
@@ -196,9 +195,24 @@ const ApiRequestForm: React.FC<ApiRequestFormProps> = ({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Password</FormLabel>
-                      <FormControl>
-                        <Input type="password" placeholder="S4 Password" {...field} />
-                      </FormControl>
+                      <div className="relative">
+                        <FormControl>
+                          <Input 
+                            type={showPassword ? "text" : "password"} 
+                            placeholder="S4 Password" 
+                            {...field} 
+                          />
+                        </FormControl>
+                        <Button 
+                          type="button"
+                          variant="ghost" 
+                          size="sm"
+                          className="absolute right-0 top-0 h-full px-3 py-2 text-muted-foreground hover:text-foreground"
+                          onClick={togglePasswordVisibility}
+                        >
+                          {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </Button>
+                      </div>
                     </FormItem>
                   )}
                 />
@@ -210,7 +224,6 @@ const ApiRequestForm: React.FC<ApiRequestFormProps> = ({
             )}
           </TabsContent>
           
-          {/* Headers Tab */}
           <TabsContent value="headers" className="border rounded-md p-4">
             <FormField
               control={form.control}
@@ -230,7 +243,6 @@ const ApiRequestForm: React.FC<ApiRequestFormProps> = ({
             />
           </TabsContent>
           
-          {/* Body Tab */}
           <TabsContent value="body" className="border rounded-md p-4">
             {watchMethod !== 'GET' ? (
               <FormField
@@ -257,7 +269,6 @@ const ApiRequestForm: React.FC<ApiRequestFormProps> = ({
           </TabsContent>
         </Tabs>
         
-        {/* Info & Help Section */}
         <div className="text-sm text-muted-foreground p-2 bg-muted rounded-md">
           <div className="flex items-center mb-2">
             <AlertCircle className="h-4 w-4 mr-2" />
