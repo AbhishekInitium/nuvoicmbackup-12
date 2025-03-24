@@ -12,6 +12,7 @@ import ApiResponseDisplay from '@/components/sap-api-tester/ApiResponseDisplay';
 import ApiHelpDialog from '@/components/sap-api-tester/ApiHelpDialog';
 import RequestHistory from '@/components/sap-api-tester/RequestHistory';
 import CollectionsSidebar from '@/components/sap-api-tester/CollectionsSidebar';
+import ApiTesterHeader from '@/components/sap-api-tester/ApiTesterHeader';
 
 type HistoryEntry = {
   id: string;
@@ -126,11 +127,37 @@ const SapApiTester = () => {
         }
       }
       
-      // Direct API call without using proxy
-      // Ensure URL is absolute
-      let url = data.endpoint;
-      if (!url.match(/^https?:\/\//)) {
-        url = `https://my418390-api.s4hana.cloud.sap${url.startsWith('/') ? '' : '/'}${url}`;
+      // Determine if we should use the proxy
+      let url: string;
+      
+      if (data.usesProxy) {
+        // Use the proxy server
+        let sapPath = data.endpoint;
+        
+        // If the endpoint is a full URL, extract the path
+        if (data.endpoint.startsWith('http')) {
+          try {
+            const parsedUrl = new URL(data.endpoint);
+            sapPath = parsedUrl.pathname + parsedUrl.search;
+          } catch (e) {
+            console.error('Failed to parse URL:', e);
+            setError('Invalid URL format');
+            setLoading(false);
+            return;
+          }
+        }
+        
+        // Make sure path starts with /sap if it doesn't already
+        if (!sapPath.startsWith('/sap') && !sapPath.startsWith('?')) {
+          sapPath = `/sap${sapPath}`;
+        }
+        
+        url = `/api/sap${sapPath}`;
+        console.log('Using proxy with URL:', url);
+      } else {
+        // Direct API call (without proxy) - Use original URL
+        url = data.endpoint;
+        console.log('Using direct call to:', url);
       }
       
       // Handle authentication
@@ -166,7 +193,7 @@ const SapApiTester = () => {
         hasBody: config.data !== undefined
       });
       
-      // Make the direct API call
+      // Make the API call
       const response = await axios(config);
       const endTime = performance.now();
       const requestTime = Math.round(endTime - startTime);
@@ -212,7 +239,13 @@ const SapApiTester = () => {
         // Add CORS context for network errors
         if (axiosError.message === 'Network Error') {
           errorMessage += " - This could be due to CORS restrictions or the endpoint being unreachable";
-          errorMessage += "\n\nNote: Direct API calls may be affected by browser CORS policies.";
+          
+          // Add proxy-specific advice
+          if (!data.usesProxy) {
+            errorMessage += "\n\nTry enabling the 'Use Proxy' option to avoid CORS issues";
+          } else {
+            errorMessage += "\n\nMake sure the proxy server is running with 'node start-with-proxy.js'";
+          }
         }
         
         setError(errorMessage);
