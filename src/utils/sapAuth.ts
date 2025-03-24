@@ -74,6 +74,7 @@ export const getSAPAuthToken = async (config: SAPAuthConfig = defaultAuthConfig)
         
         // Create basic auth token exactly as expected by the server
         // The format must be: "Basic " + base64(username:password)
+        // IMPORTANT CHANGE: No encoding on the credentials
         const credentials = `${config.username}:${config.password}`;
         const base64Credentials = btoa(credentials);
         authToken = `Basic ${base64Credentials}`;

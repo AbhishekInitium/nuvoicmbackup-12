@@ -20,7 +20,8 @@ const API_TIMEOUT = 15000;
  */
 export const getS4Url = (service: string, entity: string): string => {
   const targetUrl = `${SAP_API_URL}${SAP_CONFIG.s4hana.apiBasePath}/${service}/${entity}`;
-  return `${S4_API_BASE_URL}?targetUrl=${encodeURIComponent(targetUrl)}`;
+  // IMPORTANT CHANGE: Not encoding the URL
+  return `${S4_API_BASE_URL}?targetUrl=${targetUrl}`;
 };
 
 /**
@@ -42,12 +43,14 @@ export const s4Request = async <T>(
     if (!url.includes('/api/proxy?targetUrl=')) {
       // If the URL is a full URL (starts with http), use it with the proxy
       if (url.startsWith('http')) {
-        fullUrl = `${S4_API_BASE_URL}?targetUrl=${encodeURIComponent(url)}`;
+        // IMPORTANT CHANGE: Not encoding the URL
+        fullUrl = `${S4_API_BASE_URL}?targetUrl=${url}`;
       } 
       // If it's a relative URL, prepend the SAP API URL
       else {
         const targetUrl = `${SAP_API_URL}${url.startsWith('/') ? '' : '/'}${url}`;
-        fullUrl = `${S4_API_BASE_URL}?targetUrl=${encodeURIComponent(targetUrl)}`;
+        // IMPORTANT CHANGE: Not encoding the URL
+        fullUrl = `${S4_API_BASE_URL}?targetUrl=${targetUrl}`;
       }
     }
     

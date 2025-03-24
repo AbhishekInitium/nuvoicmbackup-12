@@ -52,9 +52,9 @@ app.all('/api/inspect-request', (req, res) => {
 // URL validator middleware
 const validateTargetUrl = (req, res, next) => {
   try {
-    // Handle target URL from query parameter
+    // Handle target URL from query parameter - IMPORTANT CHANGE: No decoding
     if (req.query.targetUrl) {
-      const targetUrl = decodeURIComponent(req.query.targetUrl);
+      const targetUrl = req.query.targetUrl; // No decodeURIComponent here
       console.log(`[Proxy] Target URL: ${targetUrl}`);
       
       try {

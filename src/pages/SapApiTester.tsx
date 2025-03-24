@@ -129,9 +129,10 @@ const SapApiTester = () => {
       // Prepare the URL and request config
       let url = data.endpoint;
       
-      // Handle authentication if needed
+      // Handle authentication if needed - IMPORTANT CHANGE: No encoding
       if (data.useAuth && data.username && data.password) {
         const credentials = `${data.username}:${data.password}`;
+        // Use raw btoa without extra encoding
         const base64Credentials = btoa(credentials);
         headers.Authorization = `Basic ${base64Credentials}`;
       }
@@ -151,9 +152,9 @@ const SapApiTester = () => {
         const isFullUrl = url.match(/^https?:\/\//);
         
         if (isFullUrl) {
-          // For full URLs, use the new proxy endpoint with targetUrl parameter
+          // For full URLs, use the new proxy endpoint with targetUrl parameter - IMPORTANT CHANGE: No encoding
           console.log('Using proxy with full URL:', url);
-          config.url = `/api/proxy?targetUrl=${encodeURIComponent(url)}`;
+          config.url = `/api/proxy?targetUrl=${url}`;
         } else {
           // For paths, use the legacy /api/sap endpoint
           console.log('Using legacy proxy with path:', url);
