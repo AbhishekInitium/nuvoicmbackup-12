@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import axios, { AxiosRequestConfig, AxiosError } from 'axios';
@@ -11,7 +12,6 @@ import ApiResponseDisplay from '@/components/sap-api-tester/ApiResponseDisplay';
 import ApiHelpDialog from '@/components/sap-api-tester/ApiHelpDialog';
 import RequestHistory from '@/components/sap-api-tester/RequestHistory';
 import CollectionsSidebar from '@/components/sap-api-tester/CollectionsSidebar';
-import NodeApiExample from '@/components/sap-api-tester/NodeApiExample';
 
 type HistoryEntry = {
   id: string;
@@ -40,6 +40,7 @@ const SapApiTester = () => {
     time?: number;
   }>({});
 
+  // Load request history from localStorage on component mount
   useEffect(() => {
     const savedHistory = localStorage.getItem('api-request-history');
     if (savedHistory) {
@@ -52,13 +53,14 @@ const SapApiTester = () => {
     }
   }, []);
 
+  // Save request history to localStorage
   const saveToHistory = (entry: Omit<HistoryEntry, 'id'>) => {
     const newEntry = {
       ...entry,
       id: Date.now().toString()
     };
     
-    const updatedHistory = [newEntry, ...requestHistory.slice(0, 19)];
+    const updatedHistory = [newEntry, ...requestHistory.slice(0, 19)]; // Keep last 20 entries
     setRequestHistory(updatedHistory);
     
     try {
@@ -78,6 +80,7 @@ const SapApiTester = () => {
     const startTime = performance.now();
     
     try {
+      // Parse JSON strings
       let headers: Record<string, string> = {};
       let params: Record<string, string> = {};
       let body: any = undefined;
@@ -123,14 +126,18 @@ const SapApiTester = () => {
         }
       }
       
+      // Prepare the URL and request config
       let url = data.endpoint;
       
+      // Handle authentication if needed - No encoding
       if (data.useAuth && data.username && data.password) {
         const credentials = `${data.username}:${data.password}`;
+        // Use raw btoa without extra encoding
         const base64Credentials = btoa(credentials);
         headers.Authorization = `Basic ${base64Credentials}`;
       }
       
+      // Configure the request
       const config: AxiosRequestConfig = {
         method: data.method,
         headers,
@@ -139,19 +146,25 @@ const SapApiTester = () => {
         timeout: 30000,
       };
       
+      // FIX: Improved proxy routing logic
       if (data.usesProxy) {
+        // Check if the endpoint is a full URL or just a path
         const isFullUrl = url.match(/^https?:\/\//);
         
         if (isFullUrl) {
+          // For full URLs, use the new proxy endpoint with targetUrl parameter
           console.log('Using proxy with full URL:', url);
           config.url = `/api/proxy?targetUrl=${url}`;
         } else {
+          // For paths, ensure we're not duplicating /sap in the path
           console.log('Using SAP proxy with path:', url);
           
+          // Make sure url starts with a slash if it doesn't already
           if (!url.startsWith('/')) {
             url = '/' + url;
           }
           
+          // Remove duplicate /sap if it exists at the beginning of the path
           if (url.startsWith('/sap/')) {
             config.url = `/api/sap${url}`;
           } else {
@@ -161,6 +174,7 @@ const SapApiTester = () => {
           console.log('Constructed URL:', config.url);
         }
       } else {
+        // Direct request - ensure URL is absolute
         if (!url.match(/^https?:\/\//)) {
           url = `https://my418390-api.s4hana.cloud.sap${url.startsWith('/') ? '' : '/'}${url}`;
         }
@@ -176,14 +190,17 @@ const SapApiTester = () => {
         hasBody: config.data !== undefined
       });
       
+      // Make the request
       const response = await axios(config);
       const endTime = performance.now();
       const requestTime = Math.round(endTime - startTime);
       
+      // Log response details
       console.log('Response status:', response.status);
       console.log('Response headers:', response.headers);
       console.log('Response data type:', typeof response.data);
       
+      // Store the response data
       setResponse(response.data);
       setRawResponseInfo({
         status: response.status,
@@ -193,6 +210,7 @@ const SapApiTester = () => {
       });
       setShowResponse(true);
       
+      // Save to history
       saveToHistory({
         method: data.method,
         url: data.endpoint,
@@ -210,10 +228,12 @@ const SapApiTester = () => {
       const endTime = performance.now();
       const requestTime = Math.round(endTime - startTime);
       
+      // Handle axios errors
       if (axios.isAxiosError(err)) {
         const axiosError = err as AxiosError;
         let errorMessage = `Error ${axiosError.response?.status || ''}: ${axiosError.message}`;
         
+        // Add context for different error types
         if (axiosError.message === 'Network Error') {
           errorMessage += " - This could be due to CORS restrictions, proxy server not running, or the endpoint being unreachable";
           errorMessage += "\n\nConsider trying without the proxy option for direct SAP endpoints that support CORS.";
@@ -221,6 +241,7 @@ const SapApiTester = () => {
         
         setError(errorMessage);
         
+        // Save failed request to history
         saveToHistory({
           method: data.method,
           url: data.endpoint,
@@ -229,6 +250,7 @@ const SapApiTester = () => {
           requestData: data
         });
         
+        // Still show the error response if available
         if (axiosError.response?.data) {
           setResponse(axiosError.response.data);
           setRawResponseInfo({
@@ -264,6 +286,7 @@ const SapApiTester = () => {
 
   return (
     <div className="flex h-screen overflow-hidden bg-gray-50">
+      {/* Sidebar */}
       <div className={`border-r bg-white transition-all duration-300 ${sidebarOpen ? 'w-64' : 'w-0'}`}>
         <CollectionsSidebar
           isOpen={sidebarOpen}
@@ -272,7 +295,9 @@ const SapApiTester = () => {
         />
       </div>
       
+      {/* Main content */}
       <div className="flex-1 flex flex-col h-full overflow-hidden">
+        {/* Top navigation bar */}
         <div className="flex items-center justify-between px-4 py-2 bg-white border-b">
           <div className="flex items-center space-x-2">
             <Button variant="ghost" size="sm" onClick={toggleSidebar}>
@@ -288,10 +313,9 @@ const SapApiTester = () => {
           </div>
         </div>
         
+        {/* Main content area */}
         <div className="flex-1 overflow-auto p-4 space-y-4">
           <ApiHelpDialog open={showHelp} onOpenChange={setShowHelp} />
-          
-          <NodeApiExample />
           
           <Card className="border shadow-sm">
             <div className="p-4">
