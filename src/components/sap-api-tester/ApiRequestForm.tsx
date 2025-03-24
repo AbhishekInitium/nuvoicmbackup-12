@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -7,7 +8,6 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AlertCircle, Send, Eye, EyeOff } from 'lucide-react';
 
@@ -45,7 +45,8 @@ const ApiRequestForm: React.FC<ApiRequestFormProps> = ({
     resolver: zodResolver(apiFormSchema),
     defaultValues: {
       method: 'GET',
-      endpoint: 'https://my418390-api.s4hana.cloud.sap/sap/opu/odata4/sap/api_supplierquotation_2/srvd_a2x/sap/supplierquotation/0001/SupplierQuotationItem/8000000005/10',
+      // Using a relative path for SAP APIs - the proxy will add the base URL
+      endpoint: '/sap/opu/odata4/sap/api_supplierquotation_2/srvd_a2x/sap/supplierquotation/0001/SupplierQuotationItem/8000000005/10',
       usesProxy: true, // Default to using proxy
       username: 'S4HANA_BASIC',
       password: 'GGWYYnbPqPWmpcuCHt9zuht<NFnlkbQYJEHvkfLi',
@@ -62,6 +63,13 @@ const ApiRequestForm: React.FC<ApiRequestFormProps> = ({
 
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
+  };
+
+  // Handle endpoint placeholder based on proxy usage
+  const getEndpointPlaceholder = () => {
+    return watchUseProxy 
+      ? "/sap/opu/odata4/sap/api_... (relative path)"
+      : "https://my418390-api.s4hana.cloud.sap/sap/opu/odata4/...";
   };
 
   return (
@@ -96,7 +104,7 @@ const ApiRequestForm: React.FC<ApiRequestFormProps> = ({
               <FormItem className="flex-1 mb-0">
                 <FormControl>
                   <Input 
-                    placeholder="Enter request URL"
+                    placeholder={getEndpointPlaceholder()}
                     className="h-10"
                     {...field} 
                   />
@@ -297,8 +305,8 @@ const ApiRequestForm: React.FC<ApiRequestFormProps> = ({
             <span className="font-semibold">Tips:</span>
           </div>
           <ul className="list-disc pl-5 space-y-1">
-            <li>Use complete URLs for API calls (e.g., <code>https://my418390-api.s4hana.cloud.sap/sap/opu/odata4/...</code>)</li>
-            <li>Enable "Use Proxy" to avoid browser CORS restrictions</li>
+            <li>When "Use Proxy" is enabled, use <strong>relative paths</strong> (e.g., <code>/sap/opu/odata4/...</code>)</li>
+            <li>When "Use Proxy" is disabled, use <strong>full URLs</strong> (e.g., <code>https://my418390-api.s4hana.cloud.sap/sap/opu/odata4/...</code>)</li>
             <li>Make sure the proxy server is running with <code>node start-with-proxy.js</code></li>
             <li>All JSON must be properly formatted with double quotes</li>
             <li>SAP systems require a specific client number (default: 080)</li>

@@ -8,24 +8,22 @@ import { SAP_CONFIG } from '@/config/sapConfig';
  * Common utilities for service interactions
  */
 
-// Base URL for API - configuring the proxy correctly
-export const S4_API_BASE_URL = '/api/proxy';
+// Base URL for the SAP API proxy
+export const S4_API_BASE_URL = '/api/sap';
 export const SAP_API_URL = 'https://my418390-api.s4hana.cloud.sap';
 
-// Timeout for API requests in milliseconds (15 seconds - increased to handle slower connections)
+// Timeout for API requests in milliseconds (15 seconds)
 const API_TIMEOUT = 15000;
 
 /**
- * Create full API URL for endpoints
+ * Create full API URL for endpoints using the proxy
  */
 export const getS4Url = (service: string, entity: string): string => {
-  const targetUrl = `${SAP_API_URL}${SAP_CONFIG.s4hana.apiBasePath}/${service}/${entity}`;
-  // Not encoding the URL - pass as is
-  return `${S4_API_BASE_URL}?targetUrl=${targetUrl}`;
+  return `${S4_API_BASE_URL}${SAP_CONFIG.s4hana.apiBasePath}/${service}/${entity}`;
 };
 
 /**
- * Generic API request function
+ * Generic API request function using the proxy
  */
 export const s4Request = async <T>(
   method: string,
@@ -36,21 +34,27 @@ export const s4Request = async <T>(
   try {
     console.log(`Making ${method} request to: ${url}`);
     
-    // Add the proxy support for all URLs
+    // Format the URL to use the proxy
     let fullUrl = url;
     
-    // If the URL is not already a full proxy URL with targetUrl parameter
-    if (!url.includes('/api/proxy?targetUrl=')) {
-      // If the URL is a full URL (starts with http), use it with the proxy
+    // If the URL doesn't already start with /api/sap
+    if (!url.startsWith(S4_API_BASE_URL)) {
+      // If it's an absolute URL (with http), extract the path
       if (url.startsWith('http')) {
-        // Not encoding the URL - pass as is
-        fullUrl = `${S4_API_BASE_URL}?targetUrl=${url}`;
+        try {
+          const urlObj = new URL(url);
+          // Extract the path from the full URL and prepend the proxy path
+          fullUrl = `${S4_API_BASE_URL}${urlObj.pathname}${urlObj.search}`;
+        } catch (e) {
+          console.error('Error parsing URL:', e);
+          fullUrl = url; // Keep the original URL if parsing fails
+        }
       } 
-      // If it's a relative URL, prepend the SAP API URL
+      // If it's a relative URL without the proxy prefix
       else {
-        const targetUrl = `${SAP_API_URL}${url.startsWith('/') ? '' : '/'}${url}`;
-        // Not encoding the URL - pass as is
-        fullUrl = `${S4_API_BASE_URL}?targetUrl=${targetUrl}`;
+        // Make sure it starts with a slash
+        const relativePath = url.startsWith('/') ? url : `/${url}`;
+        fullUrl = `${S4_API_BASE_URL}${relativePath}`;
       }
     }
     
@@ -68,7 +72,8 @@ export const s4Request = async <T>(
       // Add proper headers to ensure we get the right response format
       headers: {
         'Accept': 'application/json',
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        // The proxy will add SAP-specific headers
       }
     });
     
@@ -77,50 +82,14 @@ export const s4Request = async <T>(
     
     const response = await axios(config);
     console.log('Response status:', response.status);
-    console.log('Response headers:', response.headers);
     
     if (response.status >= 200 && response.status < 300) {
-      console.log('Request succeeded - response data type:', typeof response.data);
-      // Log a small preview of the response data to debug
-      if (typeof response.data === 'object') {
-        console.log('Response data preview:', JSON.stringify(response.data).substring(0, 200) + '...');
-      } else if (typeof response.data === 'string') {
-        // Check if the response is HTML (sometimes the proxy returns HTML even with right headers)
-        if (response.data.trim().startsWith('<!DOCTYPE html>') || response.data.trim().startsWith('<html')) {
-          console.error('Received HTML response instead of JSON');
-          throw new Error('Received HTML response instead of JSON. This may indicate an authentication issue or invalid endpoint.');
-        }
-        // Try to parse string response as JSON
-        try {
-          return JSON.parse(response.data) as T;
-        } catch (e) {
-          console.log('Response is not JSON:', response.data.substring(0, 200) + '...');
-          return response.data as unknown as T;
-        }
-      }
       return response.data as T;
     } else {
-      console.error('Non-success status code:', response.status);
       throw new Error(`Request failed with status ${response.status}`);
     }
   } catch (error) {
     console.error(`API Error (${url}):`, error);
-    
-    // Check for specific error types
-    if (error.response) {
-      // The request was made and the server responded with a status code
-      // that falls out of the range of 2xx
-      console.error('Server responded with error:', error.response.status, error.response.data);
-    } else if (error.request) {
-      // The request was made but no response was received
-      console.error('No response received from server');
-    }
-    
-    // Check for timeout
-    if (error.code === 'ECONNABORTED') {
-      console.warn('Request timed out. The server might be slow or unavailable.');
-    }
-    
     throw error;
   }
 };

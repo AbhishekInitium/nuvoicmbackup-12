@@ -1,7 +1,6 @@
 const express = require('express');
 const cors = require('cors');
 const { createProxyMiddleware } = require('http-proxy-middleware');
-const url = require('url');
 const bodyParser = require('body-parser');
 
 const app = express();
@@ -18,6 +17,9 @@ app.use((req, res, next) => {
   next();
 });
 
+// SAP S/4HANA Cloud API base URL
+const SAP_BASE_URL = 'https://my418390-api.s4hana.cloud.sap';
+
 // Test endpoint to verify the proxy server is working
 app.get('/api/test', (req, res) => {
   res.status(200).json({
@@ -28,25 +30,48 @@ app.get('/api/test', (req, res) => {
   });
 });
 
-// Request details endpoint - helpful for debugging
-app.all('/api/inspect-request', (req, res) => {
-  // Extract relevant request information
-  const requestInfo = {
-    method: req.method,
-    url: req.url,
-    headers: req.headers,
-    query: req.query,
-    body: req.body,
-    timestamp: new Date().toISOString()
-  };
-  
-  console.log('[Proxy] Request inspection:', requestInfo);
-  res.status(200).json({
-    success: true,
-    message: 'Request details captured',
-    request: requestInfo
-  });
-});
+// Direct proxy to SAP endpoints
+app.use('/api/sap', createProxyMiddleware({
+  target: SAP_BASE_URL,
+  changeOrigin: true,
+  pathRewrite: {
+    '^/api/sap': '' // rewrites /api/sap/... to /...
+  },
+  onProxyReq: (proxyReq, req, res) => {
+    console.log(`[SAP Proxy] Forwarding request to: ${SAP_BASE_URL}${req.originalUrl.replace('/api/sap', '')}`);
+    
+    // If custom auth header not provided, use default auth
+    if (!proxyReq.getHeader('Authorization')) {
+      // Using hardcoded credentials for now - in production use environment variables
+      const auth = 'Basic ' + Buffer.from('S4HANA_BASIC:GGWYYnbPqPWmpcuCHt9zuht<NFnlkbQYJEHvkfLi').toString('base64');
+      proxyReq.setHeader('Authorization', auth);
+    }
+    
+    // Add SAP client cookie if not present
+    if (!proxyReq.getHeader('Cookie') || !proxyReq.getHeader('Cookie').includes('sap-client')) {
+      const cookie = proxyReq.getHeader('Cookie') || '';
+      proxyReq.setHeader('Cookie', `${cookie}${cookie ? '; ' : ''}sap-usercontext=sap-client=080`);
+    }
+    
+    // Set Accept header if not present
+    if (!proxyReq.getHeader('Accept')) {
+      proxyReq.setHeader('Accept', 'application/json');
+    }
+    
+    console.log('[SAP Proxy] Request headers:', proxyReq.getHeaders());
+  },
+  onProxyRes: (proxyRes, req, res) => {
+    console.log(`[SAP Proxy] Response status: ${proxyRes.statusCode}`);
+  },
+  onError: (err, req, res) => {
+    console.error('[SAP Proxy] Error:', err);
+    res.status(500).json({
+      success: false,
+      message: 'Proxy Error',
+      error: err.message
+    });
+  }
+}));
 
 // URL validator middleware
 const validateTargetUrl = (req, res, next) => {
@@ -165,21 +190,6 @@ app.use('/api/proxy', (req, res, next) => {
   proxy(req, res, next);
 });
 
-// Update SAP proxy support to use the direct URL method
-app.use('/api/sap', (req, res, next) => {
-  // Redirect to the proxy route with the full SAP URL
-  const fullPath = req.originalUrl.replace('/api/sap', '');
-  const targetUrl = `https://my418390-api.s4hana.cloud.sap/sap${fullPath}`;
-  
-  console.log(`[SAP Proxy] Redirecting to proxy with target URL: ${targetUrl}`);
-  
-  // Modify the request to use the proxy route
-  req.url = `/api/proxy?targetUrl=${encodeURIComponent(targetUrl)}`;
-  
-  // Forward to the proxy middleware
-  app._router.handle(req, res, next);
-});
-
 // Health check endpoint
 app.get('/api/health', (req, res) => {
   res.status(200).send('Proxy server is running');
@@ -188,7 +198,8 @@ app.get('/api/health', (req, res) => {
 // Start the server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-  console.log(`Proxy server running on port ${PORT}`);
+  console.log(`✅ SAP Proxy server running on http://localhost:${PORT}`);
   console.log(`Test endpoint available at: http://localhost:${PORT}/api/test`);
   console.log(`Health check available at: http://localhost:${PORT}/api/health`);
+  console.log(`SAP API proxy available at: http://localhost:${PORT}/api/sap/...`);
 });

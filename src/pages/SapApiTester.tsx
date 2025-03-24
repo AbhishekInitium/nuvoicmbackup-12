@@ -2,16 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import axios, { AxiosRequestConfig, AxiosError } from 'axios';
 import { Card } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
-import { Send, Save, Clock, ArrowRight } from 'lucide-react';
+import { Send, ArrowRight } from 'lucide-react';
 import ApiRequestForm, { ApiFormValues } from '@/components/sap-api-tester/ApiRequestForm';
 import ApiResponseDisplay from '@/components/sap-api-tester/ApiResponseDisplay';
 import ApiHelpDialog from '@/components/sap-api-tester/ApiHelpDialog';
 import RequestHistory from '@/components/sap-api-tester/RequestHistory';
 import CollectionsSidebar from '@/components/sap-api-tester/CollectionsSidebar';
-import ApiTesterHeader from '@/components/sap-api-tester/ApiTesterHeader';
 
 type HistoryEntry = {
   id: string;
@@ -126,7 +123,8 @@ const SapApiTester = () => {
       let url: string;
       
       if (data.usesProxy) {
-        url = `/api/proxy?targetUrl=${data.endpoint}`;
+        const endpoint = data.endpoint.startsWith('/') ? data.endpoint : `/${data.endpoint}`;
+        url = `/api/sap${endpoint}`;
         console.log('Using proxy with URL:', url);
       } else {
         url = data.endpoint;
@@ -202,12 +200,12 @@ const SapApiTester = () => {
         let errorMessage = `Error ${axiosError.response?.status || ''}: ${axiosError.message}`;
         
         if (axiosError.message === 'Network Error') {
-          errorMessage += " - This could be due to CORS restrictions or the endpoint being unreachable";
+          errorMessage += "\n\nThis could be due to CORS restrictions or the endpoint being unreachable.";
           
           if (!data.usesProxy) {
-            errorMessage += "\n\nTry enabling the 'Use Proxy' option to avoid CORS issues";
+            errorMessage += "\n\nTry enabling the 'Use Proxy' option to avoid CORS issues.";
           } else {
-            errorMessage += "\n\nMake sure the proxy server is running with 'node start-with-proxy.js'";
+            errorMessage += "\n\nMake sure the proxy server is running with 'node start-with-proxy.js'.";
           }
         }
         
