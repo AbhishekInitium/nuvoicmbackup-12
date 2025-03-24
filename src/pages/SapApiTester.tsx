@@ -80,7 +80,7 @@ const SapApiTester = () => {
     const startTime = performance.now();
     
     try {
-      // Parse JSON strings
+      // Parse JSON strings for headers, params, and body
       let headers: Record<string, string> = {};
       let params: Record<string, string> = {};
       let body: any = undefined;
@@ -111,7 +111,7 @@ const SapApiTester = () => {
         return;
       }
       
-      if (data.body) {
+      if (data.body && data.method !== 'GET') {
         try {
           body = JSON.parse(data.body);
         } catch (e) {
@@ -126,73 +126,37 @@ const SapApiTester = () => {
         }
       }
       
-      // Prepare the URL and request config
+      // Direct API call without using proxy
+      // Ensure URL is absolute
       let url = data.endpoint;
+      if (!url.match(/^https?:\/\//)) {
+        url = `https://my418390-api.s4hana.cloud.sap${url.startsWith('/') ? '' : '/'}${url}`;
+      }
       
-      // Handle authentication if needed - No encoding
+      // Handle authentication
       if (data.useAuth && data.username && data.password) {
         const credentials = `${data.username}:${data.password}`;
-        // Use raw btoa without extra encoding
         const base64Credentials = btoa(credentials);
         headers.Authorization = `Basic ${base64Credentials}`;
+      }
+      
+      // Add SAP client cookie if provided
+      if (data.sapClient) {
+        headers.Cookie = `sap-usercontext=sap-client=${data.sapClient}`;
+        console.log('Using SAP client:', data.sapClient);
       }
       
       // Configure the request
       const config: AxiosRequestConfig = {
         method: data.method,
-        headers,
-        params,
+        url: url,
+        headers: headers,
+        params: params,
         data: data.method !== 'GET' ? body : undefined,
         timeout: 30000,
-        // Add this option to prevent axios from automatically redirecting
-        maxRedirects: 0
+        maxBodyLength: Infinity,
+        maxRedirects: 0 // Prevent redirects
       };
-      
-      // Add SAP client cookie if provided
-      if (data.sapClient) {
-        // Set the cookie header for the SAP client
-        config.headers = {
-          ...config.headers,
-          'Cookie': `sap-usercontext=sap-client=${data.sapClient}`
-        };
-        console.log('Using SAP client:', data.sapClient);
-      }
-      
-      // FIX: Improved proxy routing logic
-      if (data.usesProxy) {
-        // Check if the endpoint is a full URL or just a path
-        const isFullUrl = url.match(/^https?:\/\//);
-        
-        if (isFullUrl) {
-          // For full URLs, use the new proxy endpoint with targetUrl parameter
-          console.log('Using proxy with full URL:', url);
-          config.url = `/api/proxy?targetUrl=${url}`;
-        } else {
-          // For paths, ensure we're not duplicating /sap in the path
-          console.log('Using SAP proxy with path:', url);
-          
-          // Make sure url starts with a slash if it doesn't already
-          if (!url.startsWith('/')) {
-            url = '/' + url;
-          }
-          
-          // Remove duplicate /sap if it exists at the beginning of the path
-          if (url.startsWith('/sap/')) {
-            config.url = `/api/sap${url}`;
-          } else {
-            config.url = `/api/sap/sap${url}`;
-          }
-          
-          console.log('Constructed URL:', config.url);
-        }
-      } else {
-        // Direct request - ensure URL is absolute
-        if (!url.match(/^https?:\/\//)) {
-          url = `https://my418390-api.s4hana.cloud.sap${url.startsWith('/') ? '' : '/'}${url}`;
-        }
-        console.log('Making direct request to:', url);
-        config.url = url;
-      }
       
       console.log('Request config:', {
         method: config.method,
@@ -202,7 +166,7 @@ const SapApiTester = () => {
         hasBody: config.data !== undefined
       });
       
-      // Make the request
+      // Make the direct API call
       const response = await axios(config);
       const endTime = performance.now();
       const requestTime = Math.round(endTime - startTime);
@@ -245,22 +209,10 @@ const SapApiTester = () => {
         const axiosError = err as AxiosError;
         let errorMessage = `Error ${axiosError.response?.status || ''}: ${axiosError.message}`;
         
-        // Add context for different error types
+        // Add CORS context for network errors
         if (axiosError.message === 'Network Error') {
-          errorMessage += " - This could be due to CORS restrictions, proxy server not running, or the endpoint being unreachable";
-          errorMessage += "\n\nConsider trying without the proxy option for direct SAP endpoints that support CORS.";
-        }
-        
-        // Handle redirection errors specifically (status 301, 302, etc.)
-        if (axiosError.response?.status && axiosError.response.status >= 300 && axiosError.response.status < 400) {
-          errorMessage += `\n\nRedirection detected (${axiosError.response.status}). This might be a login page redirect.`;
-          errorMessage += "\nWe prevented automatic redirection to show you this response instead.";
-          
-          // Get the redirect location if available
-          const location = axiosError.response.headers?.location;
-          if (location) {
-            errorMessage += `\nRedirect location: ${location}`;
-          }
+          errorMessage += " - This could be due to CORS restrictions or the endpoint being unreachable";
+          errorMessage += "\n\nNote: Direct API calls may be affected by browser CORS policies.";
         }
         
         setError(errorMessage);

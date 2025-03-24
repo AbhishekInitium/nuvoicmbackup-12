@@ -15,12 +15,12 @@ import { AlertCircle, Send, Eye, EyeOff } from 'lucide-react';
 const apiFormSchema = z.object({
   method: z.string().default('GET'),
   endpoint: z.string().min(1, { message: 'Endpoint is required' }),
-  usesProxy: z.boolean().default(true),
+  usesProxy: z.boolean().default(false), // Default to false for direct API calls
   username: z.string().optional(),
   password: z.string().optional(),
   useAuth: z.boolean().default(true),
   sapClient: z.string().optional(),
-  headers: z.string().default('{\n  "Content-Type": "application/json"\n}'),
+  headers: z.string().default('{\n  "Content-Type": "application/json",\n  "Accept": "application/json"\n}'),
   params: z.string().default('{\n  "$format": "json"\n}'),
   body: z.string().optional(),
 });
@@ -46,8 +46,8 @@ const ApiRequestForm: React.FC<ApiRequestFormProps> = ({
     resolver: zodResolver(apiFormSchema),
     defaultValues: {
       method: 'GET',
-      endpoint: '/sap/opu/odata4/sap/api_supplierquotation_2/srvd_a2x/sap/supplierquotation/0001/SupplierQuotationItem/8000000005/10',
-      usesProxy: true,
+      endpoint: 'https://my418390-api.s4hana.cloud.sap/sap/opu/odata4/sap/api_supplierquotation_2/srvd_a2x/sap/supplierquotation/0001/SupplierQuotationItem/8000000005/10',
+      usesProxy: false, // Default to direct calls
       username: 'S4HANA_BASIC',
       password: 'GGWYYnbPqPWmpcuCHt9zuht<NFnlkbQYJEHvkfLi',
       useAuth: true,
@@ -125,6 +125,9 @@ const ApiRequestForm: React.FC<ApiRequestFormProps> = ({
                     onCheckedChange={field.onChange}
                   />
                 </FormControl>
+                <FormDescription className="text-xs ml-2 inline">
+                  (Disabled for direct API calls)
+                </FormDescription>
               </FormItem>
             )}
           />
@@ -295,10 +298,10 @@ const ApiRequestForm: React.FC<ApiRequestFormProps> = ({
             <span className="font-semibold">Tips:</span>
           </div>
           <ul className="list-disc pl-5 space-y-1">
-            <li>For SAP OData services, try endpoints like <code>/sap/opu/odata4/sap/api_business_partner/default/sap/api_business_partner/0001/BusinessPartner</code></li>
-            <li>The proxy server must be running for the proxy option to work</li>
+            <li>Use complete URLs for direct API calls (e.g., <code>https://my418390-api.s4hana.cloud.sap/sap/opu/odata4/...</code>)</li>
+            <li>Direct API calls might be subject to browser CORS restrictions</li>
             <li>All JSON must be properly formatted with double quotes</li>
-            <li>Some SAP systems require a specific client number (default: 080)</li>
+            <li>SAP systems require a specific client number (default: 080)</li>
           </ul>
         </div>
       </form>

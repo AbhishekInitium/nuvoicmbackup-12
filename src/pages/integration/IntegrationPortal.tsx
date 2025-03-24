@@ -30,7 +30,7 @@ const IntegrationPortal = () => {
               </CardHeader>
               <CardContent>
                 <p className="mb-4">
-                  Use our Postman-like interface to test API connections before implementing them in your application.
+                  Use our API testing interface to test direct connections to your SAP system.
                 </p>
                 <Link to="/api-tester">
                   <Button>
@@ -42,20 +42,20 @@ const IntegrationPortal = () => {
             
             <Card>
               <CardHeader>
-                <CardTitle>Proxy Server Status</CardTitle>
+                <CardTitle>API Documentation</CardTitle>
                 <CardDescription>
-                  Check the status of your proxy server
+                  Explore SAP API documentation
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <p className="mb-4">
-                  Ensure your proxy server is running correctly to handle SAP API requests.
+                  Access reference materials for working with SAP APIs.
                 </p>
-                <Link to="/api-tester">
+                <a href="https://api.sap.com/" target="_blank" rel="noopener noreferrer">
                   <Button variant="outline">
-                    Check Status
+                    Visit API Documentation
                   </Button>
-                </Link>
+                </a>
               </CardContent>
             </Card>
           </div>
