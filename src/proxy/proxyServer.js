@@ -3,11 +3,15 @@ const express = require('express');
 const cors = require('cors');
 const { createProxyMiddleware } = require('http-proxy-middleware');
 const url = require('url');
+const bodyParser = require('body-parser');
 
 const app = express();
 
 // Enable CORS for all routes
 app.use(cors());
+
+// Parse JSON bodies
+app.use(bodyParser.json());
 
 // Log all requests
 app.use((req, res, next) => {
@@ -46,48 +50,21 @@ app.all('/api/inspect-request', (req, res) => {
 });
 
 // URL validator middleware
-const validateSapUrl = (req, res, next) => {
-  // Handle the targetUrl query parameter for full URLs
-  if (req.query.targetUrl) {
-    try {
+const validateTargetUrl = (req, res, next) => {
+  try {
+    // Handle target URL from query parameter
+    if (req.query.targetUrl) {
       const targetUrl = decodeURIComponent(req.query.targetUrl);
-      console.log(`[Proxy] Using full URL target: ${targetUrl}`);
-      const parsedUrl = new URL(targetUrl);
+      console.log(`[Proxy] Target URL: ${targetUrl}`);
       
-      // Set the target URL for the proxy middleware to use
-      req.targetUrl = targetUrl;
-      
-      // Get just the pathname and search parts
-      const pathWithSearch = parsedUrl.pathname + (parsedUrl.search ? parsedUrl.search : '');
-      req.targetPath = pathWithSearch;
-      
-      // If the path already starts with the original path, don't add it again
-      req.url = req.targetPath;
-      
-      console.log(`[Proxy] Will forward to: ${parsedUrl.origin} with path: ${req.url}`);
-    } catch (error) {
-      console.error('[Proxy] Error parsing URL:', error);
-      return res.status(400).json({
-        success: false,
-        message: 'Invalid URL format',
-        error: error.message
-      });
-    }
-  } else {
-    // Legacy path handling for partial URLs
-    let targetPath = req.url.replace(/^\/api\/sap/, '');
-    
-    // If the path contains a full URL (starts with http:// or https://)
-    if (targetPath.match(/^https?:\/\//)) {
       try {
-        // Parse the URL to extract the actual path
-        const parsedUrl = new URL(targetPath);
-        // Store the full target URL for the proxy
-        req.targetUrl = targetPath;
-        // Update the path to just be the pathname portion
-        req.url = parsedUrl.pathname + (parsedUrl.search || '');
-        console.log(`[Proxy] Legacy: Converted full URL to path: ${req.url}`);
-        console.log(`[Proxy] Legacy: Will forward to: ${req.targetUrl}`);
+        // Parse the URL to validate it
+        const parsedUrl = new URL(targetUrl);
+        req.targetUrl = targetUrl;
+        req.targetOrigin = parsedUrl.origin;
+        req.targetPath = parsedUrl.pathname + (parsedUrl.search || '');
+        
+        console.log(`[Proxy] Will forward to: ${req.targetOrigin} with path: ${req.targetPath}`);
       } catch (error) {
         console.error('[Proxy] Error parsing URL:', error);
         return res.status(400).json({
@@ -96,72 +73,69 @@ const validateSapUrl = (req, res, next) => {
           error: error.message
         });
       }
+    } else {
+      // No target URL provided
+      return res.status(400).json({
+        success: false,
+        message: 'No target URL provided'
+      });
     }
-  }
-  
-  next();
-};
-
-// Apply URL validator middleware to /api/sap routes
-app.use('/api/sap', validateSapUrl);
-
-// Proxy middleware for SAP S/4HANA - now with dynamic target
-const sapProxy = createProxyMiddleware({
-  router: (req) => {
-    // If a full URL was provided, use that as the target
-    if (req.targetUrl) {
-      // Extract just the origin part of the URL
-      try {
-        const parsedUrl = new URL(req.targetUrl);
-        return `${parsedUrl.origin}`;
-      } catch (e) {
-        console.error('[Proxy] Error parsing target URL:', e);
-        return 'https://my418390-api.s4hana.cloud.sap';
-      }
-    }
-    // Otherwise use the default target
-    return 'https://my418390-api.s4hana.cloud.sap';
-  },
-  changeOrigin: true,
-  pathRewrite: (path, req) => {
-    // If we have a specific target path from the middleware, use it
-    if (req.targetPath) {
-      return req.targetPath;
-    }
-    
-    // Otherwise use the standard path rewrite
-    return path.replace(/^\/api\/sap/, '');
-  },
-  onProxyReq: (proxyReq, req) => {
-    // Forward the authorization header if it exists
-    if (req.headers.authorization) {
-      proxyReq.setHeader('Authorization', req.headers.authorization);
-    }
-    
-    // Add proper headers for JSON responses
-    proxyReq.setHeader('Accept', 'application/json');
-    
-    // Log proxy requests for debugging
-    console.log(`[Proxy] Forwarding to: ${proxyReq.path}`);
-    console.log(`[Proxy] With headers:`, req.headers);
-  },
-  onError: (err, req, res) => {
-    console.error('[Proxy] Error:', err);
+    next();
+  } catch (error) {
+    console.error('[Proxy] Validation error:', error);
     res.status(500).json({
       success: false,
-      message: 'Proxy Error',
-      error: err.message,
-      code: err.code
+      message: 'Error in URL validation',
+      error: error.message
     });
-  },
-  // Add logging for debugging
-  onProxyRes: (proxyRes, req, res) => {
-    console.log(`[Proxy] Response status: ${proxyRes.statusCode}`);
-    console.log(`[Proxy] Response headers:`, proxyRes.headers);
-    
-    // Log a preview of the response body for JSON responses
-    if (proxyRes.headers['content-type']?.includes('application/json')) {
+  }
+};
+
+// Apply URL validator middleware to target proxy route
+app.use('/api/proxy', validateTargetUrl);
+
+// Dynamic proxy middleware
+app.use('/api/proxy', (req, res, next) => {
+  if (!req.targetUrl || !req.targetOrigin) {
+    return res.status(400).json({
+      success: false,
+      message: 'Target URL not properly validated'
+    });
+  }
+  
+  // Create proxy middleware on the fly for this specific request
+  const proxy = createProxyMiddleware({
+    target: req.targetOrigin,
+    changeOrigin: true,
+    pathRewrite: (path) => req.targetPath,
+    onProxyReq: (proxyReq, req) => {
+      // Forward all headers from the original request
+      Object.keys(req.headers).forEach(key => {
+        // Skip host header to avoid conflicts
+        if (key.toLowerCase() !== 'host') {
+          proxyReq.setHeader(key, req.headers[key]);
+        }
+      });
+      
+      console.log(`[Proxy] Forwarding to: ${req.targetOrigin}${req.targetPath}`);
+      console.log(`[Proxy] With headers:`, req.headers);
+      
+      // If this is a POST/PUT/PATCH with a body, we need to restream it
+      if (['POST', 'PUT', 'PATCH'].includes(req.method) && req.body) {
+        const bodyData = JSON.stringify(req.body);
+        proxyReq.setHeader('Content-Length', Buffer.byteLength(bodyData));
+        proxyReq.write(bodyData);
+      }
+    },
+    onProxyRes: (proxyRes, req, res) => {
+      // Log the response for debugging
+      console.log(`[Proxy] Response from ${req.targetOrigin}: ${proxyRes.statusCode}`);
+      console.log(`[Proxy] Response headers:`, proxyRes.headers);
+      
+      // Store the original response data for logging/debugging
       let responseBody = '';
+      const originalWrite = res.write;
+      const originalEnd = res.end;
       
       proxyRes.on('data', (chunk) => {
         responseBody += chunk.toString('utf8');
@@ -169,18 +143,52 @@ const sapProxy = createProxyMiddleware({
       
       proxyRes.on('end', () => {
         try {
-          // Only log a preview (first 300 characters) to avoid flooding the console
-          const preview = responseBody.substring(0, 300) + (responseBody.length > 300 ? '...' : '');
-          console.log(`[Proxy] Response body preview:`, preview);
+          if (proxyRes.headers['content-type']?.includes('application/json')) {
+            console.log(`[Proxy] Response body preview:`, responseBody.substring(0, 300));
+          }
         } catch (e) {
-          console.error('[Proxy] Error parsing response body:', e);
+          console.error('[Proxy] Error processing response:', e);
         }
       });
+    },
+    onError: (err, req, res) => {
+      console.error('[Proxy] Error during proxy request:', err);
+      res.status(500).json({
+        success: false,
+        message: 'Proxy Error',
+        error: err.message,
+        code: err.code
+      });
     }
+  });
+  
+  // Apply the dynamically configured proxy to this request
+  proxy(req, res, next);
+});
+
+// Legacy SAP proxy support (for backward compatibility)
+const sapProxy = createProxyMiddleware({
+  target: 'https://my418390-api.s4hana.cloud.sap',
+  changeOrigin: true,
+  pathRewrite: (path) => path.replace(/^\/api\/sap/, ''),
+  onProxyReq: (proxyReq, req) => {
+    if (req.headers.authorization) {
+      proxyReq.setHeader('Authorization', req.headers.authorization);
+    }
+    
+    proxyReq.setHeader('Accept', 'application/json');
+    console.log(`[Legacy Proxy] Forwarding to: ${proxyReq.path}`);
+  },
+  onError: (err, req, res) => {
+    console.error('[Legacy Proxy] Error:', err);
+    res.status(500).json({
+      success: false,
+      message: 'Proxy Error',
+      error: err.message
+    });
   }
 });
 
-// Use the SAP proxy middleware for all /api/sap requests
 app.use('/api/sap', sapProxy);
 
 // Health check endpoint

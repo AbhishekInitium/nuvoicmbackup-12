@@ -29,6 +29,16 @@ const ApiResponseDisplay: React.FC<ApiResponseDisplayProps> = ({
 }) => {
   const [viewMode, setViewMode] = useState<'raw' | 'formatted'>('raw');
 
+  // Function to determine if the response is HTML
+  const isHtmlResponse = (data: any): boolean => {
+    if (typeof data !== 'string') return false;
+    return data.trim().startsWith('<!DOCTYPE html>') || 
+           data.trim().startsWith('<html') || 
+           (rawInfo.headers && 
+            rawInfo.headers['content-type'] && 
+            rawInfo.headers['content-type'].includes('text/html'));
+  };
+
   // A function to detect if the response follows OData format
   const isODataResponse = (data: any): boolean => {
     return (
@@ -132,6 +142,33 @@ const ApiResponseDisplay: React.FC<ApiResponseDisplayProps> = ({
     );
   };
 
+  // Function to render HTML response
+  const renderHtmlResponse = (htmlContent: string) => {
+    return (
+      <div>
+        <div className="text-sm text-muted-foreground mb-2">
+          <span className="font-medium">HTML Response:</span> The API returned HTML instead of JSON
+        </div>
+        <Alert className="mb-4 border-amber-300 bg-amber-50 text-amber-800">
+          <InfoIcon className="h-4 w-4" />
+          <AlertTitle>HTML Response Detected</AlertTitle>
+          <AlertDescription>
+            <p>The server returned HTML instead of JSON data. This may indicate:</p>
+            <ul className="list-disc pl-5 mt-1">
+              <li>An authentication or authorization issue</li>
+              <li>The API endpoint is not valid</li>
+              <li>The endpoint doesn't support the JSON format</li>
+              <li>You're being redirected to a login page</li>
+            </ul>
+          </AlertDescription>
+        </Alert>
+        <div className="bg-slate-100 p-4 rounded-md max-h-[300px] overflow-auto text-xs">
+          <pre className="whitespace-pre-wrap">{htmlContent}</pre>
+        </div>
+      </div>
+    );
+  };
+
   // Display the original, unmodified response to ensure we see the exact API output
   return (
     <div className="rounded-lg border p-6 bg-card text-card-foreground shadow-sm space-y-4">
@@ -156,7 +193,7 @@ const ApiResponseDisplay: React.FC<ApiResponseDisplayProps> = ({
                 </DialogHeader>
                 <div className="bg-muted p-4 rounded-md">
                   <pre className="text-sm overflow-auto whitespace-pre-wrap">
-                    {JSON.stringify(response, null, 2)}
+                    {typeof response === 'string' ? response : JSON.stringify(response, null, 2)}
                   </pre>
                 </div>
               </DialogContent>
@@ -191,9 +228,9 @@ const ApiResponseDisplay: React.FC<ApiResponseDisplayProps> = ({
           <AlertDescription>
             <p>SAP APIs typically don't support CORS for browser requests. The proxy server helps bypass this limitation.</p>
             <ul className="list-disc pl-5 mt-1">
-              <li>Direct browser access (<code>https://my418390-api.s4hana.cloud.sap/...</code>) may work in your browser because you're authenticated</li>
+              <li>Direct browser access (<code>https://my418390-api.s4hana.cloud.sap/...</code>) may not work due to CORS restrictions</li>
               <li>Our app requires the proxy server for most SAP API calls</li>
-              <li>If direct calls work for you, try turning OFF the "Use Proxy Server" option</li>
+              <li>If you get HTML responses, check if you need authentication or if the URL is correct</li>
             </ul>
           </AlertDescription>
         </Alert>
@@ -211,9 +248,11 @@ const ApiResponseDisplay: React.FC<ApiResponseDisplayProps> = ({
                 <span className="font-medium">Raw Response:</span> Showing exactly what was returned by the API
               </div>
               <pre className="text-sm overflow-auto max-h-[400px] whitespace-pre-wrap bg-slate-100 p-4 rounded-md">
-                {JSON.stringify(response, null, 2)}
+                {typeof response === 'string' ? response : JSON.stringify(response, null, 2)}
               </pre>
             </div>
+          ) : isHtmlResponse(response) ? (
+            renderHtmlResponse(response)
           ) : isODataResponse(response) ? (
             <div>
               {/* Display metadata if available */}

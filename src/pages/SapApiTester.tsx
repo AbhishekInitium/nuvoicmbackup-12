@@ -71,48 +71,49 @@ const SapApiTester = () => {
         }
       }
       
-      // Prepare the URL
+      // Prepare the URL and request config
       let url = data.endpoint;
+      let directRequest = !data.usesProxy;
       
-      // Handle direct URLs vs proxy URLs
-      if (data.usesProxy) {
-        // Check if the endpoint is already a full URL
-        const isFullUrl = url.match(/^https?:\/\//);
-        
-        if (isFullUrl) {
-          // Use the targetUrl approach for full URLs
-          url = `/api/sap?targetUrl=${encodeURIComponent(url)}`;
-          console.log('Using proxy with full URL:', url);
-        } else {
-          // For paths, add the /api/sap prefix
-          url = `/api/sap${url.startsWith('/') ? '' : '/'}${url}`;
-          console.log('Using proxy with path:', url);
-        }
-      } else {
-        // Direct request to SAP without proxy
-        // Make sure the URL is absolute
-        if (!url.match(/^https?:\/\//)) {
-          url = `https://my418390-api.s4hana.cloud.sap${url.startsWith('/') ? '' : '/'}${url}`;
-        }
-        console.log('Making direct request (no proxy) to:', url);
-      }
-      
-      // Build request config
-      const config: AxiosRequestConfig = {
-        method: data.method,
-        url,
-        headers,
-        params,
-        data: data.method !== 'GET' ? body : undefined,
-        // Add a proper timeout to avoid long-running requests
-        timeout: 30000
-      };
-      
-      // Add Basic Auth if needed
+      // Handle authentication if needed
       if (data.useAuth && data.username && data.password) {
         const credentials = `${data.username}:${data.password}`;
         const base64Credentials = btoa(credentials);
-        config.headers.Authorization = `Basic ${base64Credentials}`;
+        headers.Authorization = `Basic ${base64Credentials}`;
+      }
+      
+      // Configure the request
+      const config: AxiosRequestConfig = {
+        method: data.method,
+        headers,
+        params,
+        data: data.method !== 'GET' ? body : undefined,
+        timeout: 30000,
+      };
+      
+      // If using proxy, route through our proxy server, otherwise make direct request
+      if (data.usesProxy) {
+        // Check if the endpoint is a full URL or just a path
+        const isFullUrl = url.match(/^https?:\/\//);
+        
+        if (isFullUrl) {
+          // For full URLs, use the new proxy endpoint with targetUrl parameter
+          console.log('Using proxy with full URL:', url);
+          config.url = `/api/proxy?targetUrl=${encodeURIComponent(url)}`;
+        } else {
+          // For paths, use the legacy /api/sap endpoint
+          console.log('Using legacy proxy with path:', url);
+          // Make sure url starts with a slash if it doesn't already
+          if (!url.startsWith('/')) url = '/' + url;
+          config.url = `/api/sap${url}`;
+        }
+      } else {
+        // Direct request - ensure URL is absolute
+        if (!url.match(/^https?:\/\//)) {
+          url = `https://my418390-api.s4hana.cloud.sap${url.startsWith('/') ? '' : '/'}${url}`;
+        }
+        console.log('Making direct request to:', url);
+        config.url = url;
       }
       
       console.log('Request config:', {
@@ -120,19 +121,18 @@ const SapApiTester = () => {
         url: config.url,
         headers: config.headers,
         params: config.params,
-        // Don't log full body, but log its presence
         hasBody: config.data !== undefined
       });
       
       // Make the request
       const response = await axios(config);
       
-      // Log important parts of the response for debugging
+      // Log response details
       console.log('Response status:', response.status);
       console.log('Response headers:', response.headers);
       console.log('Response data type:', typeof response.data);
       
-      // Store the raw response data without any processing
+      // Store the response data
       setResponse(response.data);
       setRawResponseInfo({
         status: response.status,
@@ -153,7 +153,7 @@ const SapApiTester = () => {
         const axiosError = err as AxiosError;
         let errorMessage = `Error ${axiosError.response?.status || ''}: ${axiosError.message}`;
         
-        // Add more context for network errors
+        // Add context for different error types
         if (axiosError.message === 'Network Error') {
           errorMessage += " - This could be due to CORS restrictions, proxy server not running, or the endpoint being unreachable";
           errorMessage += "\n\nConsider trying without the proxy option for direct SAP endpoints that support CORS.";

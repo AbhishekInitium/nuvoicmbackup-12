@@ -9,8 +9,8 @@ import { SAP_CONFIG } from '@/config/sapConfig';
  */
 
 // Base URL for API - configuring the proxy correctly
-export const S4_API_BASE_URL = '/api/sap';
-export const SAP_API_URL = '/api/sap';
+export const S4_API_BASE_URL = '/api/proxy';
+export const SAP_API_URL = 'https://my418390-api.s4hana.cloud.sap';
 
 // Timeout for API requests in milliseconds (15 seconds - increased to handle slower connections)
 const API_TIMEOUT = 15000;
@@ -19,7 +19,8 @@ const API_TIMEOUT = 15000;
  * Create full API URL for endpoints
  */
 export const getS4Url = (service: string, entity: string): string => {
-  return `${S4_API_BASE_URL}${SAP_CONFIG.s4hana.apiBasePath}/${service}/${entity}`;
+  const targetUrl = `${SAP_API_URL}${SAP_CONFIG.s4hana.apiBasePath}/${service}/${entity}`;
+  return `${S4_API_BASE_URL}?targetUrl=${encodeURIComponent(targetUrl)}`;
 };
 
 /**
@@ -34,8 +35,22 @@ export const s4Request = async <T>(
   try {
     console.log(`Making ${method} request to: ${url}`);
     
-    // Create the full URL to ensure we're correctly targeting the SAP system
-    const fullUrl = url.startsWith('http') ? url : `${S4_API_BASE_URL}${url.startsWith('/') ? '' : '/'}${url}`;
+    // Add the proxy support for all URLs
+    let fullUrl = url;
+    
+    // If the URL is not already a full proxy URL with targetUrl parameter
+    if (!url.includes('/api/proxy?targetUrl=')) {
+      // If the URL is a full URL (starts with http), use it with the proxy
+      if (url.startsWith('http')) {
+        fullUrl = `${S4_API_BASE_URL}?targetUrl=${encodeURIComponent(url)}`;
+      } 
+      // If it's a relative URL, prepend the SAP API URL
+      else {
+        const targetUrl = `${SAP_API_URL}${url.startsWith('/') ? '' : '/'}${url}`;
+        fullUrl = `${S4_API_BASE_URL}?targetUrl=${encodeURIComponent(targetUrl)}`;
+      }
+    }
+    
     console.log('Full URL for request:', fullUrl);
     
     // Get the authenticated request config
@@ -66,6 +81,19 @@ export const s4Request = async <T>(
       // Log a small preview of the response data to debug
       if (typeof response.data === 'object') {
         console.log('Response data preview:', JSON.stringify(response.data).substring(0, 200) + '...');
+      } else if (typeof response.data === 'string') {
+        // Check if the response is HTML (sometimes the proxy returns HTML even with right headers)
+        if (response.data.trim().startsWith('<!DOCTYPE html>') || response.data.trim().startsWith('<html')) {
+          console.error('Received HTML response instead of JSON');
+          throw new Error('Received HTML response instead of JSON. This may indicate an authentication issue or invalid endpoint.');
+        }
+        // Try to parse string response as JSON
+        try {
+          return JSON.parse(response.data) as T;
+        } catch (e) {
+          console.log('Response is not JSON:', response.data.substring(0, 200) + '...');
+          return response.data as unknown as T;
+        }
       }
       return response.data as T;
     } else {

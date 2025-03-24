@@ -9,6 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { AlertCircle } from 'lucide-react';
 
 // Define form schema
 const apiFormSchema = z.object({
@@ -35,7 +36,7 @@ const ApiRequestForm: React.FC<ApiRequestFormProps> = ({ onSubmit, loading }) =>
     resolver: zodResolver(apiFormSchema),
     defaultValues: {
       method: 'GET',
-      endpoint: '/sap/opu/odata4/sap/api_supplierquotation_2/srvd_a2x/sap/supplierquotation/0001/SupplierQuotationItem/8000000005/10',
+      endpoint: '/sap/opu/odata4/sap/api_supplierquotation_2/srvd_a2x/sap/supplierquotation/0001/SupplierQuotation',
       usesProxy: true,
       username: 'S4HANA_BASIC',
       password: 'GGWYYnbPqPWmpcuCHt9zuht<NFnlkbQYJEHvkfLi',
@@ -45,6 +46,9 @@ const ApiRequestForm: React.FC<ApiRequestFormProps> = ({ onSubmit, loading }) =>
       body: ''
     }
   });
+
+  const watchUseProxy = form.watch('usesProxy');
+  const watchMethod = form.watch('method');
 
   return (
     <Form {...form}>
@@ -102,12 +106,17 @@ const ApiRequestForm: React.FC<ApiRequestFormProps> = ({ onSubmit, loading }) =>
               <FormItem className="flex-1">
                 <FormLabel>Endpoint</FormLabel>
                 <FormControl>
-                  <Input placeholder="/sap/opu/odata4/sap/api_supplierquotation_2/srvd_a2x/sap/supplierquotation/0001/SupplierQuotationItem/8000000005/10" {...field} />
+                  <Input 
+                    placeholder={watchUseProxy 
+                      ? "/sap/opu/odata4/sap/api_supplierquotation_2/srvd_a2x/sap/supplierquotation/0001" 
+                      : "https://my418390-api.s4hana.cloud.sap/sap/opu/odata4/sap/..."}
+                    {...field} 
+                  />
                 </FormControl>
                 <FormDescription>
-                  {form.watch('usesProxy') 
-                    ? "Enter the SAP API path or full URL" 
-                    : "Enter the full URL including https://"}
+                  {watchUseProxy 
+                    ? "Enter the SAP API path or full URL (e.g., /sap/opu/... or https://my418390-api.s4hana.cloud.sap/...)" 
+                    : "Enter the full URL including https:// (e.g., https://my418390-api.s4hana.cloud.sap/...)"}
                 </FormDescription>
               </FormItem>
             )}
@@ -125,7 +134,7 @@ const ApiRequestForm: React.FC<ApiRequestFormProps> = ({ onSubmit, loading }) =>
                   onCheckedChange={field.onChange}
                 />
               </FormControl>
-              <FormLabel>Use Authentication</FormLabel>
+              <FormLabel>Use Basic Authentication</FormLabel>
             </FormItem>
           )}
         />
@@ -194,29 +203,43 @@ const ApiRequestForm: React.FC<ApiRequestFormProps> = ({ onSubmit, loading }) =>
           )}
         />
         
-        <FormField
-          control={form.control}
-          name="body"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Request Body (JSON)</FormLabel>
-              <FormControl>
-                <Textarea
-                  placeholder='{ "property": "value" }'
-                  className="font-mono h-24"
-                  {...field}
-                />
-              </FormControl>
-              <FormDescription>
-                Only applicable for POST, PUT, and PATCH requests
-              </FormDescription>
-            </FormItem>
-          )}
-        />
+        {watchMethod !== 'GET' && (
+          <FormField
+            control={form.control}
+            name="body"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Request Body (JSON)</FormLabel>
+                <FormControl>
+                  <Textarea
+                    placeholder='{ "property": "value" }'
+                    className="font-mono h-24"
+                    {...field}
+                  />
+                </FormControl>
+                <FormDescription>
+                  Only applicable for POST, PUT, and PATCH requests
+                </FormDescription>
+              </FormItem>
+            )}
+          />
+        )}
         
         <Button type="submit" disabled={loading} className="w-full">
           {loading ? 'Sending Request...' : 'Send Request'}
         </Button>
+        
+        <div className="mt-4 text-sm text-muted-foreground">
+          <div className="flex items-center mb-2">
+            <AlertCircle className="h-4 w-4 mr-2" />
+            <span className="font-semibold">Important:</span>
+          </div>
+          <ul className="list-disc pl-5 space-y-1">
+            <li>For SAP OData services, try endpoints like <code>/sap/opu/odata4/sap/api_business_partner/default/sap/api_business_partner/0001/BusinessPartner</code></li>
+            <li>All JSON must be properly formatted with double quotes</li>
+            <li>The proxy server must be running to use the proxy option</li>
+          </ul>
+        </div>
       </form>
     </Form>
   );
