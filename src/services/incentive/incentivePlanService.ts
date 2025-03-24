@@ -7,10 +7,18 @@ import { IncentivePlan } from '@/types/incentiveTypes';
  * Service for interacting with incentive plan data from S/4 HANA
  */
 
+export type IncentiveStatus = 'DRAFT' | 'APPROVED';
+
+export interface IncentivePlanWithStatus extends IncentivePlan {
+  status: IncentiveStatus;
+  lastExecutionDate?: string;
+  hasBeenExecuted?: boolean;
+}
+
 /**
  * Get incentive plans from S/4 HANA or HANA Cloud
  */
-export const getIncentivePlans = async (): Promise<IncentivePlan[]> => {
+export const getIncentivePlans = async (statusFilter?: IncentiveStatus): Promise<IncentivePlanWithStatus[]> => {
   try {
     // In production, this would call your custom OData service or CDS view
     // For now, we'll simulate a response based on the default plan structure
@@ -18,7 +26,10 @@ export const getIncentivePlans = async (): Promise<IncentivePlan[]> => {
       'GET',
       `${S4_API_BASE_URL}/zincentivenovo/IncentivePlan`,
       undefined,
-      { '$expand': 'CommissionStructure,MeasurementRules,CreditRules,CustomRules' }
+      { 
+        '$expand': 'CommissionStructure,MeasurementRules,CreditRules,CustomRules',
+        '$filter': statusFilter ? `Status eq '${statusFilter}'` : undefined
+      }
     );
     
     // Transform response to match IncentivePlan interface
@@ -30,6 +41,9 @@ export const getIncentivePlans = async (): Promise<IncentivePlan[]> => {
       currency: item.Currency,
       revenueBase: item.RevenueBase,
       participants: item.Participants.split(','),
+      status: item.Status || 'DRAFT',
+      lastExecutionDate: item.LastExecutionDate,
+      hasBeenExecuted: item.HasBeenExecuted || false,
       commissionStructure: {
         tiers: item.CommissionStructure.map((tier: any) => ({
           from: tier.FromAmount,
@@ -82,7 +96,7 @@ export const getIncentivePlans = async (): Promise<IncentivePlan[]> => {
 /**
  * Save an incentive plan to S/4 HANA or HANA Cloud
  */
-export const saveIncentivePlan = async (plan: IncentivePlan): Promise<any> => {
+export const saveIncentivePlan = async (plan: IncentivePlanWithStatus): Promise<any> => {
   try {
     // Transform plan to match S/4 HANA entity structure
     const transformedPlan = {
@@ -93,6 +107,7 @@ export const saveIncentivePlan = async (plan: IncentivePlan): Promise<any> => {
       Currency: plan.currency,
       RevenueBase: plan.revenueBase,
       Participants: plan.participants.join(','),
+      Status: plan.status || 'DRAFT',
       // Additional transformations would be done here based on your actual entity model
     };
     
@@ -104,6 +119,46 @@ export const saveIncentivePlan = async (plan: IncentivePlan): Promise<any> => {
     );
   } catch (error) {
     console.error('Error saving incentive plan:', error);
+    throw error;
+  }
+};
+
+/**
+ * Update the status of an incentive plan
+ */
+export const updateIncentiveStatus = async (
+  planId: string, 
+  status: IncentiveStatus
+): Promise<any> => {
+  try {
+    return s4Request<any>(
+      'PATCH',
+      `${S4_API_BASE_URL}/zincentivenovo/IncentivePlan(${planId})`,
+      {
+        Status: status
+      }
+    );
+  } catch (error) {
+    console.error('Error updating incentive plan status:', error);
+    throw error;
+  }
+};
+
+/**
+ * Mark a plan as executed
+ */
+export const markPlanAsExecuted = async (planId: string): Promise<any> => {
+  try {
+    return s4Request<any>(
+      'PATCH',
+      `${S4_API_BASE_URL}/zincentivenovo/IncentivePlan(${planId})`,
+      {
+        HasBeenExecuted: true,
+        LastExecutionDate: new Date().toISOString()
+      }
+    );
+  } catch (error) {
+    console.error('Error marking plan as executed:', error);
     throw error;
   }
 };

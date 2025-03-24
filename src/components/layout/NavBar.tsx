@@ -65,7 +65,7 @@ const NavBar = () => {
               <img 
                 src="/lovable-uploads/8fbbb301-31ad-45ec-ac54-b296904f23bd.png" 
                 alt="Nuvo ICM Logo" 
-                className="h-8 mr-2" 
+                className="h-12 mr-2" 
               />
             </Link>
           </div>

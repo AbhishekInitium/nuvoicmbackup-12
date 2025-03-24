@@ -88,16 +88,6 @@ const Index = () => {
               </Link>
             ))}
           </div>
-          
-          <div className="mt-16 text-center">
-            <Link 
-              to="/manager/incentive-designer"
-              onClick={() => setActivePortal('manager')}
-              className="inline-flex items-center justify-center bg-app-blue text-white font-medium px-6 py-3 rounded-lg shadow-sm hover:bg-app-blue-dark transition-colors"
-            >
-              Go to Incentive Plan Designer <ArrowRight className="ml-2 h-4 w-4" />
-            </Link>
-          </div>
         </Container>
       </div>
     </div>

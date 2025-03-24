@@ -1,13 +1,14 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Settings, Users, BadgeDollarSign, Target, PlusCircle, ArrowRight } from 'lucide-react';
+import { Settings, Users, BadgeDollarSign, Target, PlusCircle, ArrowRight, Play } from 'lucide-react';
 import NavBar from '@/components/layout/NavBar';
 import Container from '@/components/layout/Container';
 import GlassCard from '@/components/ui-custom/GlassCard';
 import ActionButton from '@/components/ui-custom/ActionButton';
 import { TeamPerformanceChart } from '@/components/manager/TeamPerformanceChart';
 import { IncentivePlansList } from '@/components/manager/IncentivePlansList';
+import { Button } from '@/components/ui/button';
 
 const ManagerPortal = () => {
   return (
@@ -25,7 +26,7 @@ const ManagerPortal = () => {
           </header>
           
           {/* Quick Actions */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+          <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-8">
             <Link to="/manager/incentive-designer">
               <GlassCard className="bg-gradient-to-br from-blue-50 to-indigo-50 hover:shadow-md transition-all h-full">
                 <div className="p-6 flex flex-col h-full">
@@ -48,7 +49,7 @@ const ManagerPortal = () => {
                     <Users className="h-5 w-5 text-app-green mr-2" />
                     <h3 className="font-medium">Manage Team</h3>
                   </div>
-                  <p className="text-sm text-app-gray-600 mb-4">Assign plans and review performance</p>
+                  <p className="text-sm text-app-gray-600 mb-4">Upload hierarchy changes and review team structure</p>
                   <div className="mt-auto">
                     <span className="text-sm text-app-green flex items-center">View team <ArrowRight className="ml-1 h-4 w-4" /></span>
                   </div>
@@ -56,16 +57,31 @@ const ManagerPortal = () => {
               </GlassCard>
             </Link>
             
-            <Link to="/manager/analytics">
+            <Link to="/manager/commission-execution">
               <GlassCard className="bg-gradient-to-br from-purple-50 to-fuchsia-50 hover:shadow-md transition-all h-full">
                 <div className="p-6 flex flex-col h-full">
                   <div className="flex items-center mb-3">
-                    <BadgeDollarSign className="h-5 w-5 text-app-purple mr-2" />
+                    <Play className="h-5 w-5 text-app-purple mr-2" />
+                    <h3 className="font-medium">Execute Commission</h3>
+                  </div>
+                  <p className="text-sm text-app-gray-600 mb-4">Run commission calculations for approved plans</p>
+                  <div className="mt-auto">
+                    <span className="text-sm text-app-purple flex items-center">Run calculation <ArrowRight className="ml-1 h-4 w-4" /></span>
+                  </div>
+                </div>
+              </GlassCard>
+            </Link>
+            
+            <Link to="/manager/analytics">
+              <GlassCard className="bg-gradient-to-br from-amber-50 to-orange-50 hover:shadow-md transition-all h-full">
+                <div className="p-6 flex flex-col h-full">
+                  <div className="flex items-center mb-3">
+                    <BadgeDollarSign className="h-5 w-5 text-app-orange mr-2" />
                     <h3 className="font-medium">Commission Analytics</h3>
                   </div>
                   <p className="text-sm text-app-gray-600 mb-4">View detailed analytics and forecasts</p>
                   <div className="mt-auto">
-                    <span className="text-sm text-app-purple flex items-center">View reports <ArrowRight className="ml-1 h-4 w-4" /></span>
+                    <span className="text-sm text-app-orange flex items-center">View reports <ArrowRight className="ml-1 h-4 w-4" /></span>
                   </div>
                 </div>
               </GlassCard>
@@ -216,6 +232,14 @@ const ManagerPortal = () => {
                   </div>
                 </div>
               </GlassCard>
+              
+              <div className="flex justify-center">
+                <Link to="/manager/commission-execution">
+                  <Button className="bg-app-blue hover:bg-app-blue-dark">
+                    <Play size={18} className="mr-2" /> Commission Execution Engine
+                  </Button>
+                </Link>
+              </div>
             </div>
           </div>
         </Container>

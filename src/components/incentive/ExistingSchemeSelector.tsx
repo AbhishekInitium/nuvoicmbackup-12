@@ -1,15 +1,16 @@
 
-import React from 'react';
-import { Copy } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { Copy, Loader2 } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import ActionButton from '../ui-custom/ActionButton';
 import { MOCK_SCHEMES } from '@/constants/incentiveConstants';
 import { useToast } from "@/hooks/use-toast";
+import { IncentivePlanWithStatus, getIncentivePlans } from '@/services/incentive/incentivePlanService';
 
 interface ExistingSchemeSelectorProps {
   open: boolean;
   setOpen: (open: boolean) => void;
-  onSchemeCopy: (schemeId: number) => void;
+  onSchemeCopy: (scheme: IncentivePlanWithStatus) => void;
 }
 
 const ExistingSchemeSelector: React.FC<ExistingSchemeSelectorProps> = ({ 
@@ -18,21 +19,63 @@ const ExistingSchemeSelector: React.FC<ExistingSchemeSelectorProps> = ({
   onSchemeCopy 
 }) => {
   const { toast } = useToast();
+  const [loading, setLoading] = useState(false);
+  const [schemes, setSchemes] = useState<IncentivePlanWithStatus[]>([]);
+  const [error, setError] = useState<string | null>(null);
 
-  const copyExistingScheme = (schemeId: number) => {
-    // In a real app, this would fetch the scheme from the backend
-    const selectedScheme = MOCK_SCHEMES.find(scheme => scheme.id === schemeId);
-    
-    if (selectedScheme) {
-      toast({
-        title: "Scheme Copied",
-        description: `${selectedScheme.name} has been loaded as a template.`,
-        variant: "default"
-      });
-      
-      onSchemeCopy(schemeId);
-      setOpen(false);
+  useEffect(() => {
+    if (open) {
+      loadIncentiveSchemes();
     }
+  }, [open]);
+
+  const loadIncentiveSchemes = async () => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const plans = await getIncentivePlans();
+      setSchemes(plans);
+    } catch (err) {
+      console.error('Error loading incentive schemes:', err);
+      setError('Failed to load schemes. Please try again later.');
+      
+      // Fall back to mock schemes if API fails
+      setSchemes(MOCK_SCHEMES.map(mock => ({
+        name: mock.name,
+        description: mock.description,
+        status: 'APPROVED' as const,
+        // Add other required properties with dummy values
+        effectiveStart: '2023-01-01',
+        effectiveEnd: '2023-12-31',
+        currency: 'USD',
+        revenueBase: 'salesOrders',
+        participants: ['ALL'],
+        commissionStructure: { tiers: [] },
+        measurementRules: { 
+          primaryMetric: 'Net Revenue', 
+          minQualification: 0,
+          adjustments: [],
+          exclusions: []
+        },
+        creditRules: { levels: [] },
+        customRules: []
+      })));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const copyExistingScheme = (scheme: IncentivePlanWithStatus) => {
+    onSchemeCopy(scheme);
+    
+    toast({
+      title: "Scheme Copied",
+      description: `${scheme.name} has been loaded as a template.`,
+      variant: "default"
+    });
+    
+    setOpen(false);
   };
 
   return (
@@ -52,18 +95,42 @@ const ExistingSchemeSelector: React.FC<ExistingSchemeSelectorProps> = ({
           <p className="text-sm text-app-gray-500">
             Choose an existing scheme to use as a template
           </p>
-          <div className="max-h-64 overflow-y-auto space-y-2">
-            {MOCK_SCHEMES.map((scheme) => (
-              <div 
-                key={scheme.id}
-                className="p-3 border rounded-lg hover:bg-app-gray-50 cursor-pointer transition-colors"
-                onClick={() => copyExistingScheme(scheme.id)}
-              >
-                <h4 className="font-medium">{scheme.name}</h4>
-                <p className="text-sm text-app-gray-500 mt-1">{scheme.description}</p>
-              </div>
-            ))}
-          </div>
+          
+          {loading ? (
+            <div className="flex justify-center py-8">
+              <Loader2 className="h-8 w-8 text-app-gray-400 animate-spin" />
+            </div>
+          ) : error ? (
+            <div className="p-4 bg-red-50 text-red-600 rounded-md text-sm">
+              {error}
+            </div>
+          ) : schemes.length === 0 ? (
+            <div className="p-4 bg-app-gray-50 text-app-gray-600 rounded-md text-sm text-center">
+              No schemes found. Create your first scheme.
+            </div>
+          ) : (
+            <div className="max-h-64 overflow-y-auto space-y-2">
+              {schemes.map((scheme, index) => (
+                <div 
+                  key={index}
+                  className="p-3 border rounded-lg hover:bg-app-gray-50 cursor-pointer transition-colors"
+                  onClick={() => copyExistingScheme(scheme)}
+                >
+                  <div className="flex justify-between items-center">
+                    <h4 className="font-medium">{scheme.name}</h4>
+                    <span className={`text-xs px-2 py-1 rounded-full ${
+                      scheme.status === 'APPROVED' 
+                        ? 'bg-green-100 text-green-800' 
+                        : 'bg-amber-100 text-amber-800'
+                    }`}>
+                      {scheme.status}
+                    </span>
+                  </div>
+                  <p className="text-sm text-app-gray-500 mt-1">{scheme.description}</p>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </PopoverContent>
     </Popover>

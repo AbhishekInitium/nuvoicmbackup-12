@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Play, AlertTriangle, Calendar, Truck, Monitor } from 'lucide-react';
+import { Play, AlertTriangle, Calendar, Truck, Monitor, Shield, Info } from 'lucide-react';
 import NavBar from '@/components/layout/NavBar';
 import Container from '@/components/layout/Container';
 import SectionPanel from '@/components/ui-custom/SectionPanel';
@@ -25,11 +25,17 @@ import {
   CommissionExecutionParams,
   CommissionExecutionResult
 } from '@/services/incentive/commissionExecutionService';
+import { 
+  IncentivePlanWithStatus, 
+  getIncentivePlans, 
+  markPlanAsExecuted 
+} from '@/services/incentive/incentivePlanService';
 
 const CommissionExecutionEngine: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { incentivePlans, loadingPlans } = useS4HanaData();
+  const [incentivePlans, setIncentivePlans] = useState<IncentivePlanWithStatus[]>([]);
+  const [loadingPlans, setLoadingPlans] = useState(true);
   
   const [executionMode, setExecutionMode] = useState<ExecutionMode>('SIMULATE');
   const [selectedPlanId, setSelectedPlanId] = useState<string>('');
@@ -37,7 +43,29 @@ const CommissionExecutionEngine: React.FC = () => {
   const [description, setDescription] = useState<string>('');
   const [isExecuting, setIsExecuting] = useState<boolean>(false);
   const [executionResult, setExecutionResult] = useState<CommissionExecutionResult | null>(null);
-  const [selectedPlan, setSelectedPlan] = useState<IncentivePlan | null>(null);
+  const [selectedPlan, setSelectedPlan] = useState<IncentivePlanWithStatus | null>(null);
+  
+  useEffect(() => {
+    loadApprovedPlans();
+  }, []);
+
+  const loadApprovedPlans = async () => {
+    setLoadingPlans(true);
+    try {
+      // Only load APPROVED plans
+      const plans = await getIncentivePlans('APPROVED');
+      setIncentivePlans(plans);
+    } catch (error) {
+      console.error('Error loading approved incentive plans:', error);
+      toast({
+        title: "Error Loading Plans",
+        description: "There was an error loading the approved incentive plans.",
+        variant: "destructive"
+      });
+    } finally {
+      setLoadingPlans(false);
+    }
+  };
   
   useEffect(() => {
     if (incentivePlans && selectedPlanId) {
@@ -57,6 +85,16 @@ const CommissionExecutionEngine: React.FC = () => {
       });
       return;
     }
+
+    // Check if the plan has already been executed in production
+    if (executionMode === 'PRODUCTION' && selectedPlan.hasBeenExecuted) {
+      toast({
+        title: "Plan Already Executed",
+        description: "This plan has already been executed in production mode and cannot be executed again.",
+        variant: "destructive"
+      });
+      return;
+    }
     
     try {
       setIsExecuting(true);
@@ -65,8 +103,8 @@ const CommissionExecutionEngine: React.FC = () => {
         planId: selectedPlan.name,
         executionMode,
         executionDate,
-        periodStart: selectedPlan.effectiveStart, // Get date from selected plan
-        periodEnd: selectedPlan.effectiveEnd, // Get date from selected plan
+        periodStart: selectedPlan.effectiveStart,
+        periodEnd: selectedPlan.effectiveEnd,
         participants: selectedPlan.participants,
         description
       };
@@ -74,6 +112,28 @@ const CommissionExecutionEngine: React.FC = () => {
       const result = await executeCommissionCalculation(selectedPlan, params);
       
       setExecutionResult(result);
+      
+      // If this was a production run, mark the plan as executed
+      if (executionMode === 'PRODUCTION') {
+        await markPlanAsExecuted(selectedPlan.name);
+        
+        // Update the local state to reflect the change
+        setIncentivePlans(prevPlans => 
+          prevPlans.map(plan => 
+            plan.name === selectedPlan.name 
+              ? { ...plan, hasBeenExecuted: true, lastExecutionDate: new Date().toISOString() } 
+              : plan
+          )
+        );
+        
+        if (selectedPlan) {
+          setSelectedPlan({
+            ...selectedPlan,
+            hasBeenExecuted: true,
+            lastExecutionDate: new Date().toISOString()
+          });
+        }
+      }
       
       toast({
         title: `${executionMode} Execution Complete`,
@@ -120,20 +180,33 @@ const CommissionExecutionEngine: React.FC = () => {
                       onValueChange={setSelectedPlanId}
                     >
                       <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Select an incentive plan" />
+                        <SelectValue placeholder="Select an approved incentive plan" />
                       </SelectTrigger>
                       <SelectContent>
                         {loadingPlans ? (
-                          <SelectItem value="loading" disabled>Loading plans...</SelectItem>
+                          <SelectItem value="loading" disabled>Loading approved plans...</SelectItem>
+                        ) : incentivePlans.length === 0 ? (
+                          <SelectItem value="none" disabled>No approved plans available</SelectItem>
                         ) : (
-                          incentivePlans?.map((plan, index) => (
-                            <SelectItem key={index} value={plan.name}>
-                              {plan.name}
+                          incentivePlans.map((plan, index) => (
+                            <SelectItem 
+                              key={index} 
+                              value={plan.name}
+                              disabled={plan.hasBeenExecuted}
+                            >
+                              {plan.name} {plan.hasBeenExecuted ? "(Already Executed)" : ""}
                             </SelectItem>
                           ))
                         )}
                       </SelectContent>
                     </Select>
+                    
+                    {incentivePlans.length === 0 && !loadingPlans && (
+                      <div className="mt-2 text-sm text-amber-600 flex items-center">
+                        <Info size={16} className="mr-1" />
+                        No approved plans available. Plans must be approved by Finance before execution.
+                      </div>
+                    )}
                   </div>
                   
                   <div>
@@ -152,7 +225,11 @@ const CommissionExecutionEngine: React.FC = () => {
                         </Label>
                       </div>
                       <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="PRODUCTION" id="production" />
+                        <RadioGroupItem 
+                          value="PRODUCTION" 
+                          id="production" 
+                          disabled={selectedPlan?.hasBeenExecuted}
+                        />
                         <Label htmlFor="production" className="flex items-center">
                           <Truck size={16} className="mr-1" /> Production
                         </Label>
@@ -163,6 +240,14 @@ const CommissionExecutionEngine: React.FC = () => {
                         ? 'Simulation mode allows testing without finalizing results'
                         : 'Production mode will generate final, official results for payment'}
                     </p>
+                    
+                    {selectedPlan?.hasBeenExecuted && (
+                      <div className="mt-2 p-2 bg-amber-50 border border-amber-200 rounded text-sm text-amber-800">
+                        This plan has already been executed in production mode on{' '}
+                        {new Date(selectedPlan.lastExecutionDate || '').toLocaleDateString()}
+                        {' '}and cannot be executed again.
+                      </div>
+                    )}
                   </div>
                   
                   <div>
@@ -184,8 +269,11 @@ const CommissionExecutionEngine: React.FC = () => {
                   
                   {selectedPlan && (
                     <div className="p-4 bg-app-gray-50 rounded-md">
-                      <h3 className="text-sm font-medium text-app-gray-700 mb-2">Plan Period</h3>
-                      <div className="flex justify-between text-sm">
+                      <div className="flex items-center mb-2">
+                        <Shield className="h-4 w-4 text-app-blue mr-2" />
+                        <h3 className="text-sm font-medium text-app-gray-700">Plan Details</h3>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 text-sm">
                         <div>
                           <span className="font-medium">Start: </span>
                           {new Date(selectedPlan.effectiveStart).toLocaleDateString()}
@@ -193,6 +281,12 @@ const CommissionExecutionEngine: React.FC = () => {
                         <div>
                           <span className="font-medium">End: </span>
                           {new Date(selectedPlan.effectiveEnd).toLocaleDateString()}
+                        </div>
+                        <div>
+                          <span className="font-medium">Status: </span>
+                          <span className={selectedPlan.status === 'APPROVED' ? 'text-green-600' : 'text-amber-600'}>
+                            {selectedPlan.status}
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -231,7 +325,11 @@ const CommissionExecutionEngine: React.FC = () => {
                       className="w-full"
                       size="lg"
                       onClick={executeCommission}
-                      disabled={isExecuting || !selectedPlanId}
+                      disabled={
+                        isExecuting || 
+                        !selectedPlanId || 
+                        (executionMode === 'PRODUCTION' && selectedPlan?.hasBeenExecuted)
+                      }
                     >
                       <Play size={18} className="mr-2" />
                       {isExecuting ? 'Executing...' : `Execute ${executionMode === 'PRODUCTION' ? 'Production Run' : 'Simulation'}`}
@@ -241,9 +339,9 @@ const CommissionExecutionEngine: React.FC = () => {
                       <div className="mt-4 text-center">
                         <Button
                           variant="outline"
-                          onClick={() => navigate('/manager/incentive-designer')}
+                          onClick={() => navigate('/manager')}
                         >
-                          Back to Plan Designer
+                          Back to Dashboard
                         </Button>
                       </div>
                     )}
@@ -363,8 +461,13 @@ const CommissionExecutionEngine: React.FC = () => {
                         Back to Parameters
                       </Button>
                       
-                      {executionMode === 'SIMULATE' && (
-                        <Button onClick={() => setExecutionMode('PRODUCTION')}>
+                      {executionMode === 'SIMULATE' && selectedPlan && !selectedPlan.hasBeenExecuted && (
+                        <Button 
+                          onClick={() => {
+                            setExecutionMode('PRODUCTION');
+                            setExecutionResult(null);
+                          }}
+                        >
                           Run in Production Mode
                         </Button>
                       )}
@@ -379,7 +482,7 @@ const CommissionExecutionEngine: React.FC = () => {
                     </div>
                     <h3 className="text-lg font-medium text-app-gray-900 mb-2">No Execution Results</h3>
                     <p className="text-app-gray-500 max-w-md">
-                      Select an incentive plan and execution parameters, then click the Execute button to run the commission calculation.
+                      Select an approved incentive plan and execution parameters, then click the Execute button to run the commission calculation.
                     </p>
                   </div>
                 </div>
