@@ -129,7 +129,7 @@ const SapApiTester = () => {
       // Prepare the URL and request config
       let url = data.endpoint;
       
-      // Handle authentication if needed - IMPORTANT CHANGE: No encoding
+      // Handle authentication if needed - No encoding
       if (data.useAuth && data.username && data.password) {
         const credentials = `${data.username}:${data.password}`;
         // Use raw btoa without extra encoding
@@ -146,21 +146,32 @@ const SapApiTester = () => {
         timeout: 30000,
       };
       
-      // If using proxy, route through our proxy server, otherwise make direct request
+      // FIX: Improved proxy routing logic
       if (data.usesProxy) {
         // Check if the endpoint is a full URL or just a path
         const isFullUrl = url.match(/^https?:\/\//);
         
         if (isFullUrl) {
-          // For full URLs, use the new proxy endpoint with targetUrl parameter - IMPORTANT CHANGE: No encoding
+          // For full URLs, use the new proxy endpoint with targetUrl parameter
           console.log('Using proxy with full URL:', url);
           config.url = `/api/proxy?targetUrl=${url}`;
         } else {
-          // For paths, use the legacy /api/sap endpoint
-          console.log('Using legacy proxy with path:', url);
+          // For paths, ensure we're not duplicating /sap in the path
+          console.log('Using SAP proxy with path:', url);
+          
           // Make sure url starts with a slash if it doesn't already
-          if (!url.startsWith('/')) url = '/' + url;
-          config.url = `/api/sap${url}`;
+          if (!url.startsWith('/')) {
+            url = '/' + url;
+          }
+          
+          // Remove duplicate /sap if it exists at the beginning of the path
+          if (url.startsWith('/sap/')) {
+            config.url = `/api/sap${url}`;
+          } else {
+            config.url = `/api/sap/sap${url}`;
+          }
+          
+          console.log('Constructed URL:', config.url);
         }
       } else {
         // Direct request - ensure URL is absolute

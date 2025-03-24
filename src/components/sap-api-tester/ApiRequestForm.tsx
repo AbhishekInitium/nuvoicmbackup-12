@@ -44,7 +44,7 @@ const ApiRequestForm: React.FC<ApiRequestFormProps> = ({
     resolver: zodResolver(apiFormSchema),
     defaultValues: {
       method: 'GET',
-      endpoint: '/sap/opu/odata4/sap/api_supplierquotation_2/srvd_a2x/sap/supplierquotation/0001/SupplierQuotation',
+      endpoint: '/sap/opu/odata/sap/API_BUSINESS_PARTNER/A_BusinessPartner',
       usesProxy: true,
       username: 'S4HANA_BASIC',
       password: 'GGWYYnbPqPWmpcuCHt9zuht<NFnlkbQYJEHvkfLi',
