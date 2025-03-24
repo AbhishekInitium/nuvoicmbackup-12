@@ -1,11 +1,26 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import axios, { AxiosRequestConfig, AxiosError, AxiosResponse } from 'axios';
+import axios, { AxiosRequestConfig, AxiosError } from 'axios';
+import { Card } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Button } from '@/components/ui/button';
+import { Separator } from '@/components/ui/separator';
+import { Send, Save, Clock, ArrowRight } from 'lucide-react';
 import ApiRequestForm, { ApiFormValues } from '@/components/sap-api-tester/ApiRequestForm';
 import ApiResponseDisplay from '@/components/sap-api-tester/ApiResponseDisplay';
 import ApiHelpDialog from '@/components/sap-api-tester/ApiHelpDialog';
-import ApiTesterHeader from '@/components/sap-api-tester/ApiTesterHeader';
+import RequestHistory from '@/components/sap-api-tester/RequestHistory';
+import CollectionsSidebar from '@/components/sap-api-tester/CollectionsSidebar';
+
+type HistoryEntry = {
+  id: string;
+  method: string;
+  url: string;
+  timestamp: Date;
+  success: boolean;
+  requestData: ApiFormValues;
+};
 
 const SapApiTester = () => {
   const { toast } = useToast();
@@ -14,15 +29,55 @@ const SapApiTester = () => {
   const [error, setError] = useState<string | null>(null);
   const [showResponse, setShowResponse] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [activeTab, setActiveTab] = useState('params');
+  const [responseTab, setResponseTab] = useState('body');
+  const [requestHistory, setRequestHistory] = useState<HistoryEntry[]>([]);
   const [rawResponseInfo, setRawResponseInfo] = useState<{
     status?: number;
     statusText?: string;
     headers?: Record<string, string>;
+    time?: number;
   }>({});
+
+  // Load request history from localStorage on component mount
+  useEffect(() => {
+    const savedHistory = localStorage.getItem('api-request-history');
+    if (savedHistory) {
+      try {
+        const parsedHistory = JSON.parse(savedHistory);
+        setRequestHistory(parsedHistory);
+      } catch (e) {
+        console.error('Failed to parse request history:', e);
+      }
+    }
+  }, []);
+
+  // Save request history to localStorage
+  const saveToHistory = (entry: Omit<HistoryEntry, 'id'>) => {
+    const newEntry = {
+      ...entry,
+      id: Date.now().toString()
+    };
+    
+    const updatedHistory = [newEntry, ...requestHistory.slice(0, 19)]; // Keep last 20 entries
+    setRequestHistory(updatedHistory);
+    
+    try {
+      localStorage.setItem('api-request-history', JSON.stringify(updatedHistory));
+    } catch (e) {
+      console.error('Failed to save history to localStorage:', e);
+    }
+  };
+
+  const loadFromHistory = (entry: HistoryEntry) => {
+    handleSubmit(entry.requestData);
+  };
 
   const handleSubmit = async (data: ApiFormValues) => {
     setLoading(true);
     setError(null);
+    const startTime = performance.now();
     
     try {
       // Parse JSON strings
@@ -73,7 +128,6 @@ const SapApiTester = () => {
       
       // Prepare the URL and request config
       let url = data.endpoint;
-      let directRequest = !data.usesProxy;
       
       // Handle authentication if needed
       if (data.useAuth && data.username && data.password) {
@@ -126,6 +180,8 @@ const SapApiTester = () => {
       
       // Make the request
       const response = await axios(config);
+      const endTime = performance.now();
+      const requestTime = Math.round(endTime - startTime);
       
       // Log response details
       console.log('Response status:', response.status);
@@ -138,8 +194,18 @@ const SapApiTester = () => {
         status: response.status,
         statusText: response.statusText,
         headers: response.headers as Record<string, string>,
+        time: requestTime
       });
       setShowResponse(true);
+      
+      // Save to history
+      saveToHistory({
+        method: data.method,
+        url: data.endpoint,
+        timestamp: new Date(),
+        success: true,
+        requestData: data
+      });
       
       toast({
         title: 'API Request Successful',
@@ -147,6 +213,8 @@ const SapApiTester = () => {
       });
     } catch (err) {
       console.error('API Request Error:', err);
+      const endTime = performance.now();
+      const requestTime = Math.round(endTime - startTime);
       
       // Handle axios errors
       if (axios.isAxiosError(err)) {
@@ -161,6 +229,15 @@ const SapApiTester = () => {
         
         setError(errorMessage);
         
+        // Save failed request to history
+        saveToHistory({
+          method: data.method,
+          url: data.endpoint,
+          timestamp: new Date(),
+          success: false,
+          requestData: data
+        });
+        
         // Still show the error response if available
         if (axiosError.response?.data) {
           setResponse(axiosError.response.data);
@@ -168,6 +245,7 @@ const SapApiTester = () => {
             status: axiosError.response.status,
             statusText: axiosError.response.statusText,
             headers: axiosError.response.headers as Record<string, string>,
+            time: requestTime
           });
           setShowResponse(true);
         }
@@ -190,23 +268,64 @@ const SapApiTester = () => {
     }
   };
 
+  const toggleSidebar = () => {
+    setSidebarOpen(!sidebarOpen);
+  };
+
   return (
-    <div className="container mx-auto py-8">
-      <ApiTesterHeader onShowHelp={() => setShowHelp(true)} />
-      <ApiHelpDialog open={showHelp} onOpenChange={setShowHelp} />
+    <div className="flex h-screen overflow-hidden bg-gray-50">
+      {/* Sidebar */}
+      <div className={`border-r bg-white transition-all duration-300 ${sidebarOpen ? 'w-64' : 'w-0'}`}>
+        <CollectionsSidebar
+          isOpen={sidebarOpen}
+          history={requestHistory}
+          onSelectRequest={loadFromHistory}
+        />
+      </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <div className="space-y-6">
-          <ApiRequestForm onSubmit={handleSubmit} loading={loading} />
+      {/* Main content */}
+      <div className="flex-1 flex flex-col h-full overflow-hidden">
+        {/* Top navigation bar */}
+        <div className="flex items-center justify-between px-4 py-2 bg-white border-b">
+          <div className="flex items-center space-x-2">
+            <Button variant="ghost" size="sm" onClick={toggleSidebar}>
+              {sidebarOpen ? <ArrowRight className="h-4 w-4" /> : <ArrowRight className="h-4 w-4 rotate-180" />}
+            </Button>
+            <h1 className="text-xl font-bold">SAP API Tester</h1>
+          </div>
+          
+          <div className="flex items-center space-x-2">
+            <Button variant="outline" size="sm" onClick={() => setShowHelp(true)}>
+              Help
+            </Button>
+          </div>
         </div>
         
-        <ApiResponseDisplay 
-          response={response}
-          error={error}
-          showResponse={showResponse}
-          loading={loading}
-          rawInfo={rawResponseInfo}
-        />
+        {/* Main content area */}
+        <div className="flex-1 overflow-auto p-4 space-y-4">
+          <ApiHelpDialog open={showHelp} onOpenChange={setShowHelp} />
+          
+          <Card className="border shadow-sm">
+            <div className="p-4">
+              <ApiRequestForm 
+                onSubmit={handleSubmit} 
+                loading={loading}
+                activeTab={activeTab}
+                onTabChange={setActiveTab}
+              />
+            </div>
+          </Card>
+          
+          <ApiResponseDisplay 
+            response={response}
+            error={error}
+            showResponse={showResponse}
+            loading={loading}
+            rawInfo={rawResponseInfo}
+            activeTab={responseTab}
+            onTabChange={setResponseTab}
+          />
+        </div>
       </div>
     </div>
   );
