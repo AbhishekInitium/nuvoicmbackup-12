@@ -9,6 +9,7 @@ import { useS4HanaData } from '@/hooks/useS4HanaData';
 // Import constants and types
 import { DEFAULT_PLAN } from '@/constants/incentiveConstants';
 import { IncentivePlan } from '@/types/incentiveTypes';
+import { IncentivePlanWithStatus } from '@/services/incentive/incentivePlanService';
 
 // Import components
 import ExistingSchemeSelector from './incentive/ExistingSchemeSelector';
@@ -50,23 +51,53 @@ const IncentivePlanDesigner: React.FC = () => {
     });
   };
 
-  const copyExistingScheme = (schemeId: number) => {
-    if (incentivePlans && incentivePlans.length > 0) {
-      const selectedScheme = incentivePlans.find((p, index) => index === schemeId - 1);
-      
-      if (selectedScheme) {
-        setPlan(selectedScheme);
-        toast({
-          title: "Plan Loaded",
-          description: `Loaded plan: ${selectedScheme.name}`,
-          variant: "default"
-        });
-      }
-    }
+  const copyExistingScheme = (scheme: IncentivePlanWithStatus) => {
+    // Extract only the IncentivePlan properties from the IncentivePlanWithStatus
+    const {
+      name,
+      description,
+      effectiveStart,
+      effectiveEnd,
+      currency,
+      revenueBase,
+      participants,
+      commissionStructure,
+      measurementRules,
+      creditRules,
+      customRules
+    } = scheme;
+    
+    const planData: IncentivePlan = {
+      name,
+      description,
+      effectiveStart,
+      effectiveEnd,
+      currency,
+      revenueBase,
+      participants,
+      commissionStructure,
+      measurementRules,
+      creditRules,
+      customRules
+    };
+    
+    setPlan(planData);
+    
+    toast({
+      title: "Plan Loaded",
+      description: `Loaded plan: ${scheme.name}`,
+      variant: "default"
+    });
   };
 
   const savePlanToS4 = () => {
-    savePlan(plan, {
+    // Create a plan with status by combining the current plan with a DRAFT status
+    const planWithStatus: Partial<IncentivePlanWithStatus> = {
+      ...plan,
+      status: 'DRAFT'
+    };
+    
+    savePlan(planWithStatus, {
       onSuccess: () => {
         toast({
           title: "Success",

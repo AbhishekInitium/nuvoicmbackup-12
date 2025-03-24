@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { getIncentivePlans, saveIncentivePlan } from '@/services/incentive/incentivePlanService';
+import { getIncentivePlans, saveIncentivePlan, IncentivePlanWithStatus } from '@/services/incentive/incentivePlanService';
 import { getSalesData } from '@/services/sales/salesService';
 import { getEmployeeData } from '@/services/hr/employeeService';
 import { IncentivePlan } from '@/types/incentiveTypes';
@@ -18,13 +18,13 @@ export const useS4HanaData = () => {
     refetch: refetchPlans
   } = useQuery({
     queryKey: ['incentivePlans'],
-    queryFn: getIncentivePlans,
+    queryFn: () => getIncentivePlans(),
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
   // Mutation for saving an incentive plan
   const savePlanMutation = useMutation({
-    mutationFn: (plan: IncentivePlan) => saveIncentivePlan(plan),
+    mutationFn: (plan: Partial<IncentivePlanWithStatus>) => saveIncentivePlan(plan as IncentivePlanWithStatus),
     onSuccess: () => {
       refetchPlans();
     },

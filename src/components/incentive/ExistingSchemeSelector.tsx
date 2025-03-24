@@ -59,14 +59,15 @@ const ExistingSchemeSelector: React.FC<ExistingSchemeSelectorProps> = ({
           exclusions: []
         },
         creditRules: { levels: [] },
-        customRules: []
+        customRules: [],
+        hasBeenExecuted: false
       })));
     } finally {
       setLoading(false);
     }
   };
 
-  const copyExistingScheme = (scheme: IncentivePlanWithStatus) => {
+  const handleCopyScheme = (scheme: IncentivePlanWithStatus) => {
     onSchemeCopy(scheme);
     
     toast({
@@ -114,7 +115,7 @@ const ExistingSchemeSelector: React.FC<ExistingSchemeSelectorProps> = ({
                 <div 
                   key={index}
                   className="p-3 border rounded-lg hover:bg-app-gray-50 cursor-pointer transition-colors"
-                  onClick={() => copyExistingScheme(scheme)}
+                  onClick={() => handleCopyScheme(scheme)}
                 >
                   <div className="flex justify-between items-center">
                     <h4 className="font-medium">{scheme.name}</h4>
