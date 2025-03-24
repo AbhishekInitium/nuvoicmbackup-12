@@ -148,6 +148,16 @@ const SapApiTester = () => {
         maxRedirects: 0
       };
       
+      // Add SAP client cookie if provided
+      if (data.sapClient) {
+        // Set the cookie header for the SAP client
+        config.headers = {
+          ...config.headers,
+          'Cookie': `sap-usercontext=sap-client=${data.sapClient}`
+        };
+        console.log('Using SAP client:', data.sapClient);
+      }
+      
       // FIX: Improved proxy routing logic
       if (data.usesProxy) {
         // Check if the endpoint is a full URL or just a path

@@ -1,3 +1,4 @@
+
 const express = require('express');
 const cors = require('cors');
 const { createProxyMiddleware } = require('http-proxy-middleware');
@@ -194,6 +195,11 @@ app.use('/api/sap', (req, res, next) => {
           proxyReq.setHeader(key, req.headers[key]);
         }
       });
+      
+      // Ensure Cookie header is preserved - especially important for SAP client context
+      if (req.headers.cookie) {
+        console.log(`[SAP Proxy] Forwarding cookies: ${req.headers.cookie}`);
+      }
       
       console.log(`[SAP Proxy] With headers:`, req.headers);
       

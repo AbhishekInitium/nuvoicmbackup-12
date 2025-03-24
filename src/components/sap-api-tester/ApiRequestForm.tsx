@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -18,6 +19,7 @@ const apiFormSchema = z.object({
   username: z.string().optional(),
   password: z.string().optional(),
   useAuth: z.boolean().default(true),
+  sapClient: z.string().optional(),
   headers: z.string().default('{\n  "Content-Type": "application/json"\n}'),
   params: z.string().default('{\n  "$format": "json"\n}'),
   body: z.string().optional(),
@@ -44,11 +46,12 @@ const ApiRequestForm: React.FC<ApiRequestFormProps> = ({
     resolver: zodResolver(apiFormSchema),
     defaultValues: {
       method: 'GET',
-      endpoint: '/sap/opu/odata/sap/API_BUSINESS_PARTNER/A_BusinessPartner',
+      endpoint: '/sap/opu/odata4/sap/api_supplierquotation_2/srvd_a2x/sap/supplierquotation/0001/SupplierQuotationItem/8000000005/10',
       usesProxy: true,
       username: 'S4HANA_BASIC',
       password: 'GGWYYnbPqPWmpcuCHt9zuht<NFnlkbQYJEHvkfLi',
       useAuth: true,
+      sapClient: '080',
       headers: '{\n  "Content-Type": "application/json",\n  "Accept": "application/json"\n}',
       params: '{\n  "$format": "json"\n}',
       body: ''
@@ -136,6 +139,23 @@ const ApiRequestForm: React.FC<ApiRequestFormProps> = ({
                   <Switch
                     checked={field.value}
                     onCheckedChange={field.onChange}
+                  />
+                </FormControl>
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="sapClient"
+            render={({ field }) => (
+              <FormItem className="flex items-center space-x-2 mb-0">
+                <FormLabel className="mb-0">SAP Client:</FormLabel>
+                <FormControl>
+                  <Input
+                    className="w-16 h-8 text-center"
+                    placeholder="080"
+                    {...field}
                   />
                 </FormControl>
               </FormItem>
@@ -278,6 +298,7 @@ const ApiRequestForm: React.FC<ApiRequestFormProps> = ({
             <li>For SAP OData services, try endpoints like <code>/sap/opu/odata4/sap/api_business_partner/default/sap/api_business_partner/0001/BusinessPartner</code></li>
             <li>The proxy server must be running for the proxy option to work</li>
             <li>All JSON must be properly formatted with double quotes</li>
+            <li>Some SAP systems require a specific client number (default: 080)</li>
           </ul>
         </div>
       </form>
