@@ -144,6 +144,8 @@ const SapApiTester = () => {
         params,
         data: data.method !== 'GET' ? body : undefined,
         timeout: 30000,
+        // Add this option to prevent axios from automatically redirecting
+        maxRedirects: 0
       };
       
       // FIX: Improved proxy routing logic
@@ -237,6 +239,18 @@ const SapApiTester = () => {
         if (axiosError.message === 'Network Error') {
           errorMessage += " - This could be due to CORS restrictions, proxy server not running, or the endpoint being unreachable";
           errorMessage += "\n\nConsider trying without the proxy option for direct SAP endpoints that support CORS.";
+        }
+        
+        // Handle redirection errors specifically (status 301, 302, etc.)
+        if (axiosError.response?.status && axiosError.response.status >= 300 && axiosError.response.status < 400) {
+          errorMessage += `\n\nRedirection detected (${axiosError.response.status}). This might be a login page redirect.`;
+          errorMessage += "\nWe prevented automatic redirection to show you this response instead.";
+          
+          // Get the redirect location if available
+          const location = axiosError.response.headers?.location;
+          if (location) {
+            errorMessage += `\nRedirect location: ${location}`;
+          }
         }
         
         setError(errorMessage);

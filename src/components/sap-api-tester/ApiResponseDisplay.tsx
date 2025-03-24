@@ -7,7 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
-import { InfoIcon, Copy, Check } from 'lucide-react';
+import { InfoIcon, Copy, Check, AlertTriangle } from 'lucide-react';
 
 interface ApiResponseDisplayProps {
   response: any;
@@ -128,15 +128,14 @@ const ApiResponseDisplay: React.FC<ApiResponseDisplayProps> = ({
             <span className="font-medium">HTML Response:</span> The API returned HTML instead of JSON
           </div>
           <Alert className="mb-4 border-amber-300 bg-amber-50 text-amber-800">
-            <InfoIcon className="h-4 w-4" />
+            <AlertTriangle className="h-4 w-4" />
             <AlertTitle>HTML Response Detected</AlertTitle>
             <AlertDescription>
               <p>The server returned HTML instead of JSON data. This may indicate:</p>
               <ul className="list-disc pl-5 mt-1">
-                <li>An authentication or authorization issue</li>
-                <li>The API endpoint is not valid</li>
-                <li>The endpoint doesn't support the JSON format</li>
-                <li>You're being redirected to a login page</li>
+                <li>The API endpoint requires different authentication</li>
+                <li>The endpoint doesn't support the requested format</li>
+                <li>This is an error page or login page (not redirecting to it)</li>
               </ul>
             </AlertDescription>
           </Alert>
@@ -310,7 +309,17 @@ const ApiResponseDisplay: React.FC<ApiResponseDisplayProps> = ({
                 <li>Try turning OFF the "Use Proxy Server" option for direct access to endpoints that support CORS</li>
                 <li>Check that your SAP credentials are correct</li>
                 <li>Confirm the endpoint URL is valid and accessible</li>
-                <li>Browser security policies may be blocking cross-origin requests</li>
+              </ul>
+            </div>
+          )}
+          {error.includes('Redirection detected') && (
+            <div className="mt-2 p-3 bg-muted rounded-md text-sm">
+              <p className="font-medium">About this error:</p>
+              <ul className="list-disc pl-5 mt-1">
+                <li>We prevented automatic redirection to show you this response</li>
+                <li>This is likely a login page or authentication issue</li>
+                <li>Check your credentials and API endpoint</li>
+                <li>The HTML response below may contain more details about the issue</li>
               </ul>
             </div>
           )}
