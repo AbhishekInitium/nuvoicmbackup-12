@@ -36,14 +36,28 @@ const ExistingSchemeSelector: React.FC<ExistingSchemeSelectorProps> = ({
     setError(null);
     
     try {
+      console.log('Loading incentive plans from service');
       const plans = await getIncentivePlans();
       console.log('Loaded incentive plans:', plans);
       
       if (plans && plans.length > 0) {
+        console.log('Setting schemes with:', plans.length, 'plans');
         setSchemes(plans);
+        
+        // If we have any non-mock plans (identified by unique property not in mocks),
+        // add a notice about successful load
+        const hasRealPlans = plans.some(p => p.hasOwnProperty('lastExecutionDate'));
+        if (hasRealPlans) {
+          toast({
+            title: "Plans Loaded",
+            description: `Successfully loaded ${plans.length} incentive plans.`,
+            variant: "default"
+          });
+        }
       } else {
         // If no plans were returned, use mock schemes
         console.log('No plans returned, using mock schemes');
+        setError('No schemes found. You can create a new scheme.');
         useMockSchemes();
       }
     } catch (err) {
@@ -101,6 +115,10 @@ const ExistingSchemeSelector: React.FC<ExistingSchemeSelectorProps> = ({
     setOpen(false);
   };
 
+  const handleRefresh = () => {
+    loadIncentiveSchemes();
+  };
+
   const SchemeListContent = () => (
     <div className="space-y-4">
       {!useDialogMode && (
@@ -111,6 +129,19 @@ const ExistingSchemeSelector: React.FC<ExistingSchemeSelectorProps> = ({
           </p>
         </>
       )}
+      
+      <div className="flex justify-between items-center">
+        <span className="text-sm text-app-gray-500">
+          {schemes.length} {schemes.length === 1 ? 'scheme' : 'schemes'} available
+        </span>
+        <button
+          onClick={handleRefresh}
+          className="text-sm text-blue-600 hover:text-blue-800 flex items-center gap-1"
+        >
+          {loading ? <Loader2 className="h-3 w-3 animate-spin" /> : null}
+          Refresh
+        </button>
+      </div>
       
       {loading ? (
         <div className="flex justify-center py-8">
