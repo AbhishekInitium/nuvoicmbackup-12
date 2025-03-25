@@ -61,12 +61,10 @@ const IncentivePlanDesigner: React.FC<IncentivePlanDesignerProps> = ({
       <IncentiveDesignerHeader />
 
       <div className="max-w-4xl mx-auto">
-        {/* Only showing the Save button, removing the New Scheme and Copy buttons */}
-        <div className="mt-10 flex justify-end space-x-4 mb-6">
+        {/* Removed the top Save button */}
+        <div className="mt-10 mb-6">
           <DesignerActionButtons 
             onBack={onBack}
-            onSave={savePlanToS4}
-            isSaving={isSaving}
             showExistingSchemes={showExistingSchemes}
             setShowExistingSchemes={setShowExistingSchemes}
             copyExistingScheme={copyExistingScheme}

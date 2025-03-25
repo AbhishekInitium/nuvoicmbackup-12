@@ -90,14 +90,43 @@ export const useIncentivePlan = (
     });
   };
 
+  const validatePlan = (): { isValid: boolean; errors: string[] } => {
+    const errors: string[] = [];
+    
+    // Validate required basic fields
+    if (!plan.name) errors.push("Plan Name is required");
+    if (!plan.effectiveStart) errors.push("Start Date is required");
+    if (!plan.effectiveEnd) errors.push("End Date is required");
+    
+    // Validate Revenue Base
+    if (!plan.revenueBase) errors.push("Revenue Base is required");
+    
+    // Validate Participants
+    if (!plan.participants || plan.participants.length === 0) {
+      errors.push("At least one participant must be assigned");
+    }
+    
+    // Validate Credit Levels
+    if (!plan.creditRules.levels || plan.creditRules.levels.length === 0) {
+      errors.push("At least one Credit Level is required");
+    }
+    
+    return {
+      isValid: errors.length === 0,
+      errors
+    };
+  };
+
   const savePlanToS4 = () => {
     if (!savePlanFunction) return;
     
-    // Validate required fields
-    if (!plan.name || !plan.effectiveStart || !plan.effectiveEnd) {
+    // Validate the plan
+    const { isValid, errors } = validatePlan();
+    
+    if (!isValid) {
       toast({
         title: "Validation Error",
-        description: "Please fill in all required fields: Name, Start Date, and End Date",
+        description: errors.join(", "),
         variant: "destructive"
       });
       return;

@@ -7,9 +7,9 @@ import ExistingSchemeSelector from './ExistingSchemeSelector';
 
 interface DesignerActionButtonsProps {
   onBack?: () => void;
-  onSave: () => void;
+  onSave?: () => void;
   createNewScheme?: () => void;
-  isSaving: boolean;
+  isSaving?: boolean;
   showExistingSchemes: boolean;
   setShowExistingSchemes: (show: boolean) => void;
   copyExistingScheme: (scheme: IncentivePlanWithStatus) => void;
@@ -20,7 +20,7 @@ const DesignerActionButtons: React.FC<DesignerActionButtonsProps> = ({
   onBack,
   onSave,
   createNewScheme,
-  isSaving,
+  isSaving = false,
   showExistingSchemes,
   setShowExistingSchemes,
   copyExistingScheme,
@@ -58,17 +58,19 @@ const DesignerActionButtons: React.FC<DesignerActionButtonsProps> = ({
         )}
       </div>
       
-      <div className="mt-2 flex justify-end space-x-4">
-        <ActionButton
-          variant="primary" 
-          size="lg"
-          onClick={onSave}
-          disabled={isSaving}
-        >
-          <Save size={18} className="mr-2" /> 
-          {isSaving ? "Saving..." : "Save"}
-        </ActionButton>
-      </div>
+      {onSave && (
+        <div className="mt-2 flex justify-end space-x-4">
+          <ActionButton
+            variant="primary" 
+            size="lg"
+            onClick={onSave}
+            disabled={isSaving}
+          >
+            <Save size={18} className="mr-2" /> 
+            {isSaving ? "Saving..." : "Save"}
+          </ActionButton>
+        </div>
+      )}
     </>
   );
 };
