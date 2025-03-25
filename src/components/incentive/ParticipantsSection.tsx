@@ -1,7 +1,6 @@
 
 import React, { useState } from 'react';
 import { Plus, X, AlertTriangle } from 'lucide-react';
-import { Input } from "@/components/ui/input";
 import { useSalesOrganizations } from '@/hooks/useSalesOrganizations';
 import { 
   Select,
