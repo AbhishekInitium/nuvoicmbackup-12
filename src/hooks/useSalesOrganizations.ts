@@ -41,20 +41,20 @@ const FALLBACK_SALES_ORGS: SalesOrganization[] = [
   { SalesOrganization: "5000", SalesOrganizationName: "Global Enterprise", CompanyCode: "5000", Country: "US" }
 ];
 
-// Function to fetch sales organizations directly without proxy
+// Function to fetch sales organizations directly without proxy and without relying on other services
 async function fetchSalesOrganizations(): Promise<SalesOrganization[]> {
   try {
-    // Direct API call to SAP system
+    // Direct API call to SAP system - the exact endpoint provided by the user
     const endpoint = 'https://my418390-api.s4hana.cloud.sap/sap/opu/odata4/sap/api_salesarea/srvd_a2x/sap/salesarea/0001/SalesArea';
     
     console.log('Fetching sales areas from endpoint:', endpoint);
     
-    // Create the basic auth token
+    // Basic auth credentials
     const username = 'S4HANA_BASIC';
     const password = 'GGWYYnbPqPWmpcuCHt9zuht<NFnlkbQYJEHvkfLi';
     const base64Credentials = btoa(`${username}:${password}`);
     
-    // Make the request with the necessary headers to avoid CORS issues
+    // Make the direct API call with necessary headers
     const response = await axios({
       method: 'GET',
       url: endpoint,
@@ -62,11 +62,8 @@ async function fetchSalesOrganizations(): Promise<SalesOrganization[]> {
         'Authorization': `Basic ${base64Credentials}`,
         'Content-Type': 'application/json',
         'Accept': 'application/json',
-        'Cookie': 'sap-usercontext=sap-client=080',
-        // Add CORS headers
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-        'Access-Control-Allow-Headers': 'Origin, Content-Type, Accept, Authorization'
+        'Cookie': 'sap-usercontext=sap-client=080'
+        // Removed CORS headers as they are not needed for direct browser calls
       },
       params: {
         '$format': 'json',

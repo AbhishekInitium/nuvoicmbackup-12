@@ -32,14 +32,14 @@ const ParticipantsSection: React.FC<ParticipantsSectionProps> = ({ participants,
       
       {error && (
         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4">
-          Error connecting to backend system. Using fallback sales organizations.
+          Error connecting to SAP S/4HANA. Using fallback sales organizations.
         </div>
       )}
       
       {isUsingFallback && !error && (
         <div className="bg-yellow-50 border border-yellow-200 text-yellow-700 px-4 py-3 rounded mb-4 flex items-center">
           <AlertTriangle size={18} className="mr-2" />
-          Using demo sales organization data. Cannot connect to backend system at this time.
+          Using demo sales organization data. Cannot connect to SAP S/4HANA system at this time.
         </div>
       )}
       
@@ -105,7 +105,7 @@ const ParticipantsSection: React.FC<ParticipantsSectionProps> = ({ participants,
       
       {isLoading && (
         <div className="mt-2 text-sm text-app-gray-500">
-          Loading sales organizations...
+          Loading sales organizations from SAP S/4HANA...
         </div>
       )}
     </div>
