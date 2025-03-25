@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Copy, Loader2 } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -44,7 +43,7 @@ const ExistingSchemeSelector: React.FC<ExistingSchemeSelectorProps> = ({
       setError('Failed to load schemes. Please try again later.');
       
       // Fall back to mock schemes if API fails
-      setSchemes(MOCK_SCHEMES.map(mock => ({
+      const mockSchemes: IncentivePlanWithStatus[] = MOCK_SCHEMES.map(mock => ({
         name: mock.name,
         description: mock.description,
         status: 'APPROVED' as const,
@@ -54,7 +53,7 @@ const ExistingSchemeSelector: React.FC<ExistingSchemeSelectorProps> = ({
         currency: 'USD',
         revenueBase: 'salesOrders',
         participants: ['ALL'],
-        salesQuota: 100000, // Add the required salesQuota property with a default value
+        salesQuota: 100000, // Add the required salesQuota property
         commissionStructure: { tiers: [] },
         measurementRules: { 
           primaryMetric: 'Net Revenue', 
@@ -65,7 +64,9 @@ const ExistingSchemeSelector: React.FC<ExistingSchemeSelectorProps> = ({
         creditRules: { levels: [] },
         customRules: [],
         hasBeenExecuted: false
-      })));
+      }));
+      
+      setSchemes(mockSchemes);
     } finally {
       setLoading(false);
     }
@@ -85,7 +86,6 @@ const ExistingSchemeSelector: React.FC<ExistingSchemeSelectorProps> = ({
     setOpen(false);
   };
 
-  // Content to display scheme list
   const SchemeListContent = () => (
     <div className="space-y-4">
       {!useDialogMode && (
@@ -135,12 +135,10 @@ const ExistingSchemeSelector: React.FC<ExistingSchemeSelectorProps> = ({
     </div>
   );
 
-  // If in dialog mode, just return the content without Popover wrapper
   if (useDialogMode) {
     return <SchemeListContent />;
   }
 
-  // Regular popover mode
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
