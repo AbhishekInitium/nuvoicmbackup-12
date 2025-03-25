@@ -61,15 +61,18 @@ const IncentivePlanDesigner: React.FC<IncentivePlanDesignerProps> = ({
       <IncentiveDesignerHeader />
 
       <div className="max-w-4xl mx-auto">
-        <DesignerActionButtons 
-          onBack={onBack}
-          onSave={savePlanToS4}
-          createNewScheme={createNewScheme}
-          isSaving={isSaving}
-          showExistingSchemes={showExistingSchemes}
-          setShowExistingSchemes={setShowExistingSchemes}
-          copyExistingScheme={copyExistingScheme}
-        />
+        {/* Only showing the Save button, removing the New Scheme and Copy buttons */}
+        <div className="mt-10 flex justify-end space-x-4 mb-6">
+          <DesignerActionButtons 
+            onBack={onBack}
+            onSave={savePlanToS4}
+            isSaving={isSaving}
+            showExistingSchemes={showExistingSchemes}
+            setShowExistingSchemes={setShowExistingSchemes}
+            copyExistingScheme={copyExistingScheme}
+            hideSchemeButtons={true}
+          />
+        </div>
 
         {/* Section 1: Header Information */}
         <SectionPanel title="1. Header Information" defaultExpanded={true}>
@@ -92,15 +95,17 @@ const IncentivePlanDesigner: React.FC<IncentivePlanDesignerProps> = ({
           updateCommissionStructure={(tiers) => updatePlan('commissionStructure', { tiers })}
         />
         
-        {/* Render the save button again for better UX */}
-        <DesignerActionButtons 
-          onSave={savePlanToS4}
-          createNewScheme={createNewScheme}
-          isSaving={isSaving}
-          showExistingSchemes={showExistingSchemes}
-          setShowExistingSchemes={setShowExistingSchemes}
-          copyExistingScheme={copyExistingScheme}
-        />
+        {/* Save button at the bottom */}
+        <div className="mt-10 flex justify-end space-x-4">
+          <DesignerActionButtons 
+            onSave={savePlanToS4}
+            isSaving={isSaving}
+            showExistingSchemes={showExistingSchemes}
+            setShowExistingSchemes={setShowExistingSchemes}
+            copyExistingScheme={copyExistingScheme}
+            hideSchemeButtons={true}
+          />
+        </div>
       </div>
     </div>
   );

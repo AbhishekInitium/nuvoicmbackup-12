@@ -8,11 +8,12 @@ import ExistingSchemeSelector from './ExistingSchemeSelector';
 interface DesignerActionButtonsProps {
   onBack?: () => void;
   onSave: () => void;
-  createNewScheme: () => void;
+  createNewScheme?: () => void;
   isSaving: boolean;
   showExistingSchemes: boolean;
   setShowExistingSchemes: (show: boolean) => void;
   copyExistingScheme: (scheme: IncentivePlanWithStatus) => void;
+  hideSchemeButtons?: boolean;
 }
 
 const DesignerActionButtons: React.FC<DesignerActionButtonsProps> = ({
@@ -22,7 +23,8 @@ const DesignerActionButtons: React.FC<DesignerActionButtonsProps> = ({
   isSaving,
   showExistingSchemes,
   setShowExistingSchemes,
-  copyExistingScheme
+  copyExistingScheme,
+  hideSchemeButtons = false
 }) => {
   return (
     <>
@@ -37,24 +39,26 @@ const DesignerActionButtons: React.FC<DesignerActionButtonsProps> = ({
           </ActionButton>
         )}
         
-        <div className="flex space-x-4">
-          <ActionButton 
-            variant="outline"
-            size="sm"
-            onClick={createNewScheme}
-          >
-            <PlusCircle size={16} className="mr-2" /> New Scheme
-          </ActionButton>
-          
-          <ExistingSchemeSelector 
-            open={showExistingSchemes}
-            setOpen={setShowExistingSchemes}
-            onSchemeCopy={copyExistingScheme}
-          />
-        </div>
+        {!hideSchemeButtons && createNewScheme && (
+          <div className="flex space-x-4">
+            <ActionButton 
+              variant="outline"
+              size="sm"
+              onClick={createNewScheme}
+            >
+              <PlusCircle size={16} className="mr-2" /> New Scheme
+            </ActionButton>
+            
+            <ExistingSchemeSelector 
+              open={showExistingSchemes}
+              setOpen={setShowExistingSchemes}
+              onSchemeCopy={copyExistingScheme}
+            />
+          </div>
+        )}
       </div>
       
-      <div className="mt-10 flex justify-end space-x-4">
+      <div className="mt-2 flex justify-end space-x-4">
         <ActionButton
           variant="primary" 
           size="lg"
