@@ -1,3 +1,4 @@
+
 import { S4_API_BASE_URL, s4Request } from '../base/s4BaseService';
 import { IncentivePlan } from '@/types/incentiveTypes';
 import { MOCK_SCHEMES } from '@/constants/incentiveConstants';
@@ -109,27 +110,10 @@ export const getIncentivePlans = async (statusFilter?: IncentiveStatus): Promise
     } else {
       // If we get a response but it doesn't have the expected structure
       console.warn('Invalid response structure from incentive plans API, falling back to mock data');
-      
-      // Check if we might have saved plans in localStorage as a backup
-      const savedPlans = getPlansFromLocalStorage();
-      if (savedPlans && savedPlans.length > 0) {
-        console.log('Using plans from localStorage:', savedPlans.length, 'plans found');
-        return savedPlans;
-      }
-      
       return getMockIncentivePlans();
     }
   } catch (error) {
     console.error('Error fetching incentive plans:', error);
-    
-    // In case of any error, check localStorage first
-    const savedPlans = getPlansFromLocalStorage();
-    if (savedPlans && savedPlans.length > 0) {
-      console.log('Error occurred, using plans from localStorage');
-      return savedPlans;
-    }
-    
-    // If no localStorage plans, return mock data
     return getMockIncentivePlans();
   }
 };
@@ -169,30 +153,6 @@ const getMockIncentivePlans = (): IncentivePlanWithStatus[] => {
 };
 
 /**
- * Helper function to store and retrieve plans from localStorage
- * This acts as a fallback when S/4 API is unavailable
- */
-const savePlansToLocalStorage = (plans: IncentivePlanWithStatus[]): void => {
-  try {
-    localStorage.setItem('incentivePlans', JSON.stringify(plans));
-  } catch (e) {
-    console.error('Error saving plans to localStorage:', e);
-  }
-};
-
-const getPlansFromLocalStorage = (): IncentivePlanWithStatus[] | null => {
-  try {
-    const plansJson = localStorage.getItem('incentivePlans');
-    if (plansJson) {
-      return JSON.parse(plansJson);
-    }
-  } catch (e) {
-    console.error('Error reading plans from localStorage:', e);
-  }
-  return null;
-};
-
-/**
  * Save an incentive plan to S/4 HANA or HANA Cloud
  */
 export const saveIncentivePlan = async (plan: IncentivePlanWithStatus): Promise<any> => {
@@ -217,40 +177,9 @@ export const saveIncentivePlan = async (plan: IncentivePlanWithStatus): Promise<
       transformedPlan
     );
     
-    // Also save to localStorage as a fallback
-    // First get existing plans
-    const existingPlans = getPlansFromLocalStorage() || [];
-    
-    // Check if this plan already exists (by name or other identifier)
-    const planIndex = existingPlans.findIndex(p => p.name === plan.name);
-    
-    if (planIndex >= 0) {
-      // Update existing plan
-      existingPlans[planIndex] = plan;
-    } else {
-      // Add new plan
-      existingPlans.push(plan);
-    }
-    
-    // Save updated plans
-    savePlansToLocalStorage(existingPlans);
-    
     return response;
   } catch (error) {
     console.error('Error saving incentive plan:', error);
-    
-    // Even if the API request fails, save to localStorage
-    const existingPlans = getPlansFromLocalStorage() || [];
-    const planIndex = existingPlans.findIndex(p => p.name === plan.name);
-    
-    if (planIndex >= 0) {
-      existingPlans[planIndex] = plan;
-    } else {
-      existingPlans.push(plan);
-    }
-    
-    savePlansToLocalStorage(existingPlans);
-    
     throw error;
   }
 };
