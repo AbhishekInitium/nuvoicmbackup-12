@@ -63,11 +63,10 @@ async function fetchSalesOrganizations(): Promise<SalesOrganization[]> {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
         'Cookie': 'sap-usercontext=sap-client=080'
-        // Removed CORS headers as they are not needed for direct browser calls
       },
       params: {
-        '$format': 'json',
-        '$select': 'SalesOrganization,DistributionChannel,Division,SalesOrgName'
+        '$format': 'json'
+        // Removed the $select parameter that was causing the error
       }
     });
     
@@ -94,10 +93,11 @@ async function fetchSalesOrganizations(): Promise<SalesOrganization[]> {
     console.log(`Found ${response.data.value.length} sales areas in response`);
     
     // Transform the sales areas to the expected SalesOrganization format
+    // Using the fields that we know exist in the API response
     const salesOrgs: SalesOrganization[] = response.data.value.map((area: any) => ({
-      SalesOrganization: area.SalesOrganization,
-      SalesOrganizationName: area.SalesOrgName || `${area.SalesOrganization} (${area.DistributionChannel}/${area.Division})`,
-      CompanyCode: `${area.DistributionChannel} / ${area.Division}`,
+      SalesOrganization: area.SalesOrganization || '',
+      SalesOrganizationName: `${area.SalesOrganization || ''} - ${area.DistributionChannel || ''} - ${area.Division || ''}`,
+      CompanyCode: `${area.DistributionChannel || ''} / ${area.Division || ''}`,
       Country: area.SalesAreaID || 'N/A'
     }));
     
