@@ -52,6 +52,7 @@ const ExistingSchemeSelector: React.FC<ExistingSchemeSelectorProps> = ({
         currency: 'USD',
         revenueBase: 'salesOrders',
         participants: ['ALL'],
+        salesQuota: 100000, // Add the required salesQuota property with a default value
         commissionStructure: { tiers: [] },
         measurementRules: { 
           primaryMetric: 'Net Revenue', 
