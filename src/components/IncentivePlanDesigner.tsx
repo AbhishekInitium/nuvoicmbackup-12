@@ -19,6 +19,7 @@ import CommissionStructure from './incentive/CommissionStructure';
 import MeasurementRules from './incentive/MeasurementRules';
 import CreditRules from './incentive/CreditRules';
 import CustomRules from './incentive/CustomRules';
+import RevenueBaseSelector from './incentive/RevenueBaseSelector';
 
 const IncentivePlanDesigner: React.FC = () => {
   const { toast } = useToast();
@@ -32,7 +33,8 @@ const IncentivePlanDesigner: React.FC = () => {
   const [showExistingSchemes, setShowExistingSchemes] = useState(false);
   const [plan, setPlan] = useState<IncentivePlan>({
     ...DEFAULT_PLAN,
-    participants: [] // Initialize with empty array instead of pre-populated values
+    participants: [], // Initialize with empty array instead of pre-populated values
+    salesQuota: 0, // Add sales quota field with default value
   });
   const [isLoading, setIsLoading] = useState(true);
 
@@ -64,7 +66,8 @@ const IncentivePlanDesigner: React.FC = () => {
       commissionStructure,
       measurementRules,
       creditRules,
-      customRules
+      customRules,
+      salesQuota = 0 // Default to 0 if not present in existing scheme
     } = scheme;
     
     const planData: IncentivePlan = {
@@ -78,7 +81,8 @@ const IncentivePlanDesigner: React.FC = () => {
       commissionStructure,
       measurementRules,
       creditRules,
-      customRules
+      customRules,
+      salesQuota
     };
     
     setPlan(planData);
@@ -141,59 +145,55 @@ const IncentivePlanDesigner: React.FC = () => {
           />
         </div>
 
-        <SectionPanel title="Basic Information" defaultExpanded={true}>
+        {/* Section 1: Header Information */}
+        <SectionPanel title="1. Header Information" defaultExpanded={true}>
           <BasicInformation 
             plan={plan} 
             updatePlan={updatePlan} 
           />
         </SectionPanel>
         
-        <SectionPanel 
-          title="Participants" 
-          badge={
-            <div className="chip chip-blue">{plan.participants.length}</div>
-          }
-        >
-          <ParticipantsSection 
-            participants={plan.participants} 
-            updatePlan={updatePlan} 
-          />
+        {/* Section 2: Scheme Structure */}
+        <SectionPanel title="2. Scheme Structure">
+          <div className="space-y-8">
+            <RevenueBaseSelector
+              revenueBase={plan.revenueBase}
+              updateRevenueBase={(value) => updatePlan('revenueBase', value)}
+            />
+            
+            <ParticipantsSection 
+              participants={plan.participants} 
+              updatePlan={updatePlan} 
+              badge={<div className="chip chip-blue">{plan.participants.length}</div>}
+            />
+            
+            <MeasurementRules 
+              measurementRules={plan.measurementRules}
+              revenueBase={plan.revenueBase}
+              currency={plan.currency}
+              updateMeasurementRules={(updatedRules) => updatePlan('measurementRules', updatedRules)}
+            />
+            
+            <CreditRules 
+              levels={plan.creditRules.levels}
+              updateCreditRules={(levels) => updatePlan('creditRules', { levels })}
+            />
+            
+            <CustomRules 
+              customRules={plan.customRules}
+              currency={plan.currency}
+              updateCustomRules={(rules) => updatePlan('customRules', rules)}
+              badge={<div className="chip chip-purple">{plan.customRules.length}</div>}
+            />
+          </div>
         </SectionPanel>
         
-        <SectionPanel title="Commission Structure">
+        {/* Section 3: Rates and Payout Structure */}
+        <SectionPanel title="3. Rates and Payout Structure">
           <CommissionStructure 
             tiers={plan.commissionStructure.tiers} 
             currency={plan.currency}
             updateCommissionStructure={(tiers) => updatePlan('commissionStructure', { tiers })} 
-          />
-        </SectionPanel>
-        
-        <SectionPanel title="Measurement Rules">
-          <MeasurementRules 
-            measurementRules={plan.measurementRules}
-            revenueBase={plan.revenueBase}
-            currency={plan.currency}
-            updateMeasurementRules={(updatedRules) => updatePlan('measurementRules', updatedRules)}
-          />
-        </SectionPanel>
-        
-        <SectionPanel title="Credit Rules">
-          <CreditRules 
-            levels={plan.creditRules.levels}
-            updateCreditRules={(levels) => updatePlan('creditRules', { levels })}
-          />
-        </SectionPanel>
-        
-        <SectionPanel 
-          title="Custom Rules" 
-          badge={
-            <div className="chip chip-purple">{plan.customRules.length}</div>
-          }
-        >
-          <CustomRules 
-            customRules={plan.customRules}
-            currency={plan.currency}
-            updateCustomRules={(rules) => updatePlan('customRules', rules)}
           />
         </SectionPanel>
         

@@ -1,11 +1,10 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Settings, Users, BadgeDollarSign, Target, PlusCircle, ArrowRight, Play } from 'lucide-react';
+import { Settings, Users, BadgeDollarSign, Target, ArrowRight, Play } from 'lucide-react';
 import NavBar from '@/components/layout/NavBar';
 import Container from '@/components/layout/Container';
 import GlassCard from '@/components/ui-custom/GlassCard';
-import ActionButton from '@/components/ui-custom/ActionButton';
 import { TeamPerformanceChart } from '@/components/manager/TeamPerformanceChart';
 import { IncentivePlansList } from '@/components/manager/IncentivePlansList';
 import { Button } from '@/components/ui/button';
@@ -172,14 +171,6 @@ const ManagerPortal = () => {
                 <div className="p-6">
                   <div className="flex items-center justify-between mb-4">
                     <h2 className="text-lg font-semibold">Incentive Plans</h2>
-                    <Link to="/manager/incentive-designer">
-                      <ActionButton 
-                        variant="outline"
-                        size="sm"
-                      >
-                        <PlusCircle size={16} className="mr-1" /> New Plan
-                      </ActionButton>
-                    </Link>
                   </div>
                   <IncentivePlansList />
                   
@@ -232,14 +223,6 @@ const ManagerPortal = () => {
                   </div>
                 </div>
               </GlassCard>
-              
-              <div className="flex justify-center">
-                <Link to="/manager/commission-execution">
-                  <Button className="bg-app-blue hover:bg-app-blue-dark">
-                    <Play size={18} className="mr-2" /> Commission Execution Engine
-                  </Button>
-                </Link>
-              </div>
             </div>
           </div>
         </Container>

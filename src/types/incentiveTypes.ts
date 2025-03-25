@@ -1,4 +1,3 @@
-
 export interface Tier {
   from: number;
   to: number;
@@ -63,8 +62,13 @@ export interface IncentivePlan {
   currency: string;
   revenueBase: string;
   participants: string[];
-  commissionStructure: CommissionStructure;
+  commissionStructure: {
+    tiers: Tier[];
+  };
   measurementRules: MeasurementRules;
-  creditRules: CreditRules;
+  creditRules: {
+    levels: CreditLevel[];
+  };
   customRules: CustomRule[];
+  salesQuota?: number;
 }

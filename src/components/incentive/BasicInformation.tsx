@@ -5,6 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CURRENCIES } from '@/constants/incentiveConstants';
 import { IncentivePlan } from '@/types/incentiveTypes';
+import { getCurrencySymbol } from '@/utils/incentiveUtils';
 
 interface BasicInformationProps {
   plan: IncentivePlan;
@@ -12,6 +13,8 @@ interface BasicInformationProps {
 }
 
 const BasicInformation: React.FC<BasicInformationProps> = ({ plan, updatePlan }) => {
+  const currencySymbol = getCurrencySymbol(plan.currency);
+  
   return (
     <div className="space-y-6">
       <div>
@@ -73,22 +76,21 @@ const BasicInformation: React.FC<BasicInformationProps> = ({ plan, updatePlan })
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-app-gray-700 mb-2">Revenue Base</label>
-        <Select 
-          value={plan.revenueBase}
-          onValueChange={(value) => updatePlan('revenueBase', value)}
-        >
-          <SelectTrigger className="w-full">
-            <SelectValue placeholder="Select revenue base" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="salesOrders">Sales Orders</SelectItem>
-            <SelectItem value="invoices">Invoices</SelectItem>
-            <SelectItem value="collections">Collections</SelectItem>
-          </SelectContent>
-        </Select>
+        <label className="block text-sm font-medium text-app-gray-700 mb-2">Sales Quota / Target</label>
+        <div className="relative">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <span className="text-gray-500">{currencySymbol}</span>
+          </div>
+          <Input 
+            type="number"
+            className="pl-8"
+            value={plan.salesQuota !== undefined ? plan.salesQuota : 0}
+            onChange={(e) => updatePlan('salesQuota', parseFloat(e.target.value) || 0)}
+            min={0}
+          />
+        </div>
         <p className="text-sm text-app-gray-500 mt-2">
-          Data for calculations will be sourced from the selected system
+          Target amount to measure quota attainment against the selected revenue base
         </p>
       </div>
     </div>

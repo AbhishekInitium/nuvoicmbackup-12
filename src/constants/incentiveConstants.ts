@@ -69,44 +69,46 @@ export const METRICS = [
 
 // Default plan data structure
 export const DEFAULT_PLAN = {
-  name: 'North America Sales Incentive Plan',
-  description: 'Commission plan for North America sales team',
-  effectiveStart: '2025-01-01',
-  effectiveEnd: '2025-12-31',
+  name: 'New Sales Incentive Plan',
+  description: 'Describe the purpose and goals of this incentive plan',
+  effectiveStart: new Date().toISOString().substring(0, 10), // Today's date in YYYY-MM-DD format
+  effectiveEnd: new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().substring(0, 10), // One year from today
   currency: 'USD',
   revenueBase: 'salesOrders',
-  participants: [], // Empty by default, will be populated from SAP API
+  participants: ['ALL'], // Default to 'ALL' participants
   commissionStructure: {
     tiers: [
-      { from: 0, to: 100000, rate: 3 },
-      { from: 100001, to: 250000, rate: 4 }
+      {
+        lowerBound: 0,
+        upperBound: 100000,
+        rate: 1
+      },
+      {
+        lowerBound: 100001,
+        upperBound: 250000,
+        rate: 2
+      },
+      {
+        lowerBound: 250001,
+        upperBound: null, // No upper bound for the last tier
+        rate: 3
+      }
     ]
   },
   measurementRules: {
-    primaryMetric: 'revenue',
-    minQualification: 50000,
-    adjustments: [
-      { field: 'DiscountPercent', operator: '>', value: 20, factor: 0.8, description: 'High discount adjustment' }
-    ],
-    exclusions: [
-      { field: 'PaymentTerms', operator: '>', value: 60, description: 'Exclude long payment terms' }
-    ]
+    primaryMetric: 'Net Revenue',
+    minQualification: 50000, // Minimum qualification threshold
+    adjustments: [],
+    exclusions: []
   },
   creditRules: {
     levels: [
-      { name: 'Sales Representative', percentage: 80 },
-      { name: 'Sales Manager', percentage: 20 }
+      {
+        name: 'Primary Sales Rep',
+        percentage: 100
+      }
     ]
   },
-  customRules: [
-    {
-      name: 'Consistent Sales Qualification',
-      description: 'Sales rep must have minimum sales for past 3 consecutive months',
-      conditions: [
-        { period: 'past3months', metric: 'monthlySales', operator: '>=', value: 10000 }
-      ],
-      action: 'qualify',
-      active: true
-    }
-  ]
+  customRules: [],
+  salesQuota: 1000000 // Default sales quota of 1M
 };
