@@ -35,6 +35,7 @@ const ExistingSchemeSelector: React.FC<ExistingSchemeSelectorProps> = ({
     
     try {
       const plans = await getIncentivePlans();
+      console.log('Loaded incentive plans:', plans);
       setSchemes(plans);
     } catch (err) {
       console.error('Error loading incentive schemes:', err);
@@ -107,7 +108,7 @@ const ExistingSchemeSelector: React.FC<ExistingSchemeSelectorProps> = ({
             </div>
           ) : schemes.length === 0 ? (
             <div className="p-4 bg-app-gray-50 text-app-gray-600 rounded-md text-sm text-center">
-              No schemes found. Create your first scheme.
+              No schemes found. Create your first scheme by clicking "New Scheme".
             </div>
           ) : (
             <div className="max-h-64 overflow-y-auto space-y-2">
@@ -127,7 +128,7 @@ const ExistingSchemeSelector: React.FC<ExistingSchemeSelectorProps> = ({
                       {scheme.status}
                     </span>
                   </div>
-                  <p className="text-sm text-app-gray-500 mt-1">{scheme.description}</p>
+                  <p className="text-sm text-app-gray-500 mt-1 truncate">{scheme.description}</p>
                 </div>
               ))}
             </div>

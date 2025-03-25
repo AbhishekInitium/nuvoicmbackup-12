@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Save } from 'lucide-react';
+import { Save, PlusCircle } from 'lucide-react';
 import SectionPanel from './ui-custom/SectionPanel';
 import ActionButton from './ui-custom/ActionButton';
 import { useToast } from "@/hooks/use-toast";
@@ -27,29 +27,49 @@ const IncentivePlanDesigner: React.FC = () => {
     incentivePlans, 
     loadingPlans, 
     savePlan, 
-    isSaving
+    isSaving,
+    refetchPlans
   } = useS4HanaData();
   
   const [showExistingSchemes, setShowExistingSchemes] = useState(false);
   const [plan, setPlan] = useState<IncentivePlan>({
     ...DEFAULT_PLAN,
-    participants: [], // Initialize with empty array instead of pre-populated values
-    salesQuota: 0, // Add sales quota field with default value
+    participants: [], // Initialize with empty array
+    salesQuota: '', // Initialize with empty string instead of 0
+    name: '', // Start with empty name
+    description: '' // Start with empty description
   });
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (!loadingPlans && incentivePlans && incentivePlans.length > 0) {
-      setIsLoading(false);
-    } else if (!loadingPlans) {
+    // Fetch plans when component mounts
+    refetchPlans();
+    
+    if (!loadingPlans) {
       setIsLoading(false);
     }
-  }, [loadingPlans, incentivePlans]);
+  }, [loadingPlans, refetchPlans]);
 
   const updatePlan = (section: string, value: any) => {
     setPlan({
       ...plan,
       [section]: value
+    });
+  };
+
+  const createNewScheme = () => {
+    setPlan({
+      ...DEFAULT_PLAN,
+      participants: [],
+      salesQuota: '',
+      name: '',
+      description: ''
+    });
+    
+    toast({
+      title: "New Scheme",
+      description: "Started a new incentive scheme",
+      variant: "default"
     });
   };
 
@@ -67,7 +87,7 @@ const IncentivePlanDesigner: React.FC = () => {
       measurementRules,
       creditRules,
       customRules,
-      salesQuota = 0 // Default to 0 if not present in existing scheme
+      salesQuota = ''
     } = scheme;
     
     const planData: IncentivePlan = {
@@ -95,6 +115,16 @@ const IncentivePlanDesigner: React.FC = () => {
   };
 
   const savePlanToS4 = () => {
+    // Validate required fields
+    if (!plan.name || !plan.effectiveStart || !plan.effectiveEnd) {
+      toast({
+        title: "Validation Error",
+        description: "Please fill in all required fields: Name, Start Date, and End Date",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     // Create a plan with status by combining the current plan with a DRAFT status
     const planWithStatus: Partial<IncentivePlanWithStatus> = {
       ...plan,
@@ -108,6 +138,8 @@ const IncentivePlanDesigner: React.FC = () => {
           description: "Plan saved successfully!",
           variant: "default"
         });
+        // Refetch plans to update the list
+        refetchPlans();
       },
       onError: (error) => {
         console.error('Error saving plan:', error);
@@ -137,7 +169,15 @@ const IncentivePlanDesigner: React.FC = () => {
       </header>
 
       <div className="max-w-4xl mx-auto">
-        <div className="flex justify-end mb-6">
+        <div className="flex justify-end mb-6 space-x-4">
+          <ActionButton 
+            variant="outline"
+            size="sm"
+            onClick={createNewScheme}
+          >
+            <PlusCircle size={16} className="mr-2" /> New Scheme
+          </ActionButton>
+          
           <ExistingSchemeSelector 
             open={showExistingSchemes}
             setOpen={setShowExistingSchemes}

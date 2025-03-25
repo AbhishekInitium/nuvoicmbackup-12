@@ -23,6 +23,7 @@ const BasicInformation: React.FC<BasicInformationProps> = ({ plan, updatePlan })
           type="text"
           value={plan.name}
           onChange={(e) => updatePlan('name', e.target.value)}
+          placeholder="Enter plan name"
         />
       </div>
       
@@ -33,6 +34,7 @@ const BasicInformation: React.FC<BasicInformationProps> = ({ plan, updatePlan })
           value={plan.description}
           onChange={(e) => updatePlan('description', e.target.value)}
           rows={2}
+          placeholder="Enter plan description"
         />
       </div>
       
@@ -82,11 +84,14 @@ const BasicInformation: React.FC<BasicInformationProps> = ({ plan, updatePlan })
             <span className="text-gray-500">{currencySymbol}</span>
           </div>
           <Input 
-            type="number"
+            type="text"
             className="pl-8"
-            value={plan.salesQuota !== undefined ? plan.salesQuota : 0}
-            onChange={(e) => updatePlan('salesQuota', parseFloat(e.target.value) || 0)}
-            min={0}
+            value={plan.salesQuota || ''}
+            onChange={(e) => {
+              const value = e.target.value.replace(/[^0-9]/g, '');
+              updatePlan('salesQuota', value ? parseInt(value) : '');
+            }}
+            placeholder="Enter sales quota"
           />
         </div>
         <p className="text-sm text-app-gray-500 mt-2">

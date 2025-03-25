@@ -2,7 +2,6 @@
 import React from 'react';
 import { Trash2, Percent } from 'lucide-react';
 import { Tier } from '@/types/incentiveTypes';
-import { formatCurrency } from '@/utils/incentiveUtils';
 
 interface TierRowProps {
   tier: Tier;
@@ -24,14 +23,15 @@ const TierRow: React.FC<TierRowProps> = ({
       <td className="px-6 py-4 whitespace-nowrap">
         <div className="relative">
           <input 
-            type="number" 
+            type="text" 
             className="form-input pl-8 py-2"
-            value={formatCurrency(tier.from)}
-            onChange={(e) => updateTier(index, 'from', e.target.value)}
+            value={tier.from}
+            onChange={(e) => {
+              const value = e.target.value.replace(/[^0-9]/g, '');
+              updateTier(index, 'from', value ? parseInt(value) : '');
+            }}
             disabled={index > 0} // First tier's "from" can be edited, others are derived
-            step="0.01"
-            min="0"
-            max="9999999999999.99"
+            placeholder="Enter amount"
           />
           <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
             <span className="text-app-gray-400">{currencySymbol}</span>
@@ -41,13 +41,14 @@ const TierRow: React.FC<TierRowProps> = ({
       <td className="px-6 py-4 whitespace-nowrap">
         <div className="relative">
           <input 
-            type="number" 
+            type="text" 
             className="form-input pl-8 py-2"
-            value={formatCurrency(tier.to)}
-            onChange={(e) => updateTier(index, 'to', e.target.value)}
-            step="0.01"
-            min="0"
-            max="9999999999999.99"
+            value={tier.to}
+            onChange={(e) => {
+              const value = e.target.value.replace(/[^0-9]/g, '');
+              updateTier(index, 'to', value ? parseInt(value) : '');
+            }}
+            placeholder="Enter amount"
           />
           <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
             <span className="text-app-gray-400">{currencySymbol}</span>
@@ -57,11 +58,14 @@ const TierRow: React.FC<TierRowProps> = ({
       <td className="px-6 py-4 whitespace-nowrap">
         <div className="relative">
           <input 
-            type="number" 
-            step="0.1"
+            type="text" 
             className="form-input pl-8 py-2"
             value={tier.rate}
-            onChange={(e) => updateTier(index, 'rate', e.target.value)}
+            onChange={(e) => {
+              const value = e.target.value.replace(/[^0-9]/g, '');
+              updateTier(index, 'rate', value ? parseInt(value) : '');
+            }}
+            placeholder="Enter rate"
           />
           <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
             <Percent size={16} className="text-app-gray-400" />

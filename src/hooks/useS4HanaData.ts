@@ -19,7 +19,7 @@ export const useS4HanaData = () => {
   } = useQuery({
     queryKey: ['incentivePlans'],
     queryFn: () => getIncentivePlans(),
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 1 * 60 * 1000, // 1 minute (reduced for better refresh)
   });
 
   // Mutation for saving an incentive plan
@@ -51,13 +51,14 @@ export const useS4HanaData = () => {
   };
 
   return {
-    incentivePlans,
+    incentivePlans: incentivePlans || [],
     loadingPlans,
     plansError,
     savePlan: savePlanMutation.mutate,
     isSaving: savePlanMutation.isPending,
     saveError: savePlanMutation.error,
     fetchSalesData,
-    fetchEmployeeData
+    fetchEmployeeData,
+    refetchPlans // Expose refetchPlans function to manually refresh plans
   };
 };
