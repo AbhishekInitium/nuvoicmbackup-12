@@ -11,12 +11,14 @@ interface ExistingSchemeSelectorProps {
   open: boolean;
   setOpen: (open: boolean) => void;
   onSchemeCopy: (scheme: IncentivePlanWithStatus) => void;
+  useDialogMode?: boolean;
 }
 
 const ExistingSchemeSelector: React.FC<ExistingSchemeSelectorProps> = ({ 
   open, 
   setOpen, 
-  onSchemeCopy 
+  onSchemeCopy,
+  useDialogMode = false
 }) => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
@@ -72,15 +74,73 @@ const ExistingSchemeSelector: React.FC<ExistingSchemeSelectorProps> = ({
   const handleCopyScheme = (scheme: IncentivePlanWithStatus) => {
     onSchemeCopy(scheme);
     
-    toast({
-      title: "Scheme Copied",
-      description: `${scheme.name} has been loaded as a template.`,
-      variant: "default"
-    });
+    if (!useDialogMode) {
+      toast({
+        title: "Scheme Copied",
+        description: `${scheme.name} has been loaded as a template.`,
+        variant: "default"
+      });
+    }
     
     setOpen(false);
   };
 
+  // Content to display scheme list
+  const SchemeListContent = () => (
+    <div className="space-y-4">
+      {!useDialogMode && (
+        <>
+          <h3 className="font-medium text-lg">Select a Scheme to Copy</h3>
+          <p className="text-sm text-app-gray-500">
+            Choose an existing scheme to use as a template
+          </p>
+        </>
+      )}
+      
+      {loading ? (
+        <div className="flex justify-center py-8">
+          <Loader2 className="h-8 w-8 text-app-gray-400 animate-spin" />
+        </div>
+      ) : error ? (
+        <div className="p-4 bg-red-50 text-red-600 rounded-md text-sm">
+          {error}
+        </div>
+      ) : schemes.length === 0 ? (
+        <div className="p-4 bg-app-gray-50 text-app-gray-600 rounded-md text-sm text-center">
+          No schemes found. Create your first scheme by clicking "New Scheme".
+        </div>
+      ) : (
+        <div className="max-h-64 overflow-y-auto space-y-2">
+          {schemes.map((scheme, index) => (
+            <div 
+              key={index}
+              className="p-3 border rounded-lg hover:bg-app-gray-50 cursor-pointer transition-colors"
+              onClick={() => handleCopyScheme(scheme)}
+            >
+              <div className="flex justify-between items-center">
+                <h4 className="font-medium">{scheme.name}</h4>
+                <span className={`text-xs px-2 py-1 rounded-full ${
+                  scheme.status === 'APPROVED' 
+                    ? 'bg-green-100 text-green-800' 
+                    : 'bg-amber-100 text-amber-800'
+                }`}>
+                  {scheme.status}
+                </span>
+              </div>
+              <p className="text-sm text-app-gray-500 mt-1 truncate">{scheme.description}</p>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+
+  // If in dialog mode, just return the content without Popover wrapper
+  if (useDialogMode) {
+    return <SchemeListContent />;
+  }
+
+  // Regular popover mode
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
@@ -93,48 +153,7 @@ const ExistingSchemeSelector: React.FC<ExistingSchemeSelectorProps> = ({
         </ActionButton>
       </PopoverTrigger>
       <PopoverContent className="w-96" align="end">
-        <div className="space-y-4">
-          <h3 className="font-medium text-lg">Select a Scheme to Copy</h3>
-          <p className="text-sm text-app-gray-500">
-            Choose an existing scheme to use as a template
-          </p>
-          
-          {loading ? (
-            <div className="flex justify-center py-8">
-              <Loader2 className="h-8 w-8 text-app-gray-400 animate-spin" />
-            </div>
-          ) : error ? (
-            <div className="p-4 bg-red-50 text-red-600 rounded-md text-sm">
-              {error}
-            </div>
-          ) : schemes.length === 0 ? (
-            <div className="p-4 bg-app-gray-50 text-app-gray-600 rounded-md text-sm text-center">
-              No schemes found. Create your first scheme by clicking "New Scheme".
-            </div>
-          ) : (
-            <div className="max-h-64 overflow-y-auto space-y-2">
-              {schemes.map((scheme, index) => (
-                <div 
-                  key={index}
-                  className="p-3 border rounded-lg hover:bg-app-gray-50 cursor-pointer transition-colors"
-                  onClick={() => handleCopyScheme(scheme)}
-                >
-                  <div className="flex justify-between items-center">
-                    <h4 className="font-medium">{scheme.name}</h4>
-                    <span className={`text-xs px-2 py-1 rounded-full ${
-                      scheme.status === 'APPROVED' 
-                        ? 'bg-green-100 text-green-800' 
-                        : 'bg-amber-100 text-amber-800'
-                    }`}>
-                      {scheme.status}
-                    </span>
-                  </div>
-                  <p className="text-sm text-app-gray-500 mt-1 truncate">{scheme.description}</p>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+        <SchemeListContent />
       </PopoverContent>
     </Popover>
   );

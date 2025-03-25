@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Save, PlusCircle } from 'lucide-react';
+import { Save, PlusCircle, ArrowLeft } from 'lucide-react';
 import SectionPanel from './ui-custom/SectionPanel';
 import ActionButton from './ui-custom/ActionButton';
 import { useToast } from "@/hooks/use-toast";
@@ -21,7 +21,15 @@ import CreditRules from './incentive/CreditRules';
 import CustomRules from './incentive/CustomRules';
 import RevenueBaseSelector from './incentive/RevenueBaseSelector';
 
-const IncentivePlanDesigner: React.FC = () => {
+interface IncentivePlanDesignerProps {
+  initialPlan?: IncentivePlan | null;
+  onBack?: () => void;
+}
+
+const IncentivePlanDesigner: React.FC<IncentivePlanDesignerProps> = ({ 
+  initialPlan = null,
+  onBack
+}) => {
   const { toast } = useToast();
   const { 
     incentivePlans, 
@@ -34,10 +42,10 @@ const IncentivePlanDesigner: React.FC = () => {
   const [showExistingSchemes, setShowExistingSchemes] = useState(false);
   const [plan, setPlan] = useState<IncentivePlan>({
     ...DEFAULT_PLAN,
-    participants: [], // Initialize with empty array
-    salesQuota: 0, // Initialize with 0 instead of empty string
-    name: '', // Start with empty name
-    description: '' // Start with empty description
+    participants: [], 
+    salesQuota: 0,
+    name: '', 
+    description: '' 
   });
   const [isLoading, setIsLoading] = useState(true);
 
@@ -50,6 +58,13 @@ const IncentivePlanDesigner: React.FC = () => {
     }
   }, [loadingPlans, refetchPlans]);
 
+  useEffect(() => {
+    // Initialize with the provided plan if available
+    if (initialPlan) {
+      setPlan(initialPlan);
+    }
+  }, [initialPlan]);
+
   const updatePlan = (section: string, value: any) => {
     setPlan({
       ...plan,
@@ -61,7 +76,7 @@ const IncentivePlanDesigner: React.FC = () => {
     setPlan({
       ...DEFAULT_PLAN,
       participants: [],
-      salesQuota: 0, // Use 0 instead of empty string
+      salesQuota: 0,
       name: '',
       description: ''
     });
@@ -87,7 +102,7 @@ const IncentivePlanDesigner: React.FC = () => {
       measurementRules,
       creditRules,
       customRules,
-      salesQuota = 0 // Ensure salesQuota is a number
+      salesQuota = 0
     } = scheme;
     
     const planData: IncentivePlan = {
@@ -102,7 +117,7 @@ const IncentivePlanDesigner: React.FC = () => {
       measurementRules,
       creditRules,
       customRules,
-      salesQuota: typeof salesQuota === 'string' ? parseInt(salesQuota) || 0 : salesQuota // Convert to number if it's a string
+      salesQuota: typeof salesQuota === 'string' ? parseInt(salesQuota) || 0 : salesQuota
     };
     
     setPlan(planData);
@@ -169,20 +184,32 @@ const IncentivePlanDesigner: React.FC = () => {
       </header>
 
       <div className="max-w-4xl mx-auto">
-        <div className="flex justify-end mb-6 space-x-4">
-          <ActionButton 
-            variant="outline"
-            size="sm"
-            onClick={createNewScheme}
-          >
-            <PlusCircle size={16} className="mr-2" /> New Scheme
-          </ActionButton>
+        <div className="flex justify-between mb-6">
+          {onBack && (
+            <ActionButton 
+              variant="outline"
+              size="sm"
+              onClick={onBack}
+            >
+              <ArrowLeft size={16} className="mr-2" /> Back to Options
+            </ActionButton>
+          )}
           
-          <ExistingSchemeSelector 
-            open={showExistingSchemes}
-            setOpen={setShowExistingSchemes}
-            onSchemeCopy={copyExistingScheme}
-          />
+          <div className="flex space-x-4">
+            <ActionButton 
+              variant="outline"
+              size="sm"
+              onClick={createNewScheme}
+            >
+              <PlusCircle size={16} className="mr-2" /> New Scheme
+            </ActionButton>
+            
+            <ExistingSchemeSelector 
+              open={showExistingSchemes}
+              setOpen={setShowExistingSchemes}
+              onSchemeCopy={copyExistingScheme}
+            />
+          </div>
         </div>
 
         {/* Section 1: Header Information */}
