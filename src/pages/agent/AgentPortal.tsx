@@ -5,12 +5,14 @@ import Container from '@/components/layout/Container';
 import { useS4HanaData } from '@/hooks/useS4HanaData';
 import { useToast } from '@/hooks/use-toast';
 import AgentDashboardHeader from '@/components/agent/AgentDashboardHeader';
-import DashboardMetricCards from '@/components/agent/DashboardMetricCards';
-import CommissionChartSection from '@/components/agent/CommissionChartSection';
-import PerformanceSection from '@/components/agent/PerformanceSection';
-import IncentivePlanCard from '@/components/agent/IncentivePlanCard';
-import LeaderboardCard from '@/components/agent/LeaderboardCard';
-import GoalProgressCard from '@/components/agent/GoalProgressCard';
+import AgentProfile from '@/components/agent/AgentProfile';
+import QuotaAttainmentChart from '@/components/agent/QuotaAttainmentChart';
+import BookingsProduction from '@/components/agent/BookingsProduction';
+import CurrentPeriodPayment from '@/components/agent/CurrentPeriodPayment';
+import QuarterlyBookingsChart from '@/components/agent/QuarterlyBookingsChart';
+import TopSellers from '@/components/agent/TopSellers';
+import RecentBookings from '@/components/agent/RecentBookings';
+import Reminder from '@/components/agent/Reminder';
 
 const AgentPortal = () => {
   const [period, setPeriod] = useState('quarter');
@@ -73,38 +75,35 @@ const AgentPortal = () => {
     }
   }, [salesResult, salesLoading, salesError, toast]);
 
-  const agentPlan = incentivePlans && incentivePlans.length > 0 
-    ? incentivePlans.find(plan => 
-        plan.participants.includes('USA') || 
-        plan.participants.includes('ALL')
-      ) 
-    : null;
-
   return (
-    <div className="min-h-screen bg-gradient-to-b from-app-gray-50 to-white">
+    <div className="min-h-screen bg-app-gray-50">
       <NavBar />
       
-      <div className="py-8">
-        <Container>
+      <div className="py-6">
+        <Container maxWidth="full">
           <AgentDashboardHeader 
             employeeData={employeeData} 
             empLoading={empLoading} 
-            salesLoading={salesLoading} 
+            salesLoading={salesLoading}
+            period={period}
+            setPeriod={setPeriod}
           />
           
-          <DashboardMetricCards />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+            <AgentProfile employeeData={employeeData} />
+            <QuotaAttainmentChart />
+            <BookingsProduction />
+          </div>
           
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <div className="lg:col-span-2 space-y-8">
-              <CommissionChartSection />
-              <PerformanceSection period={period} setPeriod={setPeriod} />
-            </div>
-            
-            <div className="space-y-8">
-              <IncentivePlanCard agentPlan={agentPlan} />
-              <LeaderboardCard />
-              <GoalProgressCard />
-            </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <CurrentPeriodPayment />
+            <QuarterlyBookingsChart />
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <TopSellers />
+            <RecentBookings />
+            <Reminder />
           </div>
         </Container>
       </div>

@@ -15,25 +15,29 @@ const Index = () => {
       label: 'Sales Agent Portal',
       path: '/agent',
       icon: <User className="h-6 w-6 mb-2" />,
-      onClick: () => setActivePortal('agent')
+      onClick: () => setActivePortal('agent'),
+      description: 'Access your dashboard, quota attainment, and earnings information'
     },
     {
       label: 'Manager Portal',
       path: '/manager',
       icon: <Settings className="h-6 w-6 mb-2" />,
-      onClick: () => setActivePortal('manager')
+      onClick: () => setActivePortal('manager'),
+      description: 'Manage incentive plans, team performance, and commission payments'
     },
     {
       label: 'Ops & Finance',
       path: '/operations',
       icon: <BarChart3 className="h-6 w-6 mb-2" />,
-      onClick: () => setActivePortal('all')
+      onClick: () => setActivePortal('all'),
+      description: 'Financial reporting, commission validation, and payment processing'
     },
     {
       label: 'SAP Integration',
       path: '/integration',
       icon: <Database className="h-6 w-6 mb-2" />,
-      onClick: () => setActivePortal('all')
+      onClick: () => setActivePortal('all'),
+      description: 'Configure and test SAP integration points and data mapping'
     }
   ];
 
@@ -63,7 +67,8 @@ const Index = () => {
                   <div className="flex items-center justify-center w-12 h-12 bg-app-blue-50 rounded-full mb-4">
                     {item.icon}
                   </div>
-                  <h3 className="text-lg font-medium text-app-gray-900">{item.label}</h3>
+                  <h3 className="text-lg font-medium text-app-gray-900 mb-2">{item.label}</h3>
+                  <p className="text-sm text-app-gray-600 text-center">{item.description}</p>
                 </Link>
               ))}
             </div>
