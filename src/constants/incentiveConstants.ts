@@ -1,3 +1,4 @@
+
 // Mock data for existing schemes
 export const MOCK_SCHEMES = [
   { id: 1, name: 'Enterprise Sales Plan 2024', description: 'For enterprise sales team' },
@@ -79,18 +80,18 @@ export const DEFAULT_PLAN = {
   commissionStructure: {
     tiers: [
       {
-        lowerBound: 0,
-        upperBound: 100000,
+        from: 0,
+        to: 100000,
         rate: 1
       },
       {
-        lowerBound: 100001,
-        upperBound: 250000,
+        from: 100001,
+        to: 250000,
         rate: 2
       },
       {
-        lowerBound: 250001,
-        upperBound: null, // No upper bound for the last tier
+        from: 250001,
+        to: 999999999, // Use a large number instead of null
         rate: 3
       }
     ]

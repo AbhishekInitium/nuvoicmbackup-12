@@ -164,7 +164,6 @@ const IncentivePlanDesigner: React.FC = () => {
             <ParticipantsSection 
               participants={plan.participants} 
               updatePlan={updatePlan} 
-              badge={<div className="chip chip-blue">{plan.participants.length}</div>}
             />
             
             <MeasurementRules 
@@ -183,7 +182,6 @@ const IncentivePlanDesigner: React.FC = () => {
               customRules={plan.customRules}
               currency={plan.currency}
               updateCustomRules={(rules) => updatePlan('customRules', rules)}
-              badge={<div className="chip chip-purple">{plan.customRules.length}</div>}
             />
           </div>
         </SectionPanel>
