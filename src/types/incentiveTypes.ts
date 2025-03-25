@@ -1,3 +1,4 @@
+
 export interface Tier {
   from: number;
   to: number;
@@ -70,5 +71,5 @@ export interface IncentivePlan {
     levels: CreditLevel[];
   };
   customRules: CustomRule[];
-  salesQuota?: number;
+  salesQuota: number; // Changed from optional number to required number
 }

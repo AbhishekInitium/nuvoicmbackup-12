@@ -89,7 +89,7 @@ const BasicInformation: React.FC<BasicInformationProps> = ({ plan, updatePlan })
             value={plan.salesQuota || ''}
             onChange={(e) => {
               const value = e.target.value.replace(/[^0-9]/g, '');
-              updatePlan('salesQuota', value ? parseInt(value) : '');
+              updatePlan('salesQuota', value ? parseInt(value) : 0);
             }}
             placeholder="Enter sales quota"
           />

@@ -35,7 +35,7 @@ const IncentivePlanDesigner: React.FC = () => {
   const [plan, setPlan] = useState<IncentivePlan>({
     ...DEFAULT_PLAN,
     participants: [], // Initialize with empty array
-    salesQuota: '', // Initialize with empty string instead of 0
+    salesQuota: 0, // Initialize with 0 instead of empty string
     name: '', // Start with empty name
     description: '' // Start with empty description
   });
@@ -61,7 +61,7 @@ const IncentivePlanDesigner: React.FC = () => {
     setPlan({
       ...DEFAULT_PLAN,
       participants: [],
-      salesQuota: '',
+      salesQuota: 0, // Use 0 instead of empty string
       name: '',
       description: ''
     });
@@ -87,7 +87,7 @@ const IncentivePlanDesigner: React.FC = () => {
       measurementRules,
       creditRules,
       customRules,
-      salesQuota = ''
+      salesQuota = 0 // Ensure salesQuota is a number
     } = scheme;
     
     const planData: IncentivePlan = {
@@ -102,7 +102,7 @@ const IncentivePlanDesigner: React.FC = () => {
       measurementRules,
       creditRules,
       customRules,
-      salesQuota
+      salesQuota: typeof salesQuota === 'string' ? parseInt(salesQuota) || 0 : salesQuota // Convert to number if it's a string
     };
     
     setPlan(planData);
