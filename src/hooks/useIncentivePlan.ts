@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { IncentivePlan, MeasurementRules, PrimaryMetric } from '@/types/incentiveTypes';
@@ -63,14 +64,18 @@ export const useIncentivePlan = (
       salesQuota = 0
     } = scheme;
     
+    // Ensure the measurementRules has correct primaryMetrics
+    let defaultMetrics: PrimaryMetric[] = [{ name: 'revenue', description: 'Net Revenue' }];
+    
+    // Safe access pattern for potentially undefined values
+    const primaryMetrics = measurementRules?.primaryMetrics;
+    
+    // Create fixed measurement rules with proper type safety
     const fixedMeasurementRules: MeasurementRules = {
       ...measurementRules,
-      primaryMetrics: Array.isArray(measurementRules?.primaryMetrics) 
-        ? measurementRules.primaryMetrics 
-        : [{
-            name: 'revenue',
-            description: measurementRules?.primaryMetrics?.[0]?.description || 'Net Revenue'
-          } as PrimaryMetric]
+      primaryMetrics: Array.isArray(primaryMetrics) && primaryMetrics.length > 0
+        ? primaryMetrics
+        : defaultMetrics
     };
     
     const planData: IncentivePlan = {

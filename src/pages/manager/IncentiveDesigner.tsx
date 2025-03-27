@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import NavBar from '@/components/layout/NavBar';
 import Container from '@/components/layout/Container';
@@ -5,7 +6,7 @@ import IncentivePlanDesigner from '@/components/IncentivePlanDesigner';
 import { useToast } from "@/hooks/use-toast";
 import { IncentivePlanWithStatus } from '@/services/incentive/incentivePlanService';
 import { DEFAULT_PLAN } from '@/constants/incentiveConstants';
-import { IncentivePlan } from '@/types/incentiveTypes';
+import { IncentivePlan, PrimaryMetric } from '@/types/incentiveTypes';
 
 import SchemeOptionsScreen from '@/components/incentive/SchemeOptionsScreen';
 import DesignerNavigation from '@/components/incentive/DesignerNavigation';
@@ -29,14 +30,15 @@ const IncentiveDesigner = () => {
   };
 
   const handleCopyExistingScheme = (scheme: IncentivePlanWithStatus) => {
+    // Default metrics to use if none are found
+    const defaultMetrics: PrimaryMetric[] = [{ name: 'revenue', description: 'Net Revenue' }];
+    
     const fixedMeasurementRules = {
       ...scheme.measurementRules,
-      primaryMetrics: Array.isArray(scheme.measurementRules?.primaryMetrics) 
+      primaryMetrics: Array.isArray(scheme.measurementRules?.primaryMetrics) && 
+                     scheme.measurementRules.primaryMetrics.length > 0
         ? scheme.measurementRules.primaryMetrics 
-        : [{
-            name: 'revenue',
-            description: scheme.measurementRules?.primaryMetrics?.[0]?.description || 'Net Revenue'
-          }]
+        : defaultMetrics
     };
     
     const planData: IncentivePlan = {
