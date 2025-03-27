@@ -11,7 +11,7 @@ export const useIncentivePlan = (
   refetchPlans?: () => void
 ) => {
   const { toast } = useToast();
-  const [plan, setPlan] = useState<IncentivePlan>({
+  const [plan, setPlan] = useState<IncentivePlan>(initialPlan || {
     ...DEFAULT_PLAN,
     participants: [],
     salesQuota: 0,
@@ -66,8 +66,19 @@ export const useIncentivePlan = (
       salesQuota = 0
     } = scheme;
     
+    // Ensure the measurementRules has primaryMetrics property (as an array)
+    const fixedMeasurementRules = {
+      ...measurementRules,
+      primaryMetrics: Array.isArray(measurementRules.primaryMetrics) 
+        ? measurementRules.primaryMetrics 
+        : [{
+            name: 'revenue',
+            description: measurementRules.primaryMetric || 'Net Revenue'
+          }]
+    };
+    
     const planData: IncentivePlan = {
-      name,
+      name: `Copy of ${name}`,
       description,
       effectiveStart,
       effectiveEnd,
@@ -75,7 +86,7 @@ export const useIncentivePlan = (
       revenueBase,
       participants,
       commissionStructure,
-      measurementRules,
+      measurementRules: fixedMeasurementRules,
       creditRules,
       customRules,
       salesQuota: typeof salesQuota === 'string' ? parseInt(salesQuota) || 0 : salesQuota

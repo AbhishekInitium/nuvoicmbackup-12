@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { DB_FIELDS } from '@/constants/incentiveConstants';
 import { MeasurementRules, Adjustment, Exclusion, PrimaryMetric } from '@/types/incentiveTypes';
 
@@ -8,7 +8,27 @@ export const useMeasurementRules = (
   revenueBase: string,
   onUpdateRules: (rules: MeasurementRules) => void
 ) => {
-  const [rules, setRules] = useState<MeasurementRules>(initialRules);
+  // Ensure initialRules.primaryMetrics is an array
+  const normalizedInitialRules = {
+    ...initialRules,
+    primaryMetrics: Array.isArray(initialRules.primaryMetrics)
+      ? initialRules.primaryMetrics
+      : [{ name: 'revenue', description: 'Revenue-based metric' }]
+  };
+
+  const [rules, setRules] = useState<MeasurementRules>(normalizedInitialRules);
+
+  // Update rules if initialRules changes
+  useEffect(() => {
+    const normalizedRules = {
+      ...initialRules,
+      primaryMetrics: Array.isArray(initialRules.primaryMetrics)
+        ? initialRules.primaryMetrics
+        : [{ name: 'revenue', description: 'Revenue-based metric' }]
+    };
+    
+    setRules(normalizedRules);
+  }, [initialRules]);
 
   // Helper function to get database fields based on revenue base
   const getDbFields = () => {
@@ -48,6 +68,11 @@ export const useMeasurementRules = (
   };
 
   const removePrimaryMetric = (index: number) => {
+    // Don't remove if it's the last metric
+    if (rules.primaryMetrics.length <= 1) {
+      return;
+    }
+    
     const newMetrics = [...rules.primaryMetrics];
     newMetrics.splice(index, 1);
     

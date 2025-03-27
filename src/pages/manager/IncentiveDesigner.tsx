@@ -48,6 +48,17 @@ const IncentiveDesigner = () => {
       salesQuota = 0
     } = scheme;
     
+    // Ensure the measurementRules has primaryMetrics property (as an array)
+    const fixedMeasurementRules = {
+      ...measurementRules,
+      primaryMetrics: Array.isArray(measurementRules.primaryMetrics) 
+        ? measurementRules.primaryMetrics 
+        : [{
+            name: 'revenue',
+            description: measurementRules.primaryMetric || 'Net Revenue'
+          }]
+    };
+    
     const planData: IncentivePlan = {
       name: `Copy of ${name}`,
       description,
@@ -57,7 +68,7 @@ const IncentiveDesigner = () => {
       revenueBase,
       participants,
       commissionStructure,
-      measurementRules,
+      measurementRules: fixedMeasurementRules,
       creditRules,
       customRules,
       salesQuota: typeof salesQuota === 'string' ? parseInt(salesQuota) || 0 : salesQuota

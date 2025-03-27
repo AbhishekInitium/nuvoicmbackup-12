@@ -40,18 +40,28 @@ const MeasurementRules: React.FC<MeasurementRulesProps> = ({
     removeExclusion
   } = useMeasurementRules(measurementRules, revenueBase, updateMeasurementRules);
 
+  // Ensure primaryMetrics is always an array
+  const primaryMetrics = Array.isArray(rules?.primaryMetrics) 
+    ? rules.primaryMetrics 
+    : [];
+
+  // Get the primary metric name for qualification input
+  const primaryMetricName = primaryMetrics.length > 0 
+    ? primaryMetrics[0].name 
+    : "revenue";
+
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 gap-5">
         <PrimaryMetricSelector
-          primaryMetrics={rules.primaryMetrics}
+          primaryMetrics={primaryMetrics}
           onAddMetric={addPrimaryMetric}
           onUpdateMetric={updatePrimaryMetric}
           onRemoveMetric={removePrimaryMetric}
         />
         
         <QualificationInput
-          primaryMetric={rules.primaryMetrics.length > 0 ? rules.primaryMetrics[0].name : "revenue"}
+          primaryMetric={primaryMetricName}
           minQualification={rules.minQualification}
           currencySymbol={currencySymbol}
           onMinQualificationChange={updateMinQualification}
