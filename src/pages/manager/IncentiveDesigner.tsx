@@ -31,7 +31,7 @@ const IncentiveDesigner = () => {
 
   const handleCopyExistingScheme = (scheme: IncentivePlanWithStatus) => {
     // Default field to use if none are found
-    const defaultField = scheme.revenueBase === 'salesOrders' ? 'netAmount' : 'revenue';
+    const defaultField = scheme.revenueBase === 'salesOrders' ? 'TotalAmount' : 'InvoiceAmount';
     const defaultMetrics: PrimaryMetric[] = [{ 
       field: defaultField, 
       operator: '>', 

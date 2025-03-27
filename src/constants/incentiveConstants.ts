@@ -99,8 +99,10 @@ export const DEFAULT_PLAN = {
   measurementRules: {
     primaryMetrics: [
       {
-        name: 'revenue',
-        description: 'Net Revenue'
+        field: 'TotalAmount',
+        operator: '>',
+        value: 0,
+        description: 'Qualifying Revenue'
       }
     ],
     minQualification: 50000, // Minimum qualification threshold

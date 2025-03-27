@@ -64,11 +64,15 @@ export const getIncentivePlans = async (statusFilter?: IncentiveStatus): Promise
         measurementRules: {
           primaryMetrics: Array.isArray(item.MeasurementRules?.PrimaryMetrics) 
             ? item.MeasurementRules.PrimaryMetrics.map((metric: any) => ({
-                name: metric.Name || 'revenue',
+                field: metric.Field || 'TotalAmount',
+                operator: metric.Operator || '>',
+                value: metric.Value || 0, 
                 description: metric.Description || 'Net Revenue'
               }))
             : [{ 
-                name: 'revenue', 
+                field: 'TotalAmount', 
+                operator: '>', 
+                value: 0,
                 description: item.MeasurementRules?.PrimaryMetric || 'Net Revenue' 
               }],
           minQualification: item.MeasurementRules?.MinQualification || 0,
@@ -149,7 +153,12 @@ const getMockIncentivePlans = (): IncentivePlanWithStatus[] => {
       ] 
     },
     measurementRules: { 
-      primaryMetrics: [{ name: 'revenue', description: 'Net Revenue' }],
+      primaryMetrics: [{ 
+        field: 'TotalAmount', 
+        operator: '>', 
+        value: 0,
+        description: 'Net Revenue' 
+      }],
       minQualification: 0,
       adjustments: [],
       exclusions: []

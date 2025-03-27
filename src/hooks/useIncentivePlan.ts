@@ -65,8 +65,8 @@ export const useIncentivePlan = (
     } = scheme;
     
     // Ensure the measurementRules has correct primaryMetrics
-    const defaultField = revenueBase === 'salesOrders' ? 'netAmount' : 'revenue';
-    let defaultMetrics: PrimaryMetric[] = [{ 
+    const defaultField = revenueBase === 'salesOrders' ? 'TotalAmount' : 'InvoiceAmount';
+    const defaultMetrics: PrimaryMetric[] = [{ 
       field: defaultField, 
       operator: '>', 
       value: 0, 
