@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
 import { DB_FIELDS } from '@/constants/incentiveConstants';
-import { MeasurementRules, Adjustment, Exclusion } from '@/types/incentiveTypes';
+import { MeasurementRules, Adjustment, Exclusion, PrimaryMetric } from '@/types/incentiveTypes';
 
 export const useMeasurementRules = (
   initialRules: MeasurementRules,
@@ -15,12 +15,47 @@ export const useMeasurementRules = (
     return DB_FIELDS[revenueBase] || [];
   };
 
-  // Update primary metric
-  const updatePrimaryMetric = (value: string) => {
+  // Primary Metric handlers
+  const addPrimaryMetric = () => {
+    const newMetric: PrimaryMetric = {
+      name: 'revenue',
+      description: 'Revenue-based metric'
+    };
+    
     const updatedRules = {
       ...rules,
-      primaryMetric: value
+      primaryMetrics: [...rules.primaryMetrics, newMetric]
     };
+    
+    setRules(updatedRules);
+    onUpdateRules(updatedRules);
+  };
+
+  const updatePrimaryMetric = (index: number, field: keyof PrimaryMetric, value: string) => {
+    const newMetrics = [...rules.primaryMetrics];
+    newMetrics[index] = {
+      ...newMetrics[index],
+      [field]: value
+    };
+    
+    const updatedRules = {
+      ...rules,
+      primaryMetrics: newMetrics
+    };
+    
+    setRules(updatedRules);
+    onUpdateRules(updatedRules);
+  };
+
+  const removePrimaryMetric = (index: number) => {
+    const newMetrics = [...rules.primaryMetrics];
+    newMetrics.splice(index, 1);
+    
+    const updatedRules = {
+      ...rules,
+      primaryMetrics: newMetrics
+    };
+    
     setRules(updatedRules);
     onUpdateRules(updatedRules);
   };
@@ -135,7 +170,9 @@ export const useMeasurementRules = (
   return {
     rules,
     getDbFields,
+    addPrimaryMetric,
     updatePrimaryMetric,
+    removePrimaryMetric,
     updateMinQualification,
     addAdjustment,
     updateAdjustment,

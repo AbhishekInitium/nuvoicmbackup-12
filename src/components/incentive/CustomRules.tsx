@@ -6,7 +6,6 @@ import { CustomRule } from '@/types/incentiveTypes';
 import { getCurrencySymbol } from '@/utils/incentiveUtils';
 import { useCustomRules } from './useCustomRules';
 import CustomRuleCard from './CustomRuleCard';
-import EmptyRulesState from './EmptyRulesState';
 
 interface CustomRulesProps {
   customRules: CustomRule[];
@@ -32,7 +31,8 @@ const CustomRules: React.FC<CustomRulesProps> = ({
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-end">
+      <div className="flex justify-between items-center">
+        <h3 className="text-base font-medium text-app-gray-700">Custom Rules</h3>
         <ActionButton 
           variant="outline"
           size="sm"
@@ -43,7 +43,17 @@ const CustomRules: React.FC<CustomRulesProps> = ({
       </div>
       
       {rules.length === 0 ? (
-        <EmptyRulesState onAddRule={addCustomRule} />
+        <div className="text-center py-8 border border-dashed rounded-lg">
+          <p className="text-app-gray-500">No custom rules defined yet</p>
+          <ActionButton
+            variant="outline"
+            size="sm"
+            onClick={addCustomRule}
+            className="mx-auto mt-4"
+          >
+            <PlusCircle size={16} className="mr-1" /> Add Rule
+          </ActionButton>
+        </div>
       ) : (
         <div className="space-y-8">
           {rules.map((rule, ruleIndex) => (

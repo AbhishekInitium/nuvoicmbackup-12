@@ -28,7 +28,9 @@ const MeasurementRules: React.FC<MeasurementRulesProps> = ({
   const {
     rules,
     getDbFields,
+    addPrimaryMetric,
     updatePrimaryMetric,
+    removePrimaryMetric,
     updateMinQualification,
     addAdjustment,
     updateAdjustment,
@@ -40,14 +42,16 @@ const MeasurementRules: React.FC<MeasurementRulesProps> = ({
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+      <div className="grid grid-cols-1 gap-5">
         <PrimaryMetricSelector
-          primaryMetric={rules.primaryMetric}
-          onPrimaryMetricChange={updatePrimaryMetric}
+          primaryMetrics={rules.primaryMetrics}
+          onAddMetric={addPrimaryMetric}
+          onUpdateMetric={updatePrimaryMetric}
+          onRemoveMetric={removePrimaryMetric}
         />
         
         <QualificationInput
-          primaryMetric={rules.primaryMetric}
+          primaryMetric={rules.primaryMetrics.length > 0 ? rules.primaryMetrics[0].name : "revenue"}
           minQualification={rules.minQualification}
           currencySymbol={currencySymbol}
           onMinQualificationChange={updateMinQualification}

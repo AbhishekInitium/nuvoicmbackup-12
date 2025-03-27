@@ -20,6 +20,11 @@ export interface Exclusion {
   description: string;
 }
 
+export interface PrimaryMetric {
+  name: string;
+  description: string;
+}
+
 export interface CreditLevel {
   name: string;
   percentage: number;
@@ -41,7 +46,7 @@ export interface CustomRule {
 }
 
 export interface MeasurementRules {
-  primaryMetric: string;
+  primaryMetrics: PrimaryMetric[];
   minQualification: number;
   adjustments: Adjustment[];
   exclusions: Exclusion[];
