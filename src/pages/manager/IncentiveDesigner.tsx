@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import NavBar from '@/components/layout/NavBar';
 import Container from '@/components/layout/Container';
@@ -8,7 +7,6 @@ import { IncentivePlanWithStatus } from '@/services/incentive/incentivePlanServi
 import { DEFAULT_PLAN } from '@/constants/incentiveConstants';
 import { IncentivePlan } from '@/types/incentiveTypes';
 
-// Import the newly created components
 import SchemeOptionsScreen from '@/components/incentive/SchemeOptionsScreen';
 import DesignerNavigation from '@/components/incentive/DesignerNavigation';
 import SchemeSelectionDialog from '@/components/incentive/SchemeSelectionDialog';
@@ -20,7 +18,6 @@ const IncentiveDesigner = () => {
   const [planTemplate, setPlanTemplate] = useState<IncentivePlan | null>(null);
 
   const handleCreateNewScheme = () => {
-    // Set default template with empty values
     setPlanTemplate({
       ...DEFAULT_PLAN,
       participants: [],
@@ -32,46 +29,29 @@ const IncentiveDesigner = () => {
   };
 
   const handleCopyExistingScheme = (scheme: IncentivePlanWithStatus) => {
-    // Extract necessary properties for the plan template
-    const {
-      name,
-      description,
-      effectiveStart,
-      effectiveEnd,
-      currency,
-      revenueBase,
-      participants,
-      commissionStructure,
-      measurementRules,
-      creditRules,
-      customRules,
-      salesQuota = 0
-    } = scheme;
-    
-    // Ensure the measurementRules has primaryMetrics property (as an array)
     const fixedMeasurementRules = {
-      ...measurementRules,
-      primaryMetrics: Array.isArray(measurementRules.primaryMetrics) 
-        ? measurementRules.primaryMetrics 
+      ...scheme.measurementRules,
+      primaryMetrics: Array.isArray(scheme.measurementRules?.primaryMetrics) 
+        ? scheme.measurementRules.primaryMetrics 
         : [{
             name: 'revenue',
-            description: measurementRules.primaryMetrics?.[0]?.description || 'Net Revenue'
+            description: scheme.measurementRules?.primaryMetrics?.[0]?.description || 'Net Revenue'
           }]
     };
     
     const planData: IncentivePlan = {
-      name: `Copy of ${name}`,
-      description,
-      effectiveStart,
-      effectiveEnd,
-      currency,
-      revenueBase,
-      participants,
-      commissionStructure,
+      name: `Copy of ${scheme.name}`,
+      description: scheme.description,
+      effectiveStart: scheme.effectiveStart,
+      effectiveEnd: scheme.effectiveEnd,
+      currency: scheme.currency,
+      revenueBase: scheme.revenueBase,
+      participants: scheme.participants,
+      commissionStructure: scheme.commissionStructure,
       measurementRules: fixedMeasurementRules,
-      creditRules,
-      customRules,
-      salesQuota: typeof salesQuota === 'string' ? parseInt(salesQuota) || 0 : salesQuota
+      creditRules: scheme.creditRules,
+      customRules: scheme.customRules,
+      salesQuota: typeof scheme.salesQuota === 'string' ? parseInt(scheme.salesQuota) || 0 : scheme.salesQuota
     };
     
     setPlanTemplate(planData);
@@ -84,7 +64,7 @@ const IncentiveDesigner = () => {
       variant: "default"
     });
   };
-  
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-app-gray-50 to-white">
       <NavBar />

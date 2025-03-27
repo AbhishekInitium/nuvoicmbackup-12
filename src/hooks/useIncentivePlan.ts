@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useToast } from "@/hooks/use-toast";
-import { IncentivePlan } from '@/types/incentiveTypes';
+import { IncentivePlan, MeasurementRules, PrimaryMetric } from '@/types/incentiveTypes';
 import { IncentivePlanWithStatus } from '@/services/incentive/incentivePlanService';
 import { DEFAULT_PLAN } from '@/constants/incentiveConstants';
 
@@ -63,14 +63,14 @@ export const useIncentivePlan = (
       salesQuota = 0
     } = scheme;
     
-    const fixedMeasurementRules = {
+    const fixedMeasurementRules: MeasurementRules = {
       ...measurementRules,
-      primaryMetrics: Array.isArray(measurementRules.primaryMetrics) 
+      primaryMetrics: Array.isArray(measurementRules?.primaryMetrics) 
         ? measurementRules.primaryMetrics 
         : [{
             name: 'revenue',
-            description: measurementRules.primaryMetrics?.[0]?.description || 'Net Revenue'
-          }]
+            description: measurementRules?.primaryMetrics?.[0]?.description || 'Net Revenue'
+          } as PrimaryMetric]
     };
     
     const planData: IncentivePlan = {
