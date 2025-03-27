@@ -7,7 +7,6 @@ import { useMeasurementRules } from '@/hooks/useMeasurementRules';
 
 // Import smaller components
 import PrimaryMetricSelector from './PrimaryMetricSelector';
-import QualificationInput from './QualificationInput';
 import AdjustmentsList from './AdjustmentsList';
 import ExclusionsList from './ExclusionsList';
 
@@ -31,7 +30,6 @@ const MeasurementRules: React.FC<MeasurementRulesProps> = ({
     addPrimaryMetric,
     updatePrimaryMetric,
     removePrimaryMetric,
-    updateMinQualification,
     addAdjustment,
     updateAdjustment,
     removeAdjustment,
@@ -45,26 +43,16 @@ const MeasurementRules: React.FC<MeasurementRulesProps> = ({
     ? rules.primaryMetrics 
     : [];
 
-  // Get the primary metric name for qualification input
-  const primaryMetricName = primaryMetrics.length > 0 
-    ? primaryMetrics[0].name 
-    : "revenue";
-
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 gap-5">
         <PrimaryMetricSelector
           primaryMetrics={primaryMetrics}
+          dbFields={getDbFields()}
+          currencySymbol={currencySymbol}
           onAddMetric={addPrimaryMetric}
           onUpdateMetric={updatePrimaryMetric}
           onRemoveMetric={removePrimaryMetric}
-        />
-        
-        <QualificationInput
-          primaryMetric={primaryMetricName}
-          minQualification={rules.minQualification}
-          currencySymbol={currencySymbol}
-          onMinQualificationChange={updateMinQualification}
         />
       </div>
       

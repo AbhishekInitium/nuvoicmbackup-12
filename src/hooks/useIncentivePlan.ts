@@ -65,7 +65,13 @@ export const useIncentivePlan = (
     } = scheme;
     
     // Ensure the measurementRules has correct primaryMetrics
-    let defaultMetrics: PrimaryMetric[] = [{ name: 'revenue', description: 'Net Revenue' }];
+    const defaultField = revenueBase === 'salesOrders' ? 'netAmount' : 'revenue';
+    let defaultMetrics: PrimaryMetric[] = [{ 
+      field: defaultField, 
+      operator: '>', 
+      value: 0, 
+      description: 'Qualifying Revenue' 
+    }];
     
     // Safe access pattern for potentially undefined values
     const primaryMetrics = measurementRules?.primaryMetrics;
@@ -74,7 +80,12 @@ export const useIncentivePlan = (
     const fixedMeasurementRules: MeasurementRules = {
       ...measurementRules,
       primaryMetrics: Array.isArray(primaryMetrics) && primaryMetrics.length > 0
-        ? primaryMetrics
+        ? primaryMetrics.map(metric => ({
+            field: metric.field || defaultField,
+            operator: metric.operator || '>',
+            value: metric.value || 0,
+            description: metric.description || 'Qualifying criteria'
+          }))
         : defaultMetrics
     };
     

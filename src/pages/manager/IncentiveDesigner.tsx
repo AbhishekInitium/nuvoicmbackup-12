@@ -30,14 +30,25 @@ const IncentiveDesigner = () => {
   };
 
   const handleCopyExistingScheme = (scheme: IncentivePlanWithStatus) => {
-    // Default metrics to use if none are found
-    const defaultMetrics: PrimaryMetric[] = [{ name: 'revenue', description: 'Net Revenue' }];
+    // Default field to use if none are found
+    const defaultField = scheme.revenueBase === 'salesOrders' ? 'netAmount' : 'revenue';
+    const defaultMetrics: PrimaryMetric[] = [{ 
+      field: defaultField, 
+      operator: '>', 
+      value: 0, 
+      description: 'Qualifying Revenue' 
+    }];
     
     const fixedMeasurementRules = {
       ...scheme.measurementRules,
       primaryMetrics: Array.isArray(scheme.measurementRules?.primaryMetrics) && 
                      scheme.measurementRules.primaryMetrics.length > 0
-        ? scheme.measurementRules.primaryMetrics 
+        ? scheme.measurementRules.primaryMetrics.map(metric => ({
+            field: metric.field || defaultField,
+            operator: metric.operator || '>',
+            value: metric.value || 0,
+            description: metric.description || 'Qualifying criteria'
+          }))
         : defaultMetrics
     };
     

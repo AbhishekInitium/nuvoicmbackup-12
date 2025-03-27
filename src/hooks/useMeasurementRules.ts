@@ -9,11 +9,13 @@ export const useMeasurementRules = (
   onUpdateRules: (rules: MeasurementRules) => void
 ) => {
   // Ensure initialRules.primaryMetrics is an array
+  const defaultField = DB_FIELDS[revenueBase]?.[0] || '';
+  
   const normalizedInitialRules = {
     ...initialRules,
-    primaryMetrics: Array.isArray(initialRules.primaryMetrics)
+    primaryMetrics: Array.isArray(initialRules.primaryMetrics) && initialRules.primaryMetrics.length > 0
       ? initialRules.primaryMetrics
-      : [{ name: 'revenue', description: 'Revenue-based metric' }]
+      : [{ field: defaultField, operator: '>', value: 0, description: 'Revenue-based criteria' }]
   };
 
   const [rules, setRules] = useState<MeasurementRules>(normalizedInitialRules);
@@ -22,13 +24,13 @@ export const useMeasurementRules = (
   useEffect(() => {
     const normalizedRules = {
       ...initialRules,
-      primaryMetrics: Array.isArray(initialRules.primaryMetrics)
+      primaryMetrics: Array.isArray(initialRules.primaryMetrics) && initialRules.primaryMetrics.length > 0
         ? initialRules.primaryMetrics
-        : [{ name: 'revenue', description: 'Revenue-based metric' }]
+        : [{ field: defaultField, operator: '>', value: 0, description: 'Revenue-based criteria' }]
     };
     
     setRules(normalizedRules);
-  }, [initialRules]);
+  }, [initialRules, defaultField]);
 
   // Helper function to get database fields based on revenue base
   const getDbFields = () => {
@@ -37,9 +39,12 @@ export const useMeasurementRules = (
 
   // Primary Metric handlers
   const addPrimaryMetric = () => {
+    const defaultField = DB_FIELDS[revenueBase][0];
     const newMetric: PrimaryMetric = {
-      name: 'revenue',
-      description: 'Revenue-based metric'
+      field: defaultField,
+      operator: '>',
+      value: 0,
+      description: 'New qualifying criteria'
     };
     
     const updatedRules = {
@@ -51,7 +56,7 @@ export const useMeasurementRules = (
     onUpdateRules(updatedRules);
   };
 
-  const updatePrimaryMetric = (index: number, field: keyof PrimaryMetric, value: string) => {
+  const updatePrimaryMetric = (index: number, field: keyof PrimaryMetric, value: string | number) => {
     const newMetrics = [...rules.primaryMetrics];
     newMetrics[index] = {
       ...newMetrics[index],

@@ -21,7 +21,9 @@ export interface Exclusion {
 }
 
 export interface PrimaryMetric {
-  name: string;
+  field: string;
+  operator: string;
+  value: number;
   description: string;
 }
 
