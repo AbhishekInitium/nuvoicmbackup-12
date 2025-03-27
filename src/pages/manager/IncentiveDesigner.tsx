@@ -55,7 +55,7 @@ const IncentiveDesigner = () => {
         ? measurementRules.primaryMetrics 
         : [{
             name: 'revenue',
-            description: measurementRules.primaryMetric || 'Net Revenue'
+            description: measurementRules.primaryMetrics?.[0]?.description || 'Net Revenue'
           }]
     };
     

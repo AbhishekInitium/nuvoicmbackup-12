@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { IncentivePlan } from '@/types/incentiveTypes';
@@ -20,7 +19,6 @@ export const useIncentivePlan = (
   });
 
   useEffect(() => {
-    // Initialize with the provided plan if available
     if (initialPlan) {
       setPlan(initialPlan);
     }
@@ -50,7 +48,6 @@ export const useIncentivePlan = (
   };
 
   const copyExistingScheme = (scheme: IncentivePlanWithStatus) => {
-    // Extract only the IncentivePlan properties from the IncentivePlanWithStatus
     const {
       name,
       description,
@@ -66,14 +63,13 @@ export const useIncentivePlan = (
       salesQuota = 0
     } = scheme;
     
-    // Ensure the measurementRules has primaryMetrics property (as an array)
     const fixedMeasurementRules = {
       ...measurementRules,
       primaryMetrics: Array.isArray(measurementRules.primaryMetrics) 
         ? measurementRules.primaryMetrics 
         : [{
             name: 'revenue',
-            description: measurementRules.primaryMetric || 'Net Revenue'
+            description: measurementRules.primaryMetrics?.[0]?.description || 'Net Revenue'
           }]
     };
     
@@ -104,20 +100,16 @@ export const useIncentivePlan = (
   const validatePlan = (): { isValid: boolean; errors: string[] } => {
     const errors: string[] = [];
     
-    // Validate required basic fields
     if (!plan.name) errors.push("Plan Name is required");
     if (!plan.effectiveStart) errors.push("Start Date is required");
     if (!plan.effectiveEnd) errors.push("End Date is required");
     
-    // Validate Revenue Base
     if (!plan.revenueBase) errors.push("Revenue Base is required");
     
-    // Validate Participants
     if (!plan.participants || plan.participants.length === 0) {
       errors.push("At least one participant must be assigned");
     }
     
-    // Validate Credit Levels
     if (!plan.creditRules.levels || plan.creditRules.levels.length === 0) {
       errors.push("At least one Credit Level is required");
     }
@@ -131,7 +123,6 @@ export const useIncentivePlan = (
   const savePlanToS4 = () => {
     if (!savePlanFunction) return;
     
-    // Validate the plan
     const { isValid, errors } = validatePlan();
     
     if (!isValid) {
@@ -143,7 +134,6 @@ export const useIncentivePlan = (
       return;
     }
     
-    // Create a plan with status by combining the current plan with a DRAFT status
     const planWithStatus: Partial<IncentivePlanWithStatus> = {
       ...plan,
       status: 'DRAFT'
@@ -156,7 +146,6 @@ export const useIncentivePlan = (
           description: "Plan saved successfully!",
           variant: "default"
         });
-        // Refetch plans to update the list
         if (refetchPlans) refetchPlans();
       },
       onError: (error: any) => {
