@@ -7,6 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { IncentivePlanWithStatus } from '@/services/incentive/incentivePlanService';
 import { DEFAULT_PLAN } from '@/constants/incentiveConstants';
 import { IncentivePlan, PrimaryMetric } from '@/types/incentiveTypes';
+import { saveIncentiveScheme } from '@/services/database/mongoDBService';
 
 import SchemeOptionsScreen from '@/components/incentive/SchemeOptionsScreen';
 import DesignerNavigation from '@/components/incentive/DesignerNavigation';
@@ -17,6 +18,7 @@ const IncentiveDesigner = () => {
   const [showInitialOptions, setShowInitialOptions] = useState(true);
   const [showExistingSchemes, setShowExistingSchemes] = useState(false);
   const [planTemplate, setPlanTemplate] = useState<IncentivePlan | null>(null);
+  const [savingToMongoDB, setSavingToMongoDB] = useState(false);
 
   const handleCreateNewScheme = () => {
     setPlanTemplate({
@@ -78,6 +80,39 @@ const IncentiveDesigner = () => {
     });
   };
 
+  // New function to save to MongoDB
+  const handleSaveToMongoDB = async (plan: IncentivePlan) => {
+    if (!plan || !plan.name) {
+      toast({
+        title: "Validation Error",
+        description: "Please provide a name for the plan before saving",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      setSavingToMongoDB(true);
+      const id = await saveIncentiveScheme(plan);
+      
+      toast({
+        title: "Saved to MongoDB",
+        description: `Plan saved with unique ID: ${id}`,
+        variant: "default"
+      });
+    } catch (error) {
+      console.error('Error saving to MongoDB:', error);
+      
+      toast({
+        title: "Save Error",
+        description: "Failed to save plan to MongoDB",
+        variant: "destructive"
+      });
+    } finally {
+      setSavingToMongoDB(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-app-gray-50 to-white">
       <NavBar />
@@ -95,7 +130,9 @@ const IncentiveDesigner = () => {
         ) : (
           <IncentivePlanDesigner 
             initialPlan={planTemplate} 
-            onBack={() => setShowInitialOptions(true)} 
+            onBack={() => setShowInitialOptions(true)}
+            onSaveToMongoDB={handleSaveToMongoDB}
+            savingToMongoDB={savingToMongoDB}
           />
         )}
         

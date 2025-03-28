@@ -12,15 +12,21 @@ import SectionPanel from './ui-custom/SectionPanel';
 import BasicInformation from './incentive/BasicInformation';
 import SchemeStructureSections from './incentive/SchemeStructureSections';
 import PayoutStructureSection from './incentive/PayoutStructureSection';
+import { Button } from './ui/button';
+import { Database, Save } from 'lucide-react';
 
 interface IncentivePlanDesignerProps {
   initialPlan?: IncentivePlan | null;
   onBack?: () => void;
+  onSaveToMongoDB?: (plan: IncentivePlan) => void;
+  savingToMongoDB?: boolean;
 }
 
 const IncentivePlanDesigner: React.FC<IncentivePlanDesignerProps> = ({ 
   initialPlan = null,
-  onBack
+  onBack,
+  onSaveToMongoDB,
+  savingToMongoDB = false
 }) => {
   const { toast } = useToast();
   const { 
@@ -51,6 +57,12 @@ const IncentivePlanDesigner: React.FC<IncentivePlanDesignerProps> = ({
       setIsLoading(false);
     }
   }, [loadingPlans, refetchPlans]);
+
+  const handleSaveToMongoDB = () => {
+    if (onSaveToMongoDB) {
+      onSaveToMongoDB(plan);
+    }
+  };
 
   if (isLoading) {
     return <div className="flex justify-center items-center h-screen">Loading plans...</div>;
@@ -93,8 +105,19 @@ const IncentivePlanDesigner: React.FC<IncentivePlanDesignerProps> = ({
           updateCommissionStructure={(tiers) => updatePlan('commissionStructure', { tiers })}
         />
         
-        {/* Save button at the bottom */}
+        {/* Save buttons at the bottom */}
         <div className="mt-10 flex justify-end space-x-4">
+          <Button
+            variant="outline"
+            size="lg"
+            onClick={handleSaveToMongoDB}
+            disabled={savingToMongoDB}
+            className="flex items-center"
+          >
+            <Database size={18} className="mr-2" /> 
+            {savingToMongoDB ? "Saving to MongoDB..." : "Save to MongoDB"}
+          </Button>
+          
           <DesignerActionButtons 
             onSave={savePlanToS4}
             isSaving={isSaving}
