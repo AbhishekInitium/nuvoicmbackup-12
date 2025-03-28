@@ -1,55 +1,61 @@
 
 import { IncentivePlan } from '@/types/incentiveTypes';
 
-// We'll use this base URL for API requests
-const API_BASE_URL = '/api';  // This would point to your backend server
+/**
+ * Service to handle database operations for incentive schemes
+ * Note: Since MongoDB can't be directly accessed from browser,
+ * this implementation uses localStorage as a fallback
+ */
+
+// Generate a unique ID for a scheme based on name and timestamp
+const generateSchemeId = (scheme: IncentivePlan): string => {
+  const timestamp = Date.now();
+  const schemeName = scheme.name || 'Unnamed_Scheme';
+  
+  // Format name for storage ID
+  return `${schemeName.replace(/\s+/g, '_')}_${timestamp}`;
+};
 
 /**
- * Save an incentive scheme via API
+ * Save an incentive scheme 
+ * In a real implementation, this would connect to MongoDB via an API
  */
 export const saveIncentiveScheme = async (scheme: IncentivePlan): Promise<string> => {
   try {
-    // Prepare the timestamp for unique ID
+    // Generate ID and formatted name
     const timestamp = Date.now();
-    const schemeName = scheme.name || 'Unnamed_Scheme';
+    const formattedId = generateSchemeId(scheme);
     
-    // Format the name with timestamp
-    const formattedName = `${schemeName.replace(/\s+/g, '_')}_${timestamp}`;
-    
-    // Create a mock response with ID since we can't connect to MongoDB directly from browser
-    const mockId = `local_${timestamp}`;
-    
-    // Store in localStorage as a fallback
+    // Prepare the scheme for storage
     const schemeToSave = {
       ...scheme,
       originalName: scheme.name,
-      name: formattedName,
+      name: scheme.name, // Keep original name intact
       createdAt: new Date(timestamp).toISOString(),
-      _id: mockId
+      _id: formattedId
     };
     
-    // Save to localStorage
+    // Store in localStorage
     const existingSchemes = localStorage.getItem('incentiveSchemes');
     const schemes = existingSchemes ? JSON.parse(existingSchemes) : [];
     schemes.push(schemeToSave);
     localStorage.setItem('incentiveSchemes', JSON.stringify(schemes));
     
-    console.log(`Saved scheme with mock ID: ${mockId} (using localStorage fallback)`);
-    console.log(`Note: MongoDB connections require a server-side implementation`);
+    console.log(`Saved scheme with ID: ${formattedId}`);
+    console.log(`Note: For true MongoDB persistence, implement API endpoints on a backend server`);
     
-    return mockId;
+    return formattedId;
   } catch (error) {
     console.error("Error saving incentive scheme:", error);
-    throw error;
+    throw new Error(`Failed to save scheme: ${error instanceof Error ? error.message : String(error)}`);
   }
 };
 
 /**
- * Get all incentive schemes from localStorage
+ * Get all incentive schemes 
  */
 export const getIncentiveSchemes = async (): Promise<any[]> => {
   try {
-    // Get from localStorage
     const existingSchemes = localStorage.getItem('incentiveSchemes');
     return existingSchemes ? JSON.parse(existingSchemes) : [];
   } catch (error) {
@@ -59,11 +65,10 @@ export const getIncentiveSchemes = async (): Promise<any[]> => {
 };
 
 /**
- * Get a specific incentive scheme by ID from localStorage
+ * Get a specific incentive scheme by ID
  */
 export const getIncentiveSchemeById = async (id: string): Promise<any | null> => {
   try {
-    // Get from localStorage
     const existingSchemes = localStorage.getItem('incentiveSchemes');
     const schemes = existingSchemes ? JSON.parse(existingSchemes) : [];
     
@@ -74,4 +79,25 @@ export const getIncentiveSchemeById = async (id: string): Promise<any | null> =>
   }
 };
 
-// No need for connect or close functions in the browser version
+/**
+ * Delete an incentive scheme by ID
+ */
+export const deleteIncentiveScheme = async (id: string): Promise<boolean> => {
+  try {
+    const existingSchemes = localStorage.getItem('incentiveSchemes');
+    const schemes = existingSchemes ? JSON.parse(existingSchemes) : [];
+    
+    const filteredSchemes = schemes.filter((scheme: any) => scheme._id !== id);
+    
+    // If lengths are the same, nothing was deleted
+    if (filteredSchemes.length === schemes.length) {
+      return false;
+    }
+    
+    localStorage.setItem('incentiveSchemes', JSON.stringify(filteredSchemes));
+    return true;
+  } catch (error) {
+    console.error(`Error deleting incentive scheme with ID ${id}:`, error);
+    return false;
+  }
+};

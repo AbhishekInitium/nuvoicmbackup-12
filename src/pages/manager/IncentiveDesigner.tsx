@@ -18,7 +18,7 @@ const IncentiveDesigner = () => {
   const [showInitialOptions, setShowInitialOptions] = useState(true);
   const [showExistingSchemes, setShowExistingSchemes] = useState(false);
   const [planTemplate, setPlanTemplate] = useState<IncentivePlan | null>(null);
-  const [savingToMongoDB, setSavingToMongoDB] = useState(false);
+  const [savingToStorage, setSavingToStorage] = useState(false);
 
   const handleCreateNewScheme = () => {
     setPlanTemplate({
@@ -80,7 +80,7 @@ const IncentiveDesigner = () => {
     });
   };
 
-  // Function to save to localStorage
+  // Function to save to storage
   const handleSaveToStorage = async (plan: IncentivePlan) => {
     if (!plan || !plan.name) {
       toast({
@@ -92,12 +92,12 @@ const IncentiveDesigner = () => {
     }
 
     try {
-      setSavingToMongoDB(true);
+      setSavingToStorage(true);
       const id = await saveIncentiveScheme(plan);
       
       toast({
-        title: "Saved to Storage",
-        description: `Plan saved with unique ID: ${id}`,
+        title: "Saved Successfully",
+        description: `Plan saved with ID: ${id}`,
         variant: "default"
       });
     } catch (error) {
@@ -105,11 +105,11 @@ const IncentiveDesigner = () => {
       
       toast({
         title: "Save Error",
-        description: "Failed to save plan",
+        description: `Failed to save plan: ${error instanceof Error ? error.message : 'Unknown error'}`,
         variant: "destructive"
       });
     } finally {
-      setSavingToMongoDB(false);
+      setSavingToStorage(false);
     }
   };
 
@@ -131,8 +131,8 @@ const IncentiveDesigner = () => {
           <IncentivePlanDesigner 
             initialPlan={planTemplate} 
             onBack={() => setShowInitialOptions(true)}
-            onSaveToMongoDB={handleSaveToStorage}
-            savingToMongoDB={savingToMongoDB}
+            onSaveToStorage={handleSaveToStorage}
+            savingToStorage={savingToStorage}
           />
         )}
         
