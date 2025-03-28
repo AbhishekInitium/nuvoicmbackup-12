@@ -13,7 +13,8 @@ import BasicInformation from './incentive/BasicInformation';
 import SchemeStructureSections from './incentive/SchemeStructureSections';
 import PayoutStructureSection from './incentive/PayoutStructureSection';
 import { Button } from './ui/button';
-import { Database, Save } from 'lucide-react';
+import { Database, Save, AlertCircle } from 'lucide-react';
+import { Alert, AlertDescription } from './ui/alert';
 
 interface IncentivePlanDesignerProps {
   initialPlan?: IncentivePlan | null;
@@ -39,6 +40,7 @@ const IncentivePlanDesigner: React.FC<IncentivePlanDesignerProps> = ({
   
   const [showExistingSchemes, setShowExistingSchemes] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [showStorageNotice, setShowStorageNotice] = useState(false);
 
   // Use the custom hook to manage the plan state and logic
   const {
@@ -60,6 +62,7 @@ const IncentivePlanDesigner: React.FC<IncentivePlanDesignerProps> = ({
 
   const handleSaveToMongoDB = () => {
     if (onSaveToMongoDB) {
+      setShowStorageNotice(true);
       onSaveToMongoDB(plan);
     }
   };
@@ -73,7 +76,6 @@ const IncentivePlanDesigner: React.FC<IncentivePlanDesignerProps> = ({
       <IncentiveDesignerHeader />
 
       <div className="max-w-4xl mx-auto">
-        {/* Removed the top Save button */}
         <div className="mt-10 mb-6">
           <DesignerActionButtons 
             onBack={onBack}
@@ -84,6 +86,15 @@ const IncentivePlanDesigner: React.FC<IncentivePlanDesignerProps> = ({
           />
         </div>
 
+        {showStorageNotice && (
+          <Alert className="mb-6 bg-blue-50 border-blue-200">
+            <AlertCircle className="h-4 w-4 text-blue-600" />
+            <AlertDescription>
+              MongoDB connections require a server environment. Your scheme has been saved to localStorage as a fallback.
+            </AlertDescription>
+          </Alert>
+        )}
+        
         {/* Section 1: Header Information */}
         <SectionPanel title="1. Header Information" defaultExpanded={true}>
           <BasicInformation 
@@ -115,7 +126,7 @@ const IncentivePlanDesigner: React.FC<IncentivePlanDesignerProps> = ({
             className="flex items-center"
           >
             <Database size={18} className="mr-2" /> 
-            {savingToMongoDB ? "Saving to MongoDB..." : "Save to MongoDB"}
+            {savingToMongoDB ? "Saving..." : "Save to Local Storage"}
           </Button>
           
           <DesignerActionButtons 

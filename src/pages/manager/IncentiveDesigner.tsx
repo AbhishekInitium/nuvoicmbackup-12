@@ -80,8 +80,8 @@ const IncentiveDesigner = () => {
     });
   };
 
-  // New function to save to MongoDB
-  const handleSaveToMongoDB = async (plan: IncentivePlan) => {
+  // Function to save to localStorage
+  const handleSaveToStorage = async (plan: IncentivePlan) => {
     if (!plan || !plan.name) {
       toast({
         title: "Validation Error",
@@ -96,16 +96,16 @@ const IncentiveDesigner = () => {
       const id = await saveIncentiveScheme(plan);
       
       toast({
-        title: "Saved to MongoDB",
+        title: "Saved to Storage",
         description: `Plan saved with unique ID: ${id}`,
         variant: "default"
       });
     } catch (error) {
-      console.error('Error saving to MongoDB:', error);
+      console.error('Error saving to storage:', error);
       
       toast({
         title: "Save Error",
-        description: "Failed to save plan to MongoDB",
+        description: "Failed to save plan",
         variant: "destructive"
       });
     } finally {
@@ -131,7 +131,7 @@ const IncentiveDesigner = () => {
           <IncentivePlanDesigner 
             initialPlan={planTemplate} 
             onBack={() => setShowInitialOptions(true)}
-            onSaveToMongoDB={handleSaveToMongoDB}
+            onSaveToMongoDB={handleSaveToStorage}
             savingToMongoDB={savingToMongoDB}
           />
         )}
