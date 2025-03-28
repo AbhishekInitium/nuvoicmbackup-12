@@ -3,48 +3,50 @@ import { IncentivePlan } from '@/types/incentiveTypes';
 
 /**
  * Service to handle database operations for incentive schemes
- * Note: Since MongoDB can't be directly accessed from browser,
- * this implementation uses localStorage as a fallback
+ * This implementation follows MongoDB schema structure but uses localStorage as a fallback
+ * since direct MongoDB connections can't be made from the browser
  */
 
-// Generate a unique ID for a scheme based on name and timestamp
-const generateSchemeId = (scheme: IncentivePlan): string => {
-  const timestamp = Date.now();
-  const schemeName = scheme.name || 'Unnamed_Scheme';
+// Generate a MongoDB-like ObjectId
+const generateObjectId = (): string => {
+  const timestamp = Math.floor(Date.now() / 1000).toString(16);
+  const machineId = Math.floor(Math.random() * 16777216).toString(16).padStart(6, '0');
+  const processId = Math.floor(Math.random() * 65536).toString(16).padStart(4, '0');
+  const counter = Math.floor(Math.random() * 16777216).toString(16).padStart(6, '0');
   
-  // Format name for storage ID
-  return `${schemeName.replace(/\s+/g, '_')}_${timestamp}`;
+  return timestamp + machineId + processId + counter;
 };
 
 /**
- * Save an incentive scheme 
- * In a real implementation, this would connect to MongoDB via an API
+ * Save an incentive scheme in MongoDB-compatible format 
  */
 export const saveIncentiveScheme = async (scheme: IncentivePlan): Promise<string> => {
   try {
-    // Generate ID and formatted name
-    const timestamp = Date.now();
-    const formattedId = generateSchemeId(scheme);
+    // Generate MongoDB-like _id
+    const objectId = generateObjectId();
     
-    // Prepare the scheme for storage
-    const schemeToSave = {
+    // Create MongoDB-style document
+    const document = {
+      _id: objectId,
       ...scheme,
-      originalName: scheme.name,
-      name: scheme.name, // Keep original name intact
-      createdAt: new Date(timestamp).toISOString(),
-      _id: formattedId
+      metadata: {
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        version: 1,
+        status: 'active'
+      }
     };
     
-    // Store in localStorage
+    // For browser storage, use localStorage
     const existingSchemes = localStorage.getItem('incentiveSchemes');
     const schemes = existingSchemes ? JSON.parse(existingSchemes) : [];
-    schemes.push(schemeToSave);
+    schemes.push(document);
     localStorage.setItem('incentiveSchemes', JSON.stringify(schemes));
     
-    console.log(`Saved scheme with ID: ${formattedId}`);
-    console.log(`Note: For true MongoDB persistence, implement API endpoints on a backend server`);
+    console.log(`Saved scheme document with ID: ${objectId}`);
+    console.log('Scheme stored in MongoDB-compatible format');
     
-    return formattedId;
+    return objectId;
   } catch (error) {
     console.error("Error saving incentive scheme:", error);
     throw new Error(`Failed to save scheme: ${error instanceof Error ? error.message : String(error)}`);
@@ -52,7 +54,7 @@ export const saveIncentiveScheme = async (scheme: IncentivePlan): Promise<string
 };
 
 /**
- * Get all incentive schemes 
+ * Get all incentive schemes in MongoDB collection format
  */
 export const getIncentiveSchemes = async (): Promise<any[]> => {
   try {
@@ -65,7 +67,7 @@ export const getIncentiveSchemes = async (): Promise<any[]> => {
 };
 
 /**
- * Get a specific incentive scheme by ID
+ * Get a specific incentive scheme by ID (similar to MongoDB findOne)
  */
 export const getIncentiveSchemeById = async (id: string): Promise<any | null> => {
   try {
@@ -80,7 +82,7 @@ export const getIncentiveSchemeById = async (id: string): Promise<any | null> =>
 };
 
 /**
- * Delete an incentive scheme by ID
+ * Delete an incentive scheme by ID (similar to MongoDB deleteOne)
  */
 export const deleteIncentiveScheme = async (id: string): Promise<boolean> => {
   try {
@@ -89,7 +91,6 @@ export const deleteIncentiveScheme = async (id: string): Promise<boolean> => {
     
     const filteredSchemes = schemes.filter((scheme: any) => scheme._id !== id);
     
-    // If lengths are the same, nothing was deleted
     if (filteredSchemes.length === schemes.length) {
       return false;
     }
@@ -98,6 +99,38 @@ export const deleteIncentiveScheme = async (id: string): Promise<boolean> => {
     return true;
   } catch (error) {
     console.error(`Error deleting incentive scheme with ID ${id}:`, error);
+    return false;
+  }
+};
+
+/**
+ * Update an incentive scheme (similar to MongoDB updateOne)
+ */
+export const updateIncentiveScheme = async (id: string, updates: Partial<IncentivePlan>): Promise<boolean> => {
+  try {
+    const existingSchemes = localStorage.getItem('incentiveSchemes');
+    const schemes = existingSchemes ? JSON.parse(existingSchemes) : [];
+    
+    const schemeIndex = schemes.findIndex((scheme: any) => scheme._id === id);
+    
+    if (schemeIndex === -1) {
+      return false;
+    }
+    
+    schemes[schemeIndex] = {
+      ...schemes[schemeIndex],
+      ...updates,
+      metadata: {
+        ...schemes[schemeIndex].metadata,
+        updatedAt: new Date().toISOString(),
+        version: schemes[schemeIndex].metadata.version + 1
+      }
+    };
+    
+    localStorage.setItem('incentiveSchemes', JSON.stringify(schemes));
+    return true;
+  } catch (error) {
+    console.error(`Error updating incentive scheme with ID ${id}:`, error);
     return false;
   }
 };

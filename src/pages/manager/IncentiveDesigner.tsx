@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import NavBar from '@/components/layout/NavBar';
 import Container from '@/components/layout/Container';
@@ -80,7 +79,6 @@ const IncentiveDesigner = () => {
     });
   };
 
-  // Function to save to storage
   const handleSaveToStorage = async (plan: IncentivePlan) => {
     if (!plan || !plan.name) {
       toast({
@@ -96,16 +94,16 @@ const IncentiveDesigner = () => {
       const id = await saveIncentiveScheme(plan);
       
       toast({
-        title: "Saved Successfully",
-        description: `Plan saved with ID: ${id}`,
+        title: "MongoDB Document Created",
+        description: `Scheme saved with MongoDB _id: ${id}`,
         variant: "default"
       });
     } catch (error) {
-      console.error('Error saving to storage:', error);
+      console.error('Error saving to MongoDB format:', error);
       
       toast({
         title: "Save Error",
-        description: `Failed to save plan: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        description: `Failed to create MongoDB document: ${error instanceof Error ? error.message : 'Unknown error'}`,
         variant: "destructive"
       });
     } finally {

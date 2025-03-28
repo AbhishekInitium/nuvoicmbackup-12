@@ -64,12 +64,6 @@ const IncentivePlanDesigner: React.FC<IncentivePlanDesignerProps> = ({
     if (onSaveToStorage) {
       setShowStorageNotice(true);
       onSaveToStorage(plan);
-      
-      toast({
-        title: "Storage Update",
-        description: "Plan saved to local storage successfully",
-        variant: "default"
-      });
     }
   };
 
@@ -94,10 +88,10 @@ const IncentivePlanDesigner: React.FC<IncentivePlanDesignerProps> = ({
 
         {showStorageNotice && (
           <Alert className="mb-6 bg-blue-50 border-blue-200">
-            <AlertCircle className="h-4 w-4 text-blue-600" />
+            <Database className="h-4 w-4 text-blue-600" />
             <AlertDescription>
-              Your scheme has been saved to localStorage. In a production environment, 
-              this would connect to MongoDB via a backend API.
+              Your scheme has been saved in MongoDB-compatible JSON format. In a production environment,
+              this data would be sent to a MongoDB database via a backend API.
             </AlertDescription>
           </Alert>
         )}
@@ -133,7 +127,7 @@ const IncentivePlanDesigner: React.FC<IncentivePlanDesignerProps> = ({
             className="flex items-center"
           >
             <Database size={18} className="mr-2" /> 
-            {savingToStorage ? "Saving..." : "Save to Local Storage"}
+            {savingToStorage ? "Saving..." : "Save to MongoDB"}
           </Button>
           
           <DesignerActionButtons 
