@@ -90,8 +90,8 @@ const IncentivePlanDesigner: React.FC<IncentivePlanDesignerProps> = ({
           <Alert className="mb-6 bg-blue-50 border-blue-200">
             <Database className="h-4 w-4 text-blue-600" />
             <AlertDescription>
-              Your scheme has been saved in MongoDB-compatible JSON format. In a production environment,
-              this data would be sent to a MongoDB database via a backend API.
+              Your scheme has been saved in MongoDB. The data has been stored in your database
+              through the backend API.
             </AlertDescription>
           </Alert>
         )}

@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import NavBar from '@/components/layout/NavBar';
 import Container from '@/components/layout/Container';
@@ -99,7 +100,7 @@ const IncentiveDesigner = () => {
         variant: "default"
       });
     } catch (error) {
-      console.error('Error saving to MongoDB format:', error);
+      console.error('Error saving to MongoDB:', error);
       
       toast({
         title: "Save Error",
