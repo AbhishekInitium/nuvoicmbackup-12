@@ -1,3 +1,4 @@
+
 import { v4 as uuidv4 } from 'uuid';
 import { IncentivePlan } from '@/types/incentiveTypes';
 import { IncentivePlanWithStatus, markPlanAsExecuted } from '../incentivePlanService';
@@ -5,6 +6,7 @@ import { selectPrimaryData, applyQualifyingCriteria, DataSelectionParams } from 
 import { processData, ProcessedData } from './processingModule';
 import { createExecutionLog, completeExecutionLog, getExecutionLog as getLogFromLoggingModule, addSystemLogEntry } from './loggingModule';
 
+// Define ExecutionMode as a type
 export type ExecutionMode = 'SIMULATE' | 'PRODUCTION';
 
 export interface CommissionExecutionParams {

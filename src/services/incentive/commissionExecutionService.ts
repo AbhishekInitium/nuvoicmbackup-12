@@ -10,36 +10,36 @@ export * from './execution/dataSelectionModule';
 export * from './execution/processingModule';
 export * from './execution/loggingModule';
 
-// Import and re-export the execution service functions
+// Import the execution service functions
 import { 
-  ExecutionMode,
   executeCommissionCalculation,
   getExecutionResults,
   getExecutionResultById
 } from './execution/executionService';
 
-// Import and re-export the types with proper syntax for isolatedModules
+// Import the types with proper syntax for isolatedModules
 import type {
   CommissionExecutionParams,
   CommissionExecutionResult,
   ParticipantCommissionResult,
-  AdjustmentApplication
+  AdjustmentApplication,
+  ExecutionMode
 } from './execution/executionService';
 
 // Re-export the execution service functions
 export {
-  ExecutionMode,
   executeCommissionCalculation,
   getExecutionResults,
   getExecutionResultById
 };
 
-// Re-export the types with proper syntax
+// Re-export the types using 'export type' for isolatedModules compatibility
 export type {
   CommissionExecutionParams,
   CommissionExecutionResult,
   ParticipantCommissionResult,
-  AdjustmentApplication
+  AdjustmentApplication,
+  ExecutionMode
 };
 
-// We're not re-exporting getExecutionLog from executionService to avoid conflict
+// Note: We're not re-exporting getExecutionLog from executionService to avoid conflict
