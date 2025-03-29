@@ -5,7 +5,6 @@ import ActionButton from '../ui-custom/ActionButton';
 import { MeasurementRules as MeasurementRulesType } from '@/types/incentiveTypes';
 import { useMeasurementRules } from '@/hooks/useMeasurementRules';
 import PrimaryMetricSelector from './PrimaryMetricSelector';
-import QualificationInput from './QualificationInput';
 import AdjustmentsList from './AdjustmentsList';
 import ExclusionsList from './ExclusionsList';
 import EmptyRulesState from './EmptyRulesState';
@@ -31,7 +30,6 @@ const MeasurementRules: React.FC<MeasurementRulesProps> = ({
     addPrimaryMetric,
     updatePrimaryMetric,
     removePrimaryMetric,
-    updateMinQualification,
     addAdjustment,
     updateAdjustment,
     removeAdjustment,
@@ -80,13 +78,6 @@ const MeasurementRules: React.FC<MeasurementRulesProps> = ({
           </div>
         )}
       </div>
-
-      {/* Minimum Qualification */}
-      <QualificationInput
-        minQualification={rules.minQualification}
-        currencySymbol={currencySymbol}
-        onUpdateMinQualification={updateMinQualification}
-      />
 
       {/* Adjustments */}
       <AdjustmentsList

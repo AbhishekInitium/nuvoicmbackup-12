@@ -48,7 +48,7 @@ const PrimaryMetricSelector: React.FC<PrimaryMetricSelectorProps> = ({
             </Select>
           </div>
           
-          <div className="sm:col-span-2">
+          <div className="sm:col-span-3">
             <label className="block text-sm font-medium text-app-gray-700 mb-2">Operator</label>
             <Select 
               value={metric.operator}
@@ -57,7 +57,7 @@ const PrimaryMetricSelector: React.FC<PrimaryMetricSelectorProps> = ({
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Operator" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-white">
                 {OPERATORS.map(op => (
                   <SelectItem key={op.value} value={op.value}>{op.label}</SelectItem>
                 ))}
@@ -81,7 +81,7 @@ const PrimaryMetricSelector: React.FC<PrimaryMetricSelectorProps> = ({
             </div>
           </div>
           
-          <div className="sm:col-span-4">
+          <div className="sm:col-span-3">
             <label className="block text-sm font-medium text-app-gray-700 mb-2">Description</label>
             <Input 
               type="text" 
