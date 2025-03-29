@@ -226,7 +226,7 @@ const IncentivePlanDesigner: React.FC<IncentivePlanDesignerProps> = ({
             <AlertCircle className="h-4 w-4 text-red-600" />
             <AlertDescription>
               <span className="font-semibold">MongoDB Connection Error:</span> {connectionError}
-              <p className="mt-1">Make sure the incentiveServer.js is running with: <code>node server/incentiveServer.js</code></p>
+              <p className="mt-1">Make sure the incentiveServer.cjs is running with: <code>node server/incentiveServer.cjs</code></p>
             </AlertDescription>
           </Alert>
         )}
