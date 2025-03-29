@@ -1,4 +1,3 @@
-
 import { IncentivePlan } from '@/types/incentiveTypes';
 import { SelectedData } from './dataSelectionModule';
 import { LogEntry, addLogEntry } from './loggingModule';
@@ -266,7 +265,9 @@ const applyCustomRules = (
       
       // Check if all conditions are met
       const allConditionsMet = rule.conditions.every(condition => {
-        const metricValue = record[condition.field] || 0;
+        // For rule conditions, use the metric field as field name if field is not defined
+        const fieldName = condition.field || condition.metric;
+        const metricValue = record[fieldName] || 0;
         
         switch (condition.operator) {
           case '=':
@@ -314,6 +315,7 @@ const applyCustomRules = (
             // Apply a boost to the amount
             if (modifiedRecord.TotalNetAmount !== undefined) {
               const originalAmount = modifiedRecord.TotalNetAmount;
+              // Use rule.factor or default to 1.5 if not defined
               const boostFactor = rule.factor || 1.5; // Default boost of 50%
               modifiedRecord.TotalNetAmount = originalAmount * boostFactor;
               
@@ -338,6 +340,7 @@ const applyCustomRules = (
             // Apply a cap to the amount
             if (modifiedRecord.TotalNetAmount !== undefined) {
               const originalAmount = modifiedRecord.TotalNetAmount;
+              // Use rule.value or default to 10000 if not defined
               const capAmount = rule.value || 10000; // Default cap of 10K
               
               if (originalAmount > capAmount) {

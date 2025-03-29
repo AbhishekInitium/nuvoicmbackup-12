@@ -1,10 +1,9 @@
-
 import { v4 as uuidv4 } from 'uuid';
 import { IncentivePlan } from '@/types/incentiveTypes';
 import { IncentivePlanWithStatus, markPlanAsExecuted } from '../incentivePlanService';
 import { selectPrimaryData, applyQualifyingCriteria, DataSelectionParams } from './dataSelectionModule';
 import { processData, ProcessedData } from './processingModule';
-import { createExecutionLog, completeExecutionLog, getExecutionLog, addSystemLogEntry } from './loggingModule';
+import { createExecutionLog, completeExecutionLog, getExecutionLog as getLogFromLoggingModule, addSystemLogEntry } from './loggingModule';
 
 export type ExecutionMode = 'SIMULATE' | 'PRODUCTION';
 
@@ -200,7 +199,7 @@ export const getExecutionResultById = async (executionId: string): Promise<Commi
   console.log(`Getting execution result for ID: ${executionId}`);
   
   // Try to get from execution logs first
-  const log = getExecutionLog(executionId);
+  const log = getLogFromLoggingModule(executionId);
   
   if (log) {
     // Convert log to execution result
@@ -231,5 +230,5 @@ export const getExecutionResultById = async (executionId: string): Promise<Commi
  * Get detailed execution log for a specific execution
  */
 export const getExecutionLog = (executionId: string) => {
-  return getExecutionLog(executionId);
+  return getLogFromLoggingModule(executionId);
 };

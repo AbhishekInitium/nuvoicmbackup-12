@@ -1,4 +1,3 @@
-
 export interface Tier {
   from: number;
   to: number;
@@ -37,6 +36,7 @@ export interface RuleCondition {
   metric: string;
   operator: string;
   value: number;
+  field?: string;
 }
 
 export interface CustomRule {
@@ -45,6 +45,8 @@ export interface CustomRule {
   conditions: RuleCondition[];
   action: string;
   active: boolean;
+  factor?: number;
+  value?: number;
 }
 
 export interface MeasurementRules {
@@ -87,5 +89,5 @@ export interface IncentivePlan {
   customRules: CustomRule[];
   salesQuota: number;
   metadata?: Metadata;
-  schemeId?: string; // Add the scheme ID field
+  schemeId?: string;
 }

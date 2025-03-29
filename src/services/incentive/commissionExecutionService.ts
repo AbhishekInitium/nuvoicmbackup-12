@@ -6,30 +6,40 @@
  */
 
 // Re-export from execution modules
-export * from './execution/executionService';
 export * from './execution/dataSelectionModule';
 export * from './execution/processingModule';
 export * from './execution/loggingModule';
 
-// Import and re-export the execution types and interfaces for backwards compatibility
+// Import and re-export the execution service functions
 import { 
   ExecutionMode,
-  CommissionExecutionParams,
-  CommissionExecutionResult,
-  ParticipantCommissionResult,
-  AdjustmentApplication,
   executeCommissionCalculation,
   getExecutionResults,
   getExecutionResultById
 } from './execution/executionService';
 
-export {
-  ExecutionMode,
+// Import and re-export the types with proper syntax for isolatedModules
+import type {
   CommissionExecutionParams,
   CommissionExecutionResult,
   ParticipantCommissionResult,
-  AdjustmentApplication,
+  AdjustmentApplication
+} from './execution/executionService';
+
+// Re-export the execution service functions
+export {
+  ExecutionMode,
   executeCommissionCalculation,
   getExecutionResults,
   getExecutionResultById
 };
+
+// Re-export the types with proper syntax
+export type {
+  CommissionExecutionParams,
+  CommissionExecutionResult,
+  ParticipantCommissionResult,
+  AdjustmentApplication
+};
+
+// We're not re-exporting getExecutionLog from executionService to avoid conflict
