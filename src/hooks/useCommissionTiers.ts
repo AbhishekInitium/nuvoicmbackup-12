@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { Tier } from '@/types/incentiveTypes';
@@ -38,12 +37,6 @@ export const useCommissionTiers = (
     
     setTiers(newTiers);
     onUpdateCommissionStructure(newTiers);
-    
-    toast({
-      title: "Tier Added",
-      description: "A new commission tier has been added.",
-      variant: "default"
-    });
   };
 
   const removeTier = (index: number) => {

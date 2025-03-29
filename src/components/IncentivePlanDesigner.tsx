@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { useS4HanaData } from '@/hooks/useS4HanaData';
@@ -39,12 +38,10 @@ const IncentivePlanDesigner: React.FC<IncentivePlanDesignerProps> = ({
   const [isSaving, setIsSaving] = useState(false);
   const [schemeId, setSchemeId] = useState<string>('');
   
-  // Generate scheme ID when component mounts
   useEffect(() => {
     setSchemeId(generateTimestampId());
   }, []);
 
-  // Use the custom hook to manage the plan state and logic
   const {
     plan,
     updatePlan,
@@ -53,7 +50,6 @@ const IncentivePlanDesigner: React.FC<IncentivePlanDesignerProps> = ({
   } = useIncentivePlan(initialPlan, undefined, refetchPlans);
 
   useEffect(() => {
-    // Fetch plans when component mounts
     refetchPlans();
     
     if (!loadingPlans) {
@@ -85,13 +81,22 @@ const IncentivePlanDesigner: React.FC<IncentivePlanDesignerProps> = ({
       return;
     }
 
+    const validationErrors = validatePlanFields(plan);
+    if (validationErrors.length > 0) {
+      toast({
+        title: "Validation Error",
+        description: validationErrors.join(", "),
+        variant: "destructive"
+      });
+      return;
+    }
+
     try {
       setIsSaving(true);
       
-      // Save the scheme with the current scheme ID
       const schemeToSave = {
         ...plan,
-        schemeId: schemeId // Add the scheme ID to the plan
+        schemeId: schemeId
       };
       
       const id = await saveIncentiveScheme(schemeToSave, 'DRAFT');
@@ -114,6 +119,55 @@ const IncentivePlanDesigner: React.FC<IncentivePlanDesignerProps> = ({
     } finally {
       setIsSaving(false);
     }
+  };
+
+  const validatePlanFields = (plan: IncentivePlan): string[] => {
+    const errors: string[] = [];
+    
+    if (!plan.name || plan.name.trim() === '') {
+      errors.push("Plan Name is required");
+    }
+    
+    if (!plan.effectiveStart) {
+      errors.push("Start Date is required");
+    }
+    
+    if (!plan.effectiveEnd) {
+      errors.push("End Date is required");
+    }
+    
+    if (!plan.revenueBase) {
+      errors.push("Revenue Base is required");
+    }
+    
+    if (plan.commissionStructure.tiers.length === 0) {
+      errors.push("At least one commission tier is required");
+    }
+    
+    plan.commissionStructure.tiers.forEach((tier, index) => {
+      if (tier.rate <= 0) {
+        errors.push(`Tier ${index + 1} must have a positive commission rate`);
+      }
+    });
+    
+    if (plan.measurementRules.primaryMetrics.length === 0) {
+      errors.push("At least one qualifying criteria is required");
+    }
+    
+    plan.measurementRules.primaryMetrics.forEach((metric, index) => {
+      if (!metric.field || metric.field.trim() === '') {
+        errors.push(`Qualifying criteria ${index + 1} must have a field`);
+      }
+      if (!metric.operator || metric.operator.trim() === '') {
+        errors.push(`Qualifying criteria ${index + 1} must have an operator`);
+      }
+    });
+    
+    if (!plan.participants || plan.participants.length === 0) {
+      errors.push("At least one participant must be assigned");
+    }
+    
+    return errors;
   };
 
   if (isLoading) {
@@ -145,7 +199,6 @@ const IncentivePlanDesigner: React.FC<IncentivePlanDesignerProps> = ({
           </Alert>
         )}
         
-        {/* Section 1: Header Information */}
         <SectionPanel title="1. Header Information" defaultExpanded={true}>
           <BasicInformation 
             plan={plan} 
@@ -154,20 +207,17 @@ const IncentivePlanDesigner: React.FC<IncentivePlanDesignerProps> = ({
           />
         </SectionPanel>
         
-        {/* Section 2: Scheme Structure */}
         <SchemeStructureSections 
           plan={plan}
           updatePlan={updatePlan}
         />
         
-        {/* Section 3: Rates and Payout Structure */}
         <PayoutStructureSection 
           tiers={plan.commissionStructure.tiers}
           currency={plan.currency}
           updateCommissionStructure={(tiers) => updatePlan('commissionStructure', { tiers })}
         />
         
-        {/* Save button at the bottom */}
         <div className="mt-10 flex justify-end space-x-4">
           <Button
             variant="default"
