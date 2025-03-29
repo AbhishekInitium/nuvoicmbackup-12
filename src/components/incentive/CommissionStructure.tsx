@@ -5,7 +5,7 @@ import ActionButton from '../ui-custom/ActionButton';
 import { Tier } from '@/types/incentiveTypes';
 import { getCurrencySymbol } from '@/utils/incentiveUtils';
 import TiersTable from './TiersTable';
-import { useCommissionTiers } from './useCommissionTiers';
+import { useCommissionTiers } from '@/hooks/useCommissionTiers';
 import EmptyRulesState from './EmptyRulesState';
 
 interface CommissionStructureProps {

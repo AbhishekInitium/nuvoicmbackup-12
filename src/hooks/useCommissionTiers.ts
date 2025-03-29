@@ -102,10 +102,10 @@ export const useCommissionTiers = (
           const nextTier = newTiers[index + 1];
           if (numValue >= nextTier.from) {
             toast({
-              title: "Invalid Range",
-              description: `To value must be less than next tier's From value (${nextTier.from})`,
-              variant: "destructive"
-            });
+            title: "Invalid Range",
+            description: `To value must be less than next tier's From value (${nextTier.from})`,
+            variant: "destructive"
+          });
             return;
           }
         }
