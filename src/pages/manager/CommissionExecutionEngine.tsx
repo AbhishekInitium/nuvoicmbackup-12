@@ -32,6 +32,7 @@ import {
   markPlanAsExecuted 
 } from '@/services/incentive/incentivePlanService';
 import { Badge } from '@/components/ui/badge';
+import { getIncentiveSchemes } from '@/services/database/mongoDBService';
 
 // Type for log entries from the execution log
 interface LogEntryDisplay {
@@ -65,14 +66,45 @@ const CommissionExecutionEngine: React.FC = () => {
   const loadApprovedPlans = async () => {
     setLoadingPlans(true);
     try {
-      // Only load APPROVED plans
-      const plans = await getIncentivePlans('APPROVED');
-      setIncentivePlans(plans);
+      // Get schemes from MongoDB instead of S/4 HANA
+      const plans = await getIncentiveSchemes();
+      console.log('Loaded incentive plans from MongoDB:', plans);
+      
+      if (plans && plans.length > 0) {
+        // Transform MongoDB schemes to match IncentivePlanWithStatus structure
+        const transformedPlans: IncentivePlanWithStatus[] = plans.map(plan => ({
+          ...plan,
+          status: plan.metadata?.status || 'DRAFT',
+          hasBeenExecuted: false,
+          metadata: plan.metadata || {
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            version: 1,
+            status: 'DRAFT'
+          }
+        }));
+        
+        setIncentivePlans(transformedPlans);
+        
+        toast({
+          title: "Plans Loaded",
+          description: `Successfully loaded ${plans.length} incentive plans.`,
+          variant: "default"
+        });
+      } else {
+        console.log('No plans returned, showing error message');
+        toast({
+          title: "No Plans Found",
+          description: "No incentive plans were found in the database.",
+          variant: "destructive"
+        });
+        setIncentivePlans([]);
+      }
     } catch (error) {
-      console.error('Error loading approved incentive plans:', error);
+      console.error('Error loading incentive plans:', error);
       toast({
         title: "Error Loading Plans",
-        description: "There was an error loading the approved incentive plans.",
+        description: "There was an error loading incentive plans from MongoDB.",
         variant: "destructive"
       });
     } finally {
