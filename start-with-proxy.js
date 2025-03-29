@@ -8,8 +8,8 @@ const reactProcess = spawn('npm', ['run', 'dev'], {
   shell: true
 });
 
-// Start the proxy server
-const proxyProcess = spawn('node', [path.join(__dirname, 'src/proxy/proxyServer.js')], {
+// Start the proxy server with .cjs extension
+const proxyProcess = spawn('node', [path.join(__dirname, 'server/incentiveServer.cjs')], {
   stdio: 'inherit',
   shell: true
 });
