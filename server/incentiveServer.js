@@ -1,4 +1,3 @@
-
 const express = require('express');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
@@ -13,15 +12,19 @@ app.use(cors()); // Enable CORS for frontend requests
 app.use(bodyParser.json());
 
 // MongoDB Connection
-// Replace this URI with your actual MongoDB connection string
-const MONGODB_URI = "mongodb+srv://your_username:your_password@your_cluster.mongodb.net/your_database?retryWrites=true&w=majority";
+// Using a local MongoDB instance for development
+const MONGODB_URI = process.env.MONGODB_URI || "mongodb://localhost:27017/incentiveDB";
 
+// Connection with error handling
 mongoose.connect(MONGODB_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true
 })
-.then(() => console.log('Connected to MongoDB Atlas'))
-.catch(err => console.error('MongoDB connection error:', err));
+.then(() => console.log('Connected to MongoDB'))
+.catch(err => {
+  console.error('MongoDB connection error:', err);
+  console.log('Please make sure MongoDB is running on your local machine or update the connection string');
+});
 
 // Define Schema with required fields
 const incentiveSchema = new mongoose.Schema({
@@ -72,7 +75,7 @@ app.get('/api/incentives', async (req, res) => {
     res.json(schemes);
   } catch (error) {
     console.error('Error fetching schemes:', error);
-    res.status(500).json({ error: 'Failed to fetch incentive schemes' });
+    res.status(500).json({ error: 'Failed to fetch incentive schemes', details: error.message });
   }
 });
 
@@ -86,13 +89,24 @@ app.get('/api/incentives/:id', async (req, res) => {
     res.json(scheme);
   } catch (error) {
     console.error('Error fetching scheme:', error);
-    res.status(500).json({ error: 'Failed to fetch incentive scheme' });
+    res.status(500).json({ error: 'Failed to fetch incentive scheme', details: error.message });
   }
 });
 
 // POST - Create a new incentive scheme
 app.post('/api/incentives', async (req, res) => {
   try {
+    console.log('Received scheme data:', JSON.stringify(req.body, null, 2));
+    
+    // Validate required fields
+    const { name, effectiveStart, effectiveEnd, revenueBase } = req.body;
+    if (!name || !effectiveStart || !effectiveEnd || !revenueBase) {
+      return res.status(400).json({ 
+        error: 'Missing required fields',
+        details: 'Name, effectiveStart, effectiveEnd, and revenueBase are required'
+      });
+    }
+    
     // Ensure the scheme has required metadata
     const schemeData = {
       ...req.body,
@@ -107,10 +121,15 @@ app.post('/api/incentives', async (req, res) => {
     const newScheme = new Incentive(schemeData);
     const savedScheme = await newScheme.save();
     
+    console.log('Scheme saved successfully with ID:', savedScheme._id);
     res.status(201).json(savedScheme);
   } catch (error) {
     console.error('Error creating scheme:', error);
-    res.status(500).json({ error: 'Failed to create incentive scheme' });
+    res.status(500).json({ 
+      error: 'Failed to create incentive scheme',
+      details: error.message,
+      stack: error.stack
+    });
   }
 });
 
@@ -195,8 +214,17 @@ app.delete('/api/incentives/:id', async (req, res) => {
   }
 });
 
+// Add a health check route
+app.get('/health', (req, res) => {
+  res.status(200).json({ 
+    status: 'ok',
+    mongodb: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected'
+  });
+});
+
 // Start server
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
   console.log(`API available at http://localhost:${PORT}/api/incentives`);
+  console.log(`Health check available at http://localhost:${PORT}/health`);
 });

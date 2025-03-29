@@ -28,10 +28,31 @@ const generateSchemeTimestampId = () => {
 };
 
 /**
+ * Check server health before saving
+ */
+const checkServerHealth = async (): Promise<boolean> => {
+  try {
+    const response = await axios.get('http://localhost:3001/health');
+    return response.data.status === 'ok' && response.data.mongodb === 'connected';
+  } catch (error) {
+    console.error("Server health check failed:", error);
+    return false;
+  }
+};
+
+/**
  * Save an incentive scheme in MongoDB
  */
 export const saveIncentiveScheme = async (scheme: IncentivePlan, status: string = 'DRAFT'): Promise<string> => {
   try {
+    console.log("Attempting to save scheme:", scheme.name);
+    
+    // Check server health first
+    const isServerHealthy = await checkServerHealth();
+    if (!isServerHealthy) {
+      throw new Error('MongoDB server is not available. Please ensure the server is running.');
+    }
+    
     // Generate a scheme ID if not provided
     const schemeId = scheme.schemeId || generateSchemeTimestampId();
     
@@ -47,13 +68,32 @@ export const saveIncentiveScheme = async (scheme: IncentivePlan, status: string 
       }
     };
     
-    const response = await axios.post(API_BASE_URL, schemeToSave);
+    console.log("Saving scheme with ID:", schemeId);
     
-    if (response.status === 201 && response.data._id) {
-      console.log(`Saved scheme document with ID: ${response.data._id}`);
-      return response.data._id;
-    } else {
-      throw new Error('Failed to save scheme: No ID returned from server');
+    try {
+      const response = await axios.post(API_BASE_URL, schemeToSave);
+      
+      if (response.status === 201 && response.data._id) {
+        console.log(`Saved scheme document with ID: ${response.data._id}`);
+        return response.data._id;
+      } else {
+        throw new Error('Failed to save scheme: No ID returned from server');
+      }
+    } catch (axiosError: any) {
+      if (axiosError.response) {
+        // The request was made and the server responded with a status code
+        // that falls out of the range of 2xx
+        console.error("Server error response:", axiosError.response.data);
+        throw new Error(`Server error: ${axiosError.response.status} - ${JSON.stringify(axiosError.response.data)}`);
+      } else if (axiosError.request) {
+        // The request was made but no response was received
+        console.error("No response received:", axiosError.request);
+        throw new Error('No response from server. Please check if the server is running.');
+      } else {
+        // Something happened in setting up the request that triggered an Error
+        console.error("Request setup error:", axiosError.message);
+        throw axiosError;
+      }
     }
   } catch (error) {
     console.error("Error saving incentive scheme:", error);

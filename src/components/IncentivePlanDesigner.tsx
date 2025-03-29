@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { useS4HanaData } from '@/hooks/useS4HanaData';
@@ -38,6 +37,7 @@ const IncentivePlanDesigner: React.FC<IncentivePlanDesignerProps> = ({
   const [showStorageNotice, setShowStorageNotice] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [schemeId, setSchemeId] = useState<string>('');
+  const [connectionError, setConnectionError] = useState<string | null>(null);
   
   useEffect(() => {
     setSchemeId(generateTimestampId());
@@ -94,6 +94,7 @@ const IncentivePlanDesigner: React.FC<IncentivePlanDesignerProps> = ({
 
     try {
       setIsSaving(true);
+      setConnectionError(null);
       
       const schemeToSave = {
         ...plan,
@@ -112,9 +113,15 @@ const IncentivePlanDesigner: React.FC<IncentivePlanDesignerProps> = ({
     } catch (error) {
       console.error('Error saving to MongoDB:', error);
       
+      let errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      
+      if (errorMessage.includes('MongoDB') || errorMessage.includes('server') || errorMessage.includes('connect')) {
+        setConnectionError(errorMessage);
+      }
+      
       toast({
         title: "Save Error",
-        description: `Failed to save scheme: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        description: errorMessage,
         variant: "destructive"
       });
     } finally {
@@ -210,6 +217,16 @@ const IncentivePlanDesigner: React.FC<IncentivePlanDesignerProps> = ({
             <AlertDescription>
               Your scheme has been saved in MongoDB with the ID: {schemeId}. 
               The scheme status is set to DRAFT.
+            </AlertDescription>
+          </Alert>
+        )}
+        
+        {connectionError && (
+          <Alert className="mb-6 bg-red-50 border-red-200">
+            <AlertCircle className="h-4 w-4 text-red-600" />
+            <AlertDescription>
+              <span className="font-semibold">MongoDB Connection Error:</span> {connectionError}
+              <p className="mt-1">Make sure the incentiveServer.js is running with: <code>node server/incentiveServer.js</code></p>
             </AlertDescription>
           </Alert>
         )}
