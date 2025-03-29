@@ -6,8 +6,7 @@ import IncentivePlanDesigner from '@/components/IncentivePlanDesigner';
 import { useToast } from "@/hooks/use-toast";
 import { IncentivePlanWithStatus } from '@/services/incentive/incentivePlanService';
 import { DEFAULT_PLAN } from '@/constants/incentiveConstants';
-import { IncentivePlan, PrimaryMetric } from '@/types/incentiveTypes';
-import { saveIncentiveScheme } from '@/services/database/mongoDBService';
+import { IncentivePlan } from '@/types/incentiveTypes';
 
 import SchemeOptionsScreen from '@/components/incentive/SchemeOptionsScreen';
 import DesignerNavigation from '@/components/incentive/DesignerNavigation';
@@ -18,7 +17,6 @@ const IncentiveDesigner = () => {
   const [showInitialOptions, setShowInitialOptions] = useState(true);
   const [showExistingSchemes, setShowExistingSchemes] = useState(false);
   const [planTemplate, setPlanTemplate] = useState<IncentivePlan | null>(null);
-  const [savingToStorage, setSavingToStorage] = useState(false);
 
   const generateTimestampName = () => {
     const now = new Date();
@@ -35,7 +33,7 @@ const IncentiveDesigner = () => {
   };
 
   const handleCreateNewScheme = () => {
-    // Initialize with empty data
+    // Initialize with empty data - no prefilled fields
     setPlanTemplate({
       ...DEFAULT_PLAN,
       participants: [],
@@ -46,7 +44,7 @@ const IncentiveDesigner = () => {
         tiers: []
       },
       measurementRules: {
-        primaryMetrics: [],
+        primaryMetrics: [], // No prefilled metrics
         minQualification: 0,
         adjustments: [],
         exclusions: []
@@ -96,46 +94,6 @@ const IncentiveDesigner = () => {
     });
   };
 
-  const handleSaveToStorage = async (plan: IncentivePlan) => {
-    if (!plan) {
-      toast({
-        title: "Validation Error",
-        description: "Please provide scheme details before saving",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    try {
-      setSavingToStorage(true);
-      
-      // Use timestamp-based naming if no name is provided
-      const schemeName = plan.name || generateTimestampName();
-      const schemeToSave = {
-        ...plan,
-        name: schemeName
-      };
-      
-      const id = await saveIncentiveScheme(schemeToSave, 'DRAFT');
-      
-      toast({
-        title: "Scheme Saved",
-        description: `Scheme "${schemeName}" saved with ID: ${id}`,
-        variant: "default"
-      });
-    } catch (error) {
-      console.error('Error saving to MongoDB:', error);
-      
-      toast({
-        title: "Save Error",
-        description: `Failed to save scheme: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        variant: "destructive"
-      });
-    } finally {
-      setSavingToStorage(false);
-    }
-  };
-
   return (
     <div className="min-h-screen bg-gradient-to-b from-app-gray-50 to-white">
       <NavBar />
@@ -154,8 +112,6 @@ const IncentiveDesigner = () => {
           <IncentivePlanDesigner 
             initialPlan={planTemplate} 
             onBack={() => setShowInitialOptions(true)}
-            onSaveToStorage={handleSaveToStorage}
-            savingToStorage={savingToStorage}
           />
         )}
         

@@ -59,7 +59,7 @@ const MeasurementRules: React.FC<MeasurementRulesProps> = ({
 
         {rules.primaryMetrics.length === 0 ? (
           <EmptyRulesState
-            title="No qualifying criteria defined"
+            message="No qualifying criteria defined"
             description="Add criteria to determine when a transaction qualifies for incentive"
             buttonText="Add Qualifying Criteria"
             onAction={addPrimaryMetric}
@@ -69,11 +69,12 @@ const MeasurementRules: React.FC<MeasurementRulesProps> = ({
             {rules.primaryMetrics.map((metric, index) => (
               <PrimaryMetricSelector
                 key={index}
-                metric={metric}
+                primaryMetrics={[metric]}
                 dbFields={getDbFields()}
-                updateMetric={(field, value) => updatePrimaryMetric(index, field, value)}
-                removeMetric={() => removePrimaryMetric(index)}
-                isRemovable={rules.primaryMetrics.length > 1}
+                currencySymbol={currencySymbol}
+                onAddMetric={() => {}}
+                onUpdateMetric={(field, value) => updatePrimaryMetric(index, field, value)}
+                onRemoveMetric={() => removePrimaryMetric(index)}
               />
             ))}
           </div>
@@ -83,17 +84,17 @@ const MeasurementRules: React.FC<MeasurementRulesProps> = ({
       {/* Minimum Qualification */}
       <QualificationInput
         minQualification={rules.minQualification}
-        currency={currency}
-        updateMinQualification={updateMinQualification}
+        currencySymbol={currencySymbol}
+        onUpdateMinQualification={updateMinQualification}
       />
 
       {/* Adjustments */}
       <AdjustmentsList
         adjustments={rules.adjustments}
         dbFields={getDbFields()}
-        updateAdjustment={updateAdjustment}
-        removeAdjustment={removeAdjustment}
-        addAdjustment={addAdjustment}
+        onUpdateAdjustment={updateAdjustment}
+        onRemoveAdjustment={removeAdjustment}
+        onAddAdjustment={addAdjustment}
         currencySymbol={currencySymbol}
       />
 
@@ -101,9 +102,9 @@ const MeasurementRules: React.FC<MeasurementRulesProps> = ({
       <ExclusionsList
         exclusions={rules.exclusions}
         dbFields={getDbFields()}
-        updateExclusion={updateExclusion}
-        removeExclusion={removeExclusion}
-        addExclusion={addExclusion}
+        onUpdateExclusion={updateExclusion}
+        onRemoveExclusion={removeExclusion}
+        onAddExclusion={addExclusion}
       />
     </div>
   );

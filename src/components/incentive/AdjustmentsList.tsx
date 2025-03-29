@@ -11,6 +11,7 @@ interface AdjustmentsListProps {
   onAddAdjustment: () => void;
   onUpdateAdjustment: (index: number, field: keyof Adjustment, value: string | number) => void;
   onRemoveAdjustment: (index: number) => void;
+  currencySymbol: string;
 }
 
 const AdjustmentsList: React.FC<AdjustmentsListProps> = ({
@@ -18,7 +19,8 @@ const AdjustmentsList: React.FC<AdjustmentsListProps> = ({
   dbFields,
   onAddAdjustment,
   onUpdateAdjustment,
-  onRemoveAdjustment
+  onRemoveAdjustment,
+  currencySymbol
 }) => {
   return (
     <>

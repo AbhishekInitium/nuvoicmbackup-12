@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { PlusCircle, Plus } from 'lucide-react';
+import { PlusCircle } from 'lucide-react';
 import ActionButton from '../ui-custom/ActionButton';
 import { Exclusion } from '@/types/incentiveTypes';
 import ExclusionForm from './ExclusionForm';
@@ -36,12 +36,14 @@ const ExclusionsList: React.FC<ExclusionsListProps> = ({
       {exclusions.length === 0 ? (
         <div className="text-center py-8 border border-dashed rounded-lg">
           <p className="text-app-gray-500">No exclusions defined yet</p>
-          <button
-            className="mt-4 text-app-blue hover:text-app-blue-dark font-medium flex items-center justify-center mx-auto"
+          <ActionButton
+            variant="outline"
+            size="sm"
             onClick={onAddExclusion}
+            className="mx-auto mt-4"
           >
-            <Plus size={18} className="mr-1" /> Add your first exclusion
-          </button>
+            <PlusCircle size={16} className="mr-1" /> Add Exclusion
+          </ActionButton>
         </div>
       ) : (
         <div className="space-y-4">

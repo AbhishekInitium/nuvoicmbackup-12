@@ -15,41 +15,36 @@ import PayoutStructureSection from './incentive/PayoutStructureSection';
 import { Button } from './ui/button';
 import { Save, AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription } from './ui/alert';
+import { saveIncentiveScheme } from '@/services/database/mongoDBService';
 
 interface IncentivePlanDesignerProps {
   initialPlan?: IncentivePlan | null;
   onBack?: () => void;
-  onSaveToStorage?: (plan: IncentivePlan) => void;
-  savingToStorage?: boolean;
 }
 
 const IncentivePlanDesigner: React.FC<IncentivePlanDesignerProps> = ({ 
   initialPlan = null,
-  onBack,
-  onSaveToStorage,
-  savingToStorage = false
+  onBack
 }) => {
   const { toast } = useToast();
   const { 
     incentivePlans, 
     loadingPlans, 
-    savePlan, 
-    isSaving,
     refetchPlans
   } = useS4HanaData();
   
   const [showExistingSchemes, setShowExistingSchemes] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [showStorageNotice, setShowStorageNotice] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   // Use the custom hook to manage the plan state and logic
   const {
     plan,
     updatePlan,
     createNewScheme,
-    copyExistingScheme,
-    savePlanToS4
-  } = useIncentivePlan(initialPlan, savePlan, refetchPlans);
+    copyExistingScheme
+  } = useIncentivePlan(initialPlan, undefined, refetchPlans);
 
   useEffect(() => {
     // Fetch plans when component mounts
@@ -60,11 +55,60 @@ const IncentivePlanDesigner: React.FC<IncentivePlanDesignerProps> = ({
     }
   }, [loadingPlans, refetchPlans]);
 
-  const handleSave = () => {
-    if (onSaveToStorage) {
-      setShowStorageNotice(true);
-      onSaveToStorage(plan);
+  const handleSave = async () => {
+    if (!plan) {
+      toast({
+        title: "Validation Error",
+        description: "Please provide scheme details before saving",
+        variant: "destructive"
+      });
+      return;
     }
+
+    try {
+      setIsSaving(true);
+      
+      // Use timestamp-based naming if no name is provided
+      const schemeName = plan.name || generateTimestampName();
+      const schemeToSave = {
+        ...plan,
+        name: schemeName
+      };
+      
+      const id = await saveIncentiveScheme(schemeToSave, 'DRAFT');
+      
+      setShowStorageNotice(true);
+      
+      toast({
+        title: "Scheme Saved",
+        description: `Scheme "${schemeName}" saved with ID: ${id}`,
+        variant: "default"
+      });
+    } catch (error) {
+      console.error('Error saving to MongoDB:', error);
+      
+      toast({
+        title: "Save Error",
+        description: `Failed to save scheme: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        variant: "destructive"
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const generateTimestampName = () => {
+    const now = new Date();
+    
+    const day = String(now.getDate()).padStart(2, '0');
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const year = String(now.getFullYear()).substring(2);
+    
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const seconds = String(now.getSeconds()).padStart(2, '0');
+    
+    return `ICM_${day}${month}${year}_${hours}${minutes}${seconds}`;
   };
 
   if (isLoading) {
@@ -123,11 +167,11 @@ const IncentivePlanDesigner: React.FC<IncentivePlanDesignerProps> = ({
             variant="default"
             size="lg"
             onClick={handleSave}
-            disabled={savingToStorage}
+            disabled={isSaving}
             className="flex items-center"
           >
             <Save size={18} className="mr-2" /> 
-            {savingToStorage ? "Saving..." : "Save Scheme"}
+            {isSaving ? "Saving..." : "Save Scheme"}
           </Button>
         </div>
       </div>

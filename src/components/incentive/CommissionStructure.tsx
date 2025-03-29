@@ -41,7 +41,7 @@ const CommissionStructure: React.FC<CommissionStructureProps> = ({
         
         {tierState.length === 0 ? (
           <EmptyRulesState
-            title="No commission tiers defined"
+            message="No commission tiers defined"
             description="Add tiers to define the commission structure"
             buttonText="Add Commission Tier"
             onAction={addTier}
