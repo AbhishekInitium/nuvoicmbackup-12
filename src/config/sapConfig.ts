@@ -1,3 +1,4 @@
+
 /**
  * SAP BTP and S/4 HANA Configuration
  * This file contains configuration for SAP BTP deployment and S/4 HANA API integration
@@ -29,7 +30,7 @@ export const SAP_CONFIG = {
       salesOrders: 'API_SALES_ORDER_SRV',
       businessPartners: 'API_BUSINESS_PARTNER',
       employees: 'API_EMPLOYEE',
-      financialDocuments: 'API_FINANCIAL_DOCUMENT',
+      financialDocuments: 'API_BILLING_DOCUMENT_SRV',
       productMaster: 'API_PRODUCT_SRV',
       salesOrganization: 'API_SALESORGANIZATION_SRV'
     }
@@ -65,5 +66,11 @@ export const API_ENDPOINTS = {
     calculateCommission: '/calculateCommission',
     getPayoutHistory: '/getPayoutHistory',
     simulateIncentive: '/simulateIncentive'
+  },
+
+  // Execution logs
+  execution: {
+    getExecutionLog: '/getExecutionLog',
+    getExecutionResults: '/getExecutionResults'
   }
 };

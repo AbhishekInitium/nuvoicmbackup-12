@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Play, AlertTriangle, Calendar, Truck, Monitor, Shield, Info } from 'lucide-react';
+import { Play, AlertTriangle, Calendar, Truck, Monitor, Shield, Info, FileText, Download } from 'lucide-react';
 import NavBar from '@/components/layout/NavBar';
 import Container from '@/components/layout/Container';
 import SectionPanel from '@/components/ui-custom/SectionPanel';
@@ -23,13 +23,24 @@ import {
   executeCommissionCalculation, 
   ExecutionMode,
   CommissionExecutionParams,
-  CommissionExecutionResult
+  CommissionExecutionResult,
+  getExecutionLog
 } from '@/services/incentive/commissionExecutionService';
 import { 
   IncentivePlanWithStatus, 
   getIncentivePlans, 
   markPlanAsExecuted 
 } from '@/services/incentive/incentivePlanService';
+import { Badge } from '@/components/ui/badge';
+
+// Type for log entries from the execution log
+interface LogEntryDisplay {
+  id: string;
+  timestamp: string;
+  category: string;
+  message: string;
+  level: 'INFO' | 'WARNING' | 'ERROR' | 'DEBUG';
+}
 
 const CommissionExecutionEngine: React.FC = () => {
   const navigate = useNavigate();
@@ -44,6 +55,8 @@ const CommissionExecutionEngine: React.FC = () => {
   const [isExecuting, setIsExecuting] = useState<boolean>(false);
   const [executionResult, setExecutionResult] = useState<CommissionExecutionResult | null>(null);
   const [selectedPlan, setSelectedPlan] = useState<IncentivePlanWithStatus | null>(null);
+  const [executionLogs, setExecutionLogs] = useState<LogEntryDisplay[]>([]);
+  const [activeTab, setActiveTab] = useState<string>('results');
   
   useEffect(() => {
     loadApprovedPlans();
@@ -98,6 +111,7 @@ const CommissionExecutionEngine: React.FC = () => {
     
     try {
       setIsExecuting(true);
+      setExecutionLogs([]);
       
       const params: CommissionExecutionParams = {
         planId: selectedPlan.name,
@@ -112,6 +126,16 @@ const CommissionExecutionEngine: React.FC = () => {
       const result = await executeCommissionCalculation(selectedPlan, params);
       
       setExecutionResult(result);
+      
+      // Try to get detailed execution logs
+      try {
+        const log = await getExecutionLog(result.executionId);
+        if (log && log.entries) {
+          setExecutionLogs(log.entries);
+        }
+      } catch (logError) {
+        console.error('Error loading execution logs:', logError);
+      }
       
       // If this was a production run, mark the plan as executed
       if (executionMode === 'PRODUCTION') {
@@ -149,6 +173,43 @@ const CommissionExecutionEngine: React.FC = () => {
       });
     } finally {
       setIsExecuting(false);
+    }
+  };
+  
+  // Function to export execution log as JSON
+  const exportExecutionLog = () => {
+    if (!executionResult) return;
+    
+    const logData = {
+      execution: executionResult,
+      logs: executionLogs,
+      timestamp: new Date().toISOString()
+    };
+    
+    const blob = new Blob([JSON.stringify(logData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `execution-log-${executionResult.executionId}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+  
+  // Function to get the badge color for log levels
+  const getLogLevelBadge = (level: 'INFO' | 'WARNING' | 'ERROR' | 'DEBUG') => {
+    switch (level) {
+      case 'INFO':
+        return 'bg-blue-100 text-blue-800';
+      case 'WARNING':
+        return 'bg-amber-100 text-amber-800';
+      case 'ERROR':
+        return 'bg-red-100 text-red-800';
+      case 'DEBUG':
+        return 'bg-gray-100 text-gray-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
     }
   };
   
@@ -373,6 +434,32 @@ const CommissionExecutionEngine: React.FC = () => {
                           </div>
                         </div>
                       </div>
+                      
+                      {executionResult.logSummary && (
+                        <div className="mt-3 text-sm">
+                          <div className="flex space-x-3">
+                            <span>
+                              <Badge variant="outline" className="bg-blue-50">
+                                {executionResult.logSummary.totalEntries} log entries
+                              </Badge>
+                            </span>
+                            {executionResult.logSummary.errors > 0 && (
+                              <span>
+                                <Badge variant="destructive">
+                                  {executionResult.logSummary.errors} errors
+                                </Badge>
+                              </span>
+                            )}
+                            {executionResult.logSummary.warnings > 0 && (
+                              <span>
+                                <Badge variant="outline" className="bg-amber-100 text-amber-800 hover:bg-amber-200">
+                                  {executionResult.logSummary.warnings} warnings
+                                </Badge>
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      )}
                     </div>
                     
                     <div className="border-t border-b border-app-gray-200 py-4">
@@ -392,69 +479,163 @@ const CommissionExecutionEngine: React.FC = () => {
                       </div>
                     </div>
                     
-                    <h3 className="font-medium text-lg text-app-gray-800">Participant Results</h3>
-                    
-                    <div className="space-y-4">
-                      {executionResult.participantResults.map((participant, index) => (
-                        <GlassCard key={index} className="p-4">
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                              <div className="text-sm text-app-gray-500">Participant ID</div>
-                              <div className="font-medium">{participant.participantId}</div>
+                    <Tabs defaultValue="results" value={activeTab} onValueChange={setActiveTab} className="w-full">
+                      <TabsList className="w-full grid grid-cols-3">
+                        <TabsTrigger value="results">Results</TabsTrigger>
+                        <TabsTrigger value="logs">Execution Logs</TabsTrigger>
+                        <TabsTrigger value="reports">Reports</TabsTrigger>
+                      </TabsList>
+                      
+                      <TabsContent value="results" className="pt-4">
+                        <h3 className="font-medium text-lg text-app-gray-800 mb-4">Participant Results</h3>
+                        <div className="space-y-4">
+                          {executionResult.participantResults.map((participant, index) => (
+                            <GlassCard key={index} className="p-4">
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                  <div className="text-sm text-app-gray-500">Participant ID</div>
+                                  <div className="font-medium">{participant.participantId}</div>
+                                  
+                                  <div className="mt-3 text-sm text-app-gray-500">Sales Amount</div>
+                                  <div className="font-medium">${participant.salesAmount.toFixed(2)}</div>
+                                </div>
+                                
+                                <div>
+                                  <div className="text-sm text-app-gray-500">Commission Amount</div>
+                                  <div className="font-medium text-app-green-600">${participant.commissionAmount.toFixed(2)}</div>
+                                  
+                                  <div className="mt-3 text-sm text-app-gray-500">Applied Rate</div>
+                                  <div className="font-medium">{participant.appliedRate}% (Tier: {participant.tier})</div>
+                                </div>
+                              </div>
                               
-                              <div className="mt-3 text-sm text-app-gray-500">Sales Amount</div>
-                              <div className="font-medium">${participant.salesAmount.toFixed(2)}</div>
-                            </div>
-                            
-                            <div>
-                              <div className="text-sm text-app-gray-500">Commission Amount</div>
-                              <div className="font-medium text-app-green-600">${participant.commissionAmount.toFixed(2)}</div>
+                              <div className="mt-3 grid grid-cols-2 gap-4 text-sm">
+                                <div className="text-app-gray-500">Qualified Records</div>
+                                <div>{participant.qualifiedRecords}</div>
+                                
+                                <div className="text-app-gray-500">Disqualified Records</div>
+                                <div>{participant.disqualifiedRecords}</div>
+                              </div>
                               
-                              <div className="mt-3 text-sm text-app-gray-500">Applied Rate</div>
-                              <div className="font-medium">{participant.appliedRate}% (Tier: {participant.tier})</div>
+                              <div className="mt-4">
+                                <Tabs defaultValue="adjustments">
+                                  <TabsList>
+                                    <TabsTrigger value="adjustments">Adjustments</TabsTrigger>
+                                    <TabsTrigger value="rules">Custom Rules</TabsTrigger>
+                                  </TabsList>
+                                  
+                                  <TabsContent value="adjustments">
+                                    {participant.adjustments.length === 0 ? (
+                                      <p className="text-sm text-app-gray-500 py-2">No adjustments applied</p>
+                                    ) : (
+                                      <ul className="text-sm divide-y">
+                                        {participant.adjustments.map((adj, i) => (
+                                          <li key={i} className="py-2 flex justify-between">
+                                            <span>{adj.description}</span>
+                                            <span className={adj.impact >= 0 ? 'text-app-green-600' : 'text-app-red-600'}>
+                                              {adj.impact >= 0 ? '+' : ''}{adj.impact.toFixed(2)}
+                                            </span>
+                                          </li>
+                                        ))}
+                                      </ul>
+                                    )}
+                                  </TabsContent>
+                                  
+                                  <TabsContent value="rules">
+                                    {participant.customRulesApplied.length === 0 ? (
+                                      <p className="text-sm text-app-gray-500 py-2">No custom rules applied</p>
+                                    ) : (
+                                      <ul className="text-sm">
+                                        {participant.customRulesApplied.map((rule, i) => (
+                                          <li key={i} className="py-1">{rule}</li>
+                                        ))}
+                                      </ul>
+                                    )}
+                                  </TabsContent>
+                                </Tabs>
+                              </div>
+                            </GlassCard>
+                          ))}
+                        </div>
+                      </TabsContent>
+                      
+                      <TabsContent value="logs" className="pt-4">
+                        <div className="flex justify-between items-center mb-4">
+                          <h3 className="font-medium text-lg text-app-gray-800">Execution Logs</h3>
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={exportExecutionLog}
+                            className="flex items-center"
+                          >
+                            <Download size={16} className="mr-1" />
+                            Export Logs
+                          </Button>
+                        </div>
+                        
+                        {executionLogs.length > 0 ? (
+                          <div className="border border-gray-200 rounded-lg overflow-hidden">
+                            <div className="max-h-96 overflow-y-auto">
+                              <table className="min-w-full divide-y divide-gray-200">
+                                <thead className="bg-gray-50 sticky top-0">
+                                  <tr>
+                                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">Time</th>
+                                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-24">Level</th>
+                                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">Category</th>
+                                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Message</th>
+                                  </tr>
+                                </thead>
+                                <tbody className="bg-white divide-y divide-gray-200">
+                                  {executionLogs.map((log) => (
+                                    <tr key={log.id}>
+                                      <td className="px-3 py-2 whitespace-nowrap text-xs text-gray-900">
+                                        {new Date(log.timestamp).toLocaleTimeString()}
+                                      </td>
+                                      <td className="px-3 py-2 whitespace-nowrap">
+                                        <Badge className={getLogLevelBadge(log.level)}>
+                                          {log.level}
+                                        </Badge>
+                                      </td>
+                                      <td className="px-3 py-2 whitespace-nowrap text-xs text-gray-500">
+                                        {log.category}
+                                      </td>
+                                      <td className="px-3 py-2 text-xs text-gray-900">
+                                        {log.message}
+                                      </td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
                             </div>
                           </div>
+                        ) : (
+                          <div className="text-center py-8 bg-gray-50 rounded-lg">
+                            <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                            <p className="text-gray-600">No detailed logs available for this execution</p>
+                          </div>
+                        )}
+                      </TabsContent>
+                      
+                      <TabsContent value="reports" className="pt-4">
+                        <h3 className="font-medium text-lg text-app-gray-800 mb-4">Commission Reports</h3>
+                        <div className="bg-gray-50 p-6 rounded-lg text-center">
+                          <FileText className="h-16 w-16 mx-auto text-gray-400 mb-4" />
+                          <p className="text-gray-600 mb-4">Download commission reports in different formats</p>
                           
-                          <div className="mt-4">
-                            <Tabs defaultValue="adjustments">
-                              <TabsList>
-                                <TabsTrigger value="adjustments">Adjustments</TabsTrigger>
-                                <TabsTrigger value="rules">Custom Rules</TabsTrigger>
-                              </TabsList>
-                              
-                              <TabsContent value="adjustments">
-                                {participant.adjustments.length === 0 ? (
-                                  <p className="text-sm text-app-gray-500 py-2">No adjustments applied</p>
-                                ) : (
-                                  <ul className="text-sm divide-y">
-                                    {participant.adjustments.map((adj, i) => (
-                                      <li key={i} className="py-2 flex justify-between">
-                                        <span>{adj.description}</span>
-                                        <span className={adj.impact >= 0 ? 'text-app-green-600' : 'text-app-red-600'}>
-                                          {adj.impact >= 0 ? '+' : ''}{adj.impact.toFixed(2)}
-                                        </span>
-                                      </li>
-                                    ))}
-                                  </ul>
-                                )}
-                              </TabsContent>
-                              
-                              <TabsContent value="rules">
-                                {participant.customRulesApplied.length === 0 ? (
-                                  <p className="text-sm text-app-gray-500 py-2">No custom rules applied</p>
-                                ) : (
-                                  <ul className="text-sm">
-                                    {participant.customRulesApplied.map((rule, i) => (
-                                      <li key={i} className="py-1">{rule}</li>
-                                    ))}
-                                  </ul>
-                                )}
-                              </TabsContent>
-                            </Tabs>
+                          <div className="flex flex-col sm:flex-row justify-center gap-3">
+                            <Button variant="outline" size="sm">
+                              <Download size={16} className="mr-1" /> Excel Report
+                            </Button>
+                            <Button variant="outline" size="sm">
+                              <Download size={16} className="mr-1" /> PDF Summary
+                            </Button>
+                            <Button variant="outline" size="sm">
+                              <Download size={16} className="mr-1" /> Full Data (CSV)
+                            </Button>
                           </div>
-                        </GlassCard>
-                      ))}
-                    </div>
+                        </div>
+                      </TabsContent>
+                    </Tabs>
                     
                     <div className="flex justify-end space-x-4 pt-4">
                       <Button variant="outline" onClick={() => setExecutionResult(null)}>
