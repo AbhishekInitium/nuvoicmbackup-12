@@ -1,20 +1,21 @@
 
 import React from 'react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { getCurrencySymbol } from '@/utils/incentiveUtils';
+import { PlusCircle } from 'lucide-react';
+import ActionButton from '../ui-custom/ActionButton';
 import { MeasurementRules as MeasurementRulesType } from '@/types/incentiveTypes';
 import { useMeasurementRules } from '@/hooks/useMeasurementRules';
-
-// Import smaller components
 import PrimaryMetricSelector from './PrimaryMetricSelector';
+import QualificationInput from './QualificationInput';
 import AdjustmentsList from './AdjustmentsList';
 import ExclusionsList from './ExclusionsList';
+import EmptyRulesState from './EmptyRulesState';
+import { getCurrencySymbol } from '@/utils/incentiveUtils';
 
 interface MeasurementRulesProps {
   measurementRules: MeasurementRulesType;
   revenueBase: string;
   currency: string;
-  updateMeasurementRules: (updatedRules: MeasurementRulesType) => void;
+  updateMeasurementRules: (rules: MeasurementRulesType) => void;
 }
 
 const MeasurementRules: React.FC<MeasurementRulesProps> = ({
@@ -30,6 +31,7 @@ const MeasurementRules: React.FC<MeasurementRulesProps> = ({
     addPrimaryMetric,
     updatePrimaryMetric,
     removePrimaryMetric,
+    updateMinQualification,
     addAdjustment,
     updateAdjustment,
     removeAdjustment,
@@ -38,52 +40,71 @@ const MeasurementRules: React.FC<MeasurementRulesProps> = ({
     removeExclusion
   } = useMeasurementRules(measurementRules, revenueBase, updateMeasurementRules);
 
-  // Ensure primaryMetrics is always an array
-  const primaryMetrics = Array.isArray(rules?.primaryMetrics) 
-    ? rules.primaryMetrics 
-    : [];
-
   return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 gap-5">
-        <PrimaryMetricSelector
-          primaryMetrics={primaryMetrics}
-          dbFields={getDbFields()}
-          currencySymbol={currencySymbol}
-          onAddMetric={addPrimaryMetric}
-          onUpdateMetric={updatePrimaryMetric}
-          onRemoveMetric={removePrimaryMetric}
-        />
+    <div className="space-y-8">
+      {/* Primary Metrics Section */}
+      <div>
+        <div className="flex justify-between items-center mb-4">
+          <label className="text-sm font-medium text-app-gray-700">
+            Qualifying Criteria
+          </label>
+          <ActionButton
+            variant="outline"
+            size="sm"
+            onClick={addPrimaryMetric}
+          >
+            <PlusCircle size={16} className="mr-1" /> Add Criteria
+          </ActionButton>
+        </div>
+
+        {rules.primaryMetrics.length === 0 ? (
+          <EmptyRulesState
+            title="No qualifying criteria defined"
+            description="Add criteria to determine when a transaction qualifies for incentive"
+            buttonText="Add Qualifying Criteria"
+            onAction={addPrimaryMetric}
+          />
+        ) : (
+          <div className="space-y-4">
+            {rules.primaryMetrics.map((metric, index) => (
+              <PrimaryMetricSelector
+                key={index}
+                metric={metric}
+                dbFields={getDbFields()}
+                updateMetric={(field, value) => updatePrimaryMetric(index, field, value)}
+                removeMetric={() => removePrimaryMetric(index)}
+                isRemovable={rules.primaryMetrics.length > 1}
+              />
+            ))}
+          </div>
+        )}
       </div>
-      
-      <div className="section-divider"></div>
-      
-      <Tabs defaultValue="adjustments" className="w-full">
-        <TabsList className="grid grid-cols-2 mb-4">
-          <TabsTrigger value="adjustments">Adjustment Factors</TabsTrigger>
-          <TabsTrigger value="exclusions">Exclusions</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="adjustments" className="mt-0">
-          <AdjustmentsList
-            adjustments={rules.adjustments}
-            dbFields={getDbFields()}
-            onAddAdjustment={addAdjustment}
-            onUpdateAdjustment={updateAdjustment}
-            onRemoveAdjustment={removeAdjustment}
-          />
-        </TabsContent>
-        
-        <TabsContent value="exclusions" className="mt-0">
-          <ExclusionsList
-            exclusions={rules.exclusions}
-            dbFields={getDbFields()}
-            onAddExclusion={addExclusion}
-            onUpdateExclusion={updateExclusion}
-            onRemoveExclusion={removeExclusion}
-          />
-        </TabsContent>
-      </Tabs>
+
+      {/* Minimum Qualification */}
+      <QualificationInput
+        minQualification={rules.minQualification}
+        currency={currency}
+        updateMinQualification={updateMinQualification}
+      />
+
+      {/* Adjustments */}
+      <AdjustmentsList
+        adjustments={rules.adjustments}
+        dbFields={getDbFields()}
+        updateAdjustment={updateAdjustment}
+        removeAdjustment={removeAdjustment}
+        addAdjustment={addAdjustment}
+        currencySymbol={currencySymbol}
+      />
+
+      {/* Exclusions */}
+      <ExclusionsList
+        exclusions={rules.exclusions}
+        dbFields={getDbFields()}
+        updateExclusion={updateExclusion}
+        removeExclusion={removeExclusion}
+        addExclusion={addExclusion}
+      />
     </div>
   );
 };

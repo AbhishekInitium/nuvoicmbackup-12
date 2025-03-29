@@ -35,39 +35,32 @@ const IncentiveDesigner = () => {
   };
 
   const handleCreateNewScheme = () => {
+    // Initialize with empty data
     setPlanTemplate({
       ...DEFAULT_PLAN,
       participants: [],
       salesQuota: 0,
       name: generateTimestampName(),
-      description: ''
+      description: '',
+      commissionStructure: {
+        tiers: []
+      },
+      measurementRules: {
+        primaryMetrics: [],
+        minQualification: 0,
+        adjustments: [],
+        exclusions: []
+      },
+      creditRules: {
+        levels: []
+      },
+      customRules: []
     });
     setShowInitialOptions(false);
   };
 
   const handleCopyExistingScheme = (scheme: IncentivePlanWithStatus) => {
-    // Default field to use if none are found
-    const defaultField = scheme.revenueBase === 'salesOrders' ? 'TotalAmount' : 'InvoiceAmount';
-    const defaultMetrics: PrimaryMetric[] = [{ 
-      field: defaultField, 
-      operator: '>', 
-      value: 0, 
-      description: 'Qualifying Revenue' 
-    }];
-    
-    const fixedMeasurementRules = {
-      ...scheme.measurementRules,
-      primaryMetrics: Array.isArray(scheme.measurementRules?.primaryMetrics) && 
-                     scheme.measurementRules.primaryMetrics.length > 0
-        ? scheme.measurementRules.primaryMetrics.map(metric => ({
-            field: metric.field || defaultField,
-            operator: metric.operator || '>',
-            value: metric.value || 0,
-            description: metric.description || 'Qualifying criteria'
-          }))
-        : defaultMetrics
-    };
-    
+    // Create a clean copy with no default values
     const planData: IncentivePlan = {
       name: generateTimestampName(),
       description: `Copy of ${scheme.name}`,
@@ -76,10 +69,19 @@ const IncentiveDesigner = () => {
       currency: scheme.currency,
       revenueBase: scheme.revenueBase,
       participants: scheme.participants,
-      commissionStructure: scheme.commissionStructure,
-      measurementRules: fixedMeasurementRules,
-      creditRules: scheme.creditRules,
-      customRules: scheme.customRules,
+      commissionStructure: {
+        tiers: Array.isArray(scheme.commissionStructure?.tiers) ? [...scheme.commissionStructure.tiers] : []
+      },
+      measurementRules: {
+        primaryMetrics: Array.isArray(scheme.measurementRules?.primaryMetrics) ? [...scheme.measurementRules.primaryMetrics] : [],
+        minQualification: scheme.measurementRules?.minQualification || 0,
+        adjustments: Array.isArray(scheme.measurementRules?.adjustments) ? [...scheme.measurementRules.adjustments] : [],
+        exclusions: Array.isArray(scheme.measurementRules?.exclusions) ? [...scheme.measurementRules.exclusions] : []
+      },
+      creditRules: {
+        levels: Array.isArray(scheme.creditRules?.levels) ? [...scheme.creditRules.levels] : []
+      },
+      customRules: Array.isArray(scheme.customRules) ? [...scheme.customRules] : [],
       salesQuota: typeof scheme.salesQuota === 'string' ? parseInt(scheme.salesQuota) || 0 : scheme.salesQuota
     };
     

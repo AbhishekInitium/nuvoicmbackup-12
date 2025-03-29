@@ -5,6 +5,7 @@ import ActionButton from '../ui-custom/ActionButton';
 import { useToast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
 import { CreditLevel } from '@/types/incentiveTypes';
+import EmptyRulesState from './EmptyRulesState';
 
 interface CreditRulesProps {
   levels: CreditLevel[];
@@ -26,16 +27,6 @@ const CreditRules: React.FC<CreditRulesProps> = ({ levels, updateCreditRules }) 
   };
 
   const removeCreditLevel = (index: number) => {
-    // Don't allow removing all levels
-    if (levels.length <= 1) {
-      toast({
-        title: "Cannot Remove Level",
-        description: "At least one credit level is required.",
-        variant: "destructive"
-      });
-      return;
-    }
-    
     const newLevels = [...levels];
     newLevels.splice(index, 1);
     
@@ -83,69 +74,79 @@ const CreditRules: React.FC<CreditRulesProps> = ({ levels, updateCreditRules }) 
           </ActionButton>
         </div>
         
-        <div className="overflow-hidden rounded-xl border border-app-gray-200">
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-app-gray-200">
-              <thead>
-                <tr className="bg-app-gray-50">
-                  <th className="px-6 py-3 text-left text-xs font-medium text-app-gray-500 uppercase tracking-wider">Level Name</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-app-gray-500 uppercase tracking-wider">Percentage (%)</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-app-gray-500 uppercase tracking-wider">Action</th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-app-gray-200">
-                {levels.map((level, index) => (
-                  <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-app-gray-50 bg-opacity-30'}>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <Input 
-                        type="text" 
-                        value={level.name}
-                        onChange={(e) => updateCreditLevel(index, 'name', e.target.value)}
-                      />
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="relative">
-                        <input 
-                          type="number" 
-                          className="form-input pl-8 py-2"
-                          value={level.percentage}
-                          onChange={(e) => updateCreditLevel(index, 'percentage', e.target.value)}
-                        />
-                        <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                          <Percent size={16} className="text-app-gray-400" />
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right">
-                      <button 
-                        className="text-app-red hover:text-opacity-80 transition-colors duration-200"
-                        onClick={() => removeCreditLevel(index)}
-                      >
-                        <Trash2 size={18} />
-                      </button>
-                    </td>
+        {levels.length === 0 ? (
+          <EmptyRulesState
+            title="No credit levels defined"
+            description="Add credit levels to define how commission is distributed"
+            buttonText="Add Credit Level"
+            onAction={addCreditLevel}
+          />
+        ) : (
+          <div className="overflow-hidden rounded-xl border border-app-gray-200">
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-app-gray-200">
+                <thead>
+                  <tr className="bg-app-gray-50">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-app-gray-500 uppercase tracking-wider">Level Name</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-app-gray-500 uppercase tracking-wider">Percentage (%)</th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-app-gray-500 uppercase tracking-wider">Action</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-        
-        {/* Total percentage indicator */}
-        <div className="mt-4 flex items-center justify-between">
-          <p className="text-sm text-app-gray-500">
-            Total credit distribution should equal 100%
-          </p>
-          <div className="flex items-center">
-            <div className={`px-3 py-1 rounded-full ${
-              levels.reduce((acc, level) => acc + level.percentage, 0) === 100
-                ? 'bg-green-100 text-green-800'
-                : 'bg-amber-100 text-amber-800'
-            }`}>
-              Total: {levels.reduce((acc, level) => acc + level.percentage, 0)}%
+                </thead>
+                <tbody className="bg-white divide-y divide-app-gray-200">
+                  {levels.map((level, index) => (
+                    <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-app-gray-50 bg-opacity-30'}>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <Input 
+                          type="text" 
+                          value={level.name}
+                          onChange={(e) => updateCreditLevel(index, 'name', e.target.value)}
+                        />
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="relative">
+                          <input 
+                            type="number" 
+                            className="form-input pl-8 py-2"
+                            value={level.percentage}
+                            onChange={(e) => updateCreditLevel(index, 'percentage', e.target.value)}
+                          />
+                          <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                            <Percent size={16} className="text-app-gray-400" />
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right">
+                        <button 
+                          className="text-app-red hover:text-opacity-80 transition-colors duration-200"
+                          onClick={() => removeCreditLevel(index)}
+                        >
+                          <Trash2 size={18} />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           </div>
-        </div>
+        )}
+        
+        {levels.length > 0 && (
+          <div className="mt-4 flex items-center justify-between">
+            <p className="text-sm text-app-gray-500">
+              Total credit distribution should equal 100%
+            </p>
+            <div className="flex items-center">
+              <div className={`px-3 py-1 rounded-full ${
+                levels.reduce((acc, level) => acc + level.percentage, 0) === 100
+                  ? 'bg-green-100 text-green-800'
+                  : 'bg-amber-100 text-amber-800'
+              }`}>
+                Total: {levels.reduce((acc, level) => acc + level.percentage, 0)}%
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

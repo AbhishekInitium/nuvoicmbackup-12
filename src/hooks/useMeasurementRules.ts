@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { DB_FIELDS } from '@/constants/incentiveConstants';
 import { MeasurementRules, Adjustment, Exclusion, PrimaryMetric } from '@/types/incentiveTypes';
@@ -8,14 +7,12 @@ export const useMeasurementRules = (
   revenueBase: string,
   onUpdateRules: (rules: MeasurementRules) => void
 ) => {
-  // Ensure initialRules.primaryMetrics is an array
-  const defaultField = DB_FIELDS[revenueBase]?.[0] || '';
-  
+  // Ensure initialRules.primaryMetrics is an array but don't add default values
   const normalizedInitialRules = {
     ...initialRules,
-    primaryMetrics: Array.isArray(initialRules.primaryMetrics) && initialRules.primaryMetrics.length > 0
-      ? initialRules.primaryMetrics
-      : [{ field: defaultField, operator: '>', value: 0, description: 'Revenue-based criteria' }]
+    primaryMetrics: Array.isArray(initialRules.primaryMetrics) ? initialRules.primaryMetrics : [],
+    adjustments: Array.isArray(initialRules.adjustments) ? initialRules.adjustments : [],
+    exclusions: Array.isArray(initialRules.exclusions) ? initialRules.exclusions : []
   };
 
   const [rules, setRules] = useState<MeasurementRules>(normalizedInitialRules);
@@ -24,13 +21,13 @@ export const useMeasurementRules = (
   useEffect(() => {
     const normalizedRules = {
       ...initialRules,
-      primaryMetrics: Array.isArray(initialRules.primaryMetrics) && initialRules.primaryMetrics.length > 0
-        ? initialRules.primaryMetrics
-        : [{ field: defaultField, operator: '>', value: 0, description: 'Revenue-based criteria' }]
+      primaryMetrics: Array.isArray(initialRules.primaryMetrics) ? initialRules.primaryMetrics : [],
+      adjustments: Array.isArray(initialRules.adjustments) ? initialRules.adjustments : [],
+      exclusions: Array.isArray(initialRules.exclusions) ? initialRules.exclusions : []
     };
     
     setRules(normalizedRules);
-  }, [initialRules, defaultField]);
+  }, [initialRules]);
 
   // Helper function to get database fields based on revenue base
   const getDbFields = () => {
@@ -39,7 +36,7 @@ export const useMeasurementRules = (
 
   // Primary Metric handlers
   const addPrimaryMetric = () => {
-    const defaultField = DB_FIELDS[revenueBase][0];
+    const defaultField = DB_FIELDS[revenueBase]?.[0] || '';
     const newMetric: PrimaryMetric = {
       field: defaultField,
       operator: '>',
@@ -73,11 +70,7 @@ export const useMeasurementRules = (
   };
 
   const removePrimaryMetric = (index: number) => {
-    // Don't remove if it's the last metric
-    if (rules.primaryMetrics.length <= 1) {
-      return;
-    }
-    
+    // Allow removing even if it's the last one
     const newMetrics = [...rules.primaryMetrics];
     newMetrics.splice(index, 1);
     
@@ -102,7 +95,7 @@ export const useMeasurementRules = (
 
   // Adjustment handlers
   const addAdjustment = () => {
-    const defaultField = DB_FIELDS[revenueBase][0];
+    const defaultField = DB_FIELDS[revenueBase]?.[0] || '';
     const newAdjustment = {
       field: defaultField,
       operator: '>',
@@ -151,7 +144,7 @@ export const useMeasurementRules = (
 
   // Exclusion handlers
   const addExclusion = () => {
-    const defaultField = DB_FIELDS[revenueBase][0];
+    const defaultField = DB_FIELDS[revenueBase]?.[0] || '';
     const newExclusion = {
       field: defaultField,
       operator: '>',

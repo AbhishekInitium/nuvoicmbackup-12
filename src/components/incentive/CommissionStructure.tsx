@@ -6,6 +6,7 @@ import { Tier } from '@/types/incentiveTypes';
 import { getCurrencySymbol } from '@/utils/incentiveUtils';
 import TiersTable from './TiersTable';
 import { useCommissionTiers } from './useCommissionTiers';
+import EmptyRulesState from './EmptyRulesState';
 
 interface CommissionStructureProps {
   tiers: Tier[];
@@ -38,16 +39,27 @@ const CommissionStructure: React.FC<CommissionStructureProps> = ({
           </ActionButton>
         </div>
         
-        <TiersTable 
-          tiers={tierState}
-          currencySymbol={currencySymbol}
-          updateTier={updateTier}
-          removeTier={removeTier}
-        />
+        {tierState.length === 0 ? (
+          <EmptyRulesState
+            title="No commission tiers defined"
+            description="Add tiers to define the commission structure"
+            buttonText="Add Commission Tier"
+            onAction={addTier}
+          />
+        ) : (
+          <TiersTable 
+            tiers={tierState}
+            currencySymbol={currencySymbol}
+            updateTier={updateTier}
+            removeTier={removeTier}
+          />
+        )}
         
-        <p className="text-sm text-app-gray-500 mt-3">
-          Sales within each tier range will be commissioned at the corresponding rate.
-        </p>
+        {tierState.length > 0 && (
+          <p className="text-sm text-app-gray-500 mt-3">
+            Sales within each tier range will be commissioned at the corresponding rate.
+          </p>
+        )}
       </div>
     </div>
   );

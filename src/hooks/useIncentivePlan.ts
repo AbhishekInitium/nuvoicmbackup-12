@@ -16,7 +16,20 @@ export const useIncentivePlan = (
     participants: [],
     salesQuota: 0,
     name: '',
-    description: ''
+    description: '',
+    commissionStructure: {
+      tiers: []
+    },
+    measurementRules: {
+      primaryMetrics: [],
+      minQualification: 0,
+      adjustments: [],
+      exclusions: []
+    },
+    creditRules: {
+      levels: []
+    },
+    customRules: []
   });
 
   useEffect(() => {
@@ -38,7 +51,20 @@ export const useIncentivePlan = (
       participants: [],
       salesQuota: 0,
       name: '',
-      description: ''
+      description: '',
+      commissionStructure: {
+        tiers: []
+      },
+      measurementRules: {
+        primaryMetrics: [],
+        minQualification: 0,
+        adjustments: [],
+        exclusions: []
+      },
+      creditRules: {
+        levels: []
+      },
+      customRules: []
     });
     
     toast({

@@ -80,7 +80,8 @@ const ExistingSchemeSelector: React.FC<ExistingSchemeSelectorProps> = ({
     setOpen(false);
   };
 
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateString: string | undefined) => {
+    if (!dateString) return 'Unknown date';
     try {
       return format(new Date(dateString), 'dd/MM/yyyy HH:mm');
     } catch (error) {
@@ -88,8 +89,9 @@ const ExistingSchemeSelector: React.FC<ExistingSchemeSelectorProps> = ({
     }
   };
 
-  const getStatusBadgeClass = (status: string) => {
-    switch (status?.toUpperCase()) {
+  const getStatusBadgeClass = (status: string | undefined) => {
+    const statusUpper = status?.toUpperCase() || '';
+    switch (statusUpper) {
       case 'APPROVED':
         return 'bg-green-100 text-green-800';
       case 'DRAFT':
@@ -155,9 +157,9 @@ const ExistingSchemeSelector: React.FC<ExistingSchemeSelectorProps> = ({
               {schemes.map((scheme, index) => (
                 <TableRow key={index} className="hover:bg-app-gray-50">
                   <TableCell className="font-medium">{scheme.name}</TableCell>
-                  <TableCell>{formatDate(scheme.metadata?.createdAt || '')}</TableCell>
+                  <TableCell>{formatDate(scheme.metadata?.createdAt)}</TableCell>
                   <TableCell>
-                    <span className={`text-xs px-2 py-1 rounded-full ${getStatusBadgeClass(scheme.metadata?.status || '')}`}>
+                    <span className={`text-xs px-2 py-1 rounded-full ${getStatusBadgeClass(scheme.metadata?.status)}`}>
                       {scheme.metadata?.status || 'DRAFT'}
                     </span>
                   </TableCell>
