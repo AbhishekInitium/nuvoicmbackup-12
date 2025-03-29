@@ -1,21 +1,83 @@
 
 const express = require('express');
-const router = express.Router();
-const Incentive = require('../models/incentiveSchema.cjs');
+const mongoose = require('mongoose');
+const bodyParser = require('body-parser');
+const cors = require('cors');
+
+// Create Express app
+const app = express();
+const PORT = process.env.PORT || 3001;
+
+// Middleware
+app.use(cors()); // Enable CORS for frontend requests
+app.use(bodyParser.json());
+
+// MongoDB Connection
+// Replace this URI with your actual MongoDB connection string
+const MONGODB_URI = "mongodb+srv://your_username:your_password@your_cluster.mongodb.net/your_database?retryWrites=true&w=majority";
+
+mongoose.connect(MONGODB_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true
+})
+.then(() => console.log('Connected to MongoDB Atlas'))
+.catch(err => console.error('MongoDB connection error:', err));
+
+// Define Schema with required fields
+const incentiveSchema = new mongoose.Schema({
+  name: {
+    type: String,
+    required: true
+  },
+  description: String,
+  effectiveStart: String,
+  effectiveEnd: String,
+  currency: String,
+  revenueBase: String,
+  participants: [String],
+  commissionStructure: Object,
+  measurementRules: Object,
+  creditRules: Object,
+  customRules: Array,
+  salesQuota: Number,
+  metadata: {
+    createdAt: {
+      type: String,
+      default: () => new Date().toISOString()
+    },
+    updatedAt: {
+      type: String,
+      default: () => new Date().toISOString()
+    },
+    version: {
+      type: Number,
+      default: 1
+    },
+    status: {
+      type: String,
+      enum: ['DRAFT', 'APPROVED', 'SIMULATION', 'PRODUCTION'],
+      default: 'DRAFT'
+    }
+  }
+}, { strict: false }); // Allow flexible structure
+
+const Incentive = mongoose.model('incentivescheme', incentiveSchema);
+
+// API Routes
 
 // GET all incentive schemes
-router.get('/', async (req, res) => {
+app.get('/api/incentives', async (req, res) => {
   try {
     const schemes = await Incentive.find().sort({ 'metadata.createdAt': -1 });
     res.json(schemes);
   } catch (error) {
     console.error('Error fetching schemes:', error);
-    res.status(500).json({ error: 'Failed to fetch incentive schemes', details: error.message });
+    res.status(500).json({ error: 'Failed to fetch incentive schemes' });
   }
 });
 
 // GET a specific incentive scheme by ID
-router.get('/:id', async (req, res) => {
+app.get('/api/incentives/:id', async (req, res) => {
   try {
     const scheme = await Incentive.findById(req.params.id);
     if (!scheme) {
@@ -24,24 +86,13 @@ router.get('/:id', async (req, res) => {
     res.json(scheme);
   } catch (error) {
     console.error('Error fetching scheme:', error);
-    res.status(500).json({ error: 'Failed to fetch incentive scheme', details: error.message });
+    res.status(500).json({ error: 'Failed to fetch incentive scheme' });
   }
 });
 
 // POST - Create a new incentive scheme
-router.post('/', async (req, res) => {
+app.post('/api/incentives', async (req, res) => {
   try {
-    console.log('Received scheme data:', JSON.stringify(req.body, null, 2));
-    
-    // Validate required fields
-    const { name, effectiveStart, effectiveEnd, revenueBase } = req.body;
-    if (!name || !effectiveStart || !effectiveEnd || !revenueBase) {
-      return res.status(400).json({ 
-        error: 'Missing required fields',
-        details: 'Name, effectiveStart, effectiveEnd, and revenueBase are required'
-      });
-    }
-    
     // Ensure the scheme has required metadata
     const schemeData = {
       ...req.body,
@@ -56,20 +107,15 @@ router.post('/', async (req, res) => {
     const newScheme = new Incentive(schemeData);
     const savedScheme = await newScheme.save();
     
-    console.log('Scheme saved successfully with ID:', savedScheme._id);
     res.status(201).json(savedScheme);
   } catch (error) {
     console.error('Error creating scheme:', error);
-    res.status(500).json({ 
-      error: 'Failed to create incentive scheme',
-      details: error.message,
-      stack: error.stack
-    });
+    res.status(500).json({ error: 'Failed to create incentive scheme' });
   }
 });
 
 // PUT - Update an existing incentive scheme
-router.put('/:id', async (req, res) => {
+app.put('/api/incentives/:id', async (req, res) => {
   try {
     const scheme = await Incentive.findById(req.params.id);
     
@@ -102,7 +148,7 @@ router.put('/:id', async (req, res) => {
 });
 
 // PATCH - Update scheme status only
-router.patch('/:id/status', async (req, res) => {
+app.patch('/api/incentives/:id/status', async (req, res) => {
   try {
     const { status } = req.body;
     
@@ -134,7 +180,7 @@ router.patch('/:id/status', async (req, res) => {
 });
 
 // DELETE - Remove an incentive scheme
-router.delete('/:id', async (req, res) => {
+app.delete('/api/incentives/:id', async (req, res) => {
   try {
     const deletedScheme = await Incentive.findByIdAndDelete(req.params.id);
     
@@ -149,4 +195,8 @@ router.delete('/:id', async (req, res) => {
   }
 });
 
-module.exports = router;
+// Start server
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+  console.log(`API available at http://localhost:${PORT}/api/incentives`);
+});

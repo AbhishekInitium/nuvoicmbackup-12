@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
+import { useToast } from "@/hooks/use-toast";
 import { useS4HanaData } from '@/hooks/useS4HanaData';
 import { IncentivePlan } from '@/types/incentiveTypes';
 import { useIncentivePlan } from '@/hooks/useIncentivePlan';
@@ -11,8 +12,10 @@ import SectionPanel from './ui-custom/SectionPanel';
 import BasicInformation from './incentive/BasicInformation';
 import SchemeStructureSections from './incentive/SchemeStructureSections';
 import PayoutStructureSection from './incentive/PayoutStructureSection';
-import IncentiveNotifications from './incentive/IncentiveNotifications';
-import SaveSchemeButton from './incentive/SaveSchemeButton';
+import { Button } from './ui/button';
+import { Save, AlertCircle } from 'lucide-react';
+import { Alert, AlertDescription } from './ui/alert';
+import { saveIncentiveScheme } from '@/services/database/mongoDBService';
 
 interface IncentivePlanDesignerProps {
   initialPlan?: IncentivePlan | null;
@@ -23,6 +26,7 @@ const IncentivePlanDesigner: React.FC<IncentivePlanDesignerProps> = ({
   initialPlan = null,
   onBack
 }) => {
+  const { toast } = useToast();
   const { 
     incentivePlans, 
     loadingPlans, 
@@ -32,7 +36,7 @@ const IncentivePlanDesigner: React.FC<IncentivePlanDesignerProps> = ({
   const [showExistingSchemes, setShowExistingSchemes] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [showStorageNotice, setShowStorageNotice] = useState(false);
-  const [connectionError, setConnectionError] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
   const [schemeId, setSchemeId] = useState<string>('');
   
   useEffect(() => {
@@ -68,17 +72,117 @@ const IncentivePlanDesigner: React.FC<IncentivePlanDesignerProps> = ({
     return `ICM_${day}${month}${year}_${hours}${minutes}${seconds}`;
   };
 
-  const handleSaveComplete = (success: boolean, errorMessage?: string) => {
-    if (success) {
-      setShowStorageNotice(true);
-      setConnectionError(null);
-    } else if (errorMessage) {
-      if (errorMessage.includes('MongoDB') || 
-          errorMessage.includes('server') || 
-          errorMessage.includes('connect')) {
-        setConnectionError(errorMessage);
-      }
+  const handleSave = async () => {
+    if (!plan) {
+      toast({
+        title: "Validation Error",
+        description: "Please provide scheme details before saving",
+        variant: "destructive"
+      });
+      return;
     }
+
+    const validationErrors = validatePlanFields(plan);
+    if (validationErrors.length > 0) {
+      toast({
+        title: "Validation Error",
+        description: validationErrors.join(", "),
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      setIsSaving(true);
+      
+      const schemeToSave = {
+        ...plan,
+        schemeId: schemeId
+      };
+      
+      const id = await saveIncentiveScheme(schemeToSave, 'DRAFT');
+      
+      setShowStorageNotice(true);
+      
+      toast({
+        title: "Scheme Saved",
+        description: `Scheme "${plan.name || 'Unnamed'}" saved with ID: ${id}`,
+        variant: "default"
+      });
+    } catch (error) {
+      console.error('Error saving to MongoDB:', error);
+      
+      toast({
+        title: "Save Error",
+        description: `Failed to save scheme: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        variant: "destructive"
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const validatePlanFields = (plan: IncentivePlan): string[] => {
+    const errors: string[] = [];
+    
+    // Mandatory fields validation
+    if (!plan.name || plan.name.trim() === '') {
+      errors.push("Plan Name is required");
+    }
+    
+    if (!plan.effectiveStart) {
+      errors.push("Start Date is required");
+    }
+    
+    if (!plan.effectiveEnd) {
+      errors.push("End Date is required");
+    }
+    
+    if (!plan.revenueBase) {
+      errors.push("Revenue Base is required");
+    }
+    
+    // Sales quota validation
+    if (plan.salesQuota <= 0) {
+      errors.push("Sales Quota must be a positive value");
+    }
+    
+    // Commission structure validation
+    if (!plan.commissionStructure.tiers || plan.commissionStructure.tiers.length === 0) {
+      errors.push("At least one commission tier is required");
+    } else {
+      plan.commissionStructure.tiers.forEach((tier, index) => {
+        if (tier.rate <= 0) {
+          errors.push(`Tier ${index + 1} must have a positive commission rate`);
+        }
+      });
+    }
+    
+    // Qualifying criteria validation
+    if (!plan.measurementRules.primaryMetrics || plan.measurementRules.primaryMetrics.length === 0) {
+      errors.push("At least one qualifying criteria is required");
+    } else {
+      plan.measurementRules.primaryMetrics.forEach((metric, index) => {
+        if (!metric.field || metric.field.trim() === '') {
+          errors.push(`Qualifying criteria ${index + 1} must have a field`);
+        }
+        if (!metric.operator || metric.operator.trim() === '') {
+          errors.push(`Qualifying criteria ${index + 1} must have an operator`);
+        }
+      });
+    }
+    
+    // Participants validation
+    if (!plan.participants || plan.participants.length === 0) {
+      errors.push("At least one sales organization must be assigned");
+    }
+    
+    // Credit levels validation
+    if (!plan.creditRules.levels || plan.creditRules.levels.length === 0) {
+      errors.push("At least one credit level is required");
+    }
+    
+    return errors;
   };
 
   if (isLoading) {
@@ -100,11 +204,15 @@ const IncentivePlanDesigner: React.FC<IncentivePlanDesignerProps> = ({
           />
         </div>
 
-        <IncentiveNotifications 
-          showStorageNotice={showStorageNotice}
-          connectionError={connectionError}
-          schemeId={schemeId}
-        />
+        {showStorageNotice && (
+          <Alert className="mb-6 bg-blue-50 border-blue-200">
+            <AlertCircle className="h-4 w-4 text-blue-600" />
+            <AlertDescription>
+              Your scheme has been saved in MongoDB with the ID: {schemeId}. 
+              The scheme status is set to DRAFT.
+            </AlertDescription>
+          </Alert>
+        )}
         
         <SectionPanel title="1. Header Information" defaultExpanded={true}>
           <BasicInformation 
@@ -126,11 +234,16 @@ const IncentivePlanDesigner: React.FC<IncentivePlanDesignerProps> = ({
         />
         
         <div className="mt-10 flex justify-end space-x-4">
-          <SaveSchemeButton 
-            plan={plan}
-            schemeId={schemeId}
-            onSaveComplete={handleSaveComplete}
-          />
+          <Button
+            variant="default"
+            size="lg"
+            onClick={handleSave}
+            disabled={isSaving}
+            className="flex items-center"
+          >
+            <Save size={18} className="mr-2" /> 
+            {isSaving ? "Saving..." : "Save Scheme"}
+          </Button>
         </div>
       </div>
     </div>
