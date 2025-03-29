@@ -76,7 +76,7 @@ const CreditRules: React.FC<CreditRulesProps> = ({ levels, updateCreditRules }) 
         
         {levels.length === 0 ? (
           <EmptyRulesState
-            title="No credit levels defined"
+            message="No credit levels defined"
             description="Add credit levels to define how commission is distributed"
             buttonText="Add Credit Level"
             onAction={addCreditLevel}
