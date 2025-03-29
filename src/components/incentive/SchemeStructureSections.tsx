@@ -20,16 +20,19 @@ const SchemeStructureSections: React.FC<SchemeStructureSectionsProps> = ({
   return (
     <SectionPanel title="2. Scheme Structure">
       <div className="space-y-8">
+        {/* 1. Revenue base for Calculation */}
         <RevenueBaseSelector
           revenueBase={plan.revenueBase}
           updateRevenueBase={(value) => updatePlan('revenueBase', value)}
         />
         
+        {/* Participants section remains before the main metrics */}
         <ParticipantsSection 
           participants={plan.participants} 
           updatePlan={updatePlan} 
         />
         
+        {/* 2. Qualifying Criteria, 3. Adjustments + Exclusions */}
         <MeasurementRules 
           measurementRules={plan.measurementRules}
           revenueBase={plan.revenueBase}
@@ -37,11 +40,7 @@ const SchemeStructureSections: React.FC<SchemeStructureSectionsProps> = ({
           updateMeasurementRules={(updatedRules) => updatePlan('measurementRules', updatedRules)}
         />
         
-        <CreditRules 
-          levels={plan.creditRules.levels}
-          updateCreditRules={(levels) => updatePlan('creditRules', { levels })}
-        />
-        
+        {/* 4. Custom Rules - moved to come after exclusions (which are part of MeasurementRules) */}
         <CustomRules 
           customRules={plan.customRules}
           currency={plan.currency}

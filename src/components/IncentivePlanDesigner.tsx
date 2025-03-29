@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { useS4HanaData } from '@/hooks/useS4HanaData';
@@ -12,6 +11,7 @@ import SectionPanel from './ui-custom/SectionPanel';
 import BasicInformation from './incentive/BasicInformation';
 import SchemeStructureSections from './incentive/SchemeStructureSections';
 import PayoutStructureSection from './incentive/PayoutStructureSection';
+import CreditDistributionSection from './incentive/CreditDistributionSection';
 import { Button } from './ui/button';
 import { Save, AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription } from './ui/alert';
@@ -225,6 +225,11 @@ const IncentivePlanDesigner: React.FC<IncentivePlanDesignerProps> = ({
         <SchemeStructureSections 
           plan={plan}
           updatePlan={updatePlan}
+        />
+        
+        <CreditDistributionSection 
+          levels={plan.creditRules.levels}
+          updateCreditRules={(levels) => updatePlan('creditRules', { levels })}
         />
         
         <PayoutStructureSection 
