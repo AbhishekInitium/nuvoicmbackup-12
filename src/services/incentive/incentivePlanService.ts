@@ -1,6 +1,6 @@
 
 import { S4_API_BASE_URL, s4Request } from '../base/s4BaseService';
-import { IncentivePlan } from '@/types/incentiveTypes';
+import { IncentivePlan, Metadata } from '@/types/incentiveTypes';
 import { MOCK_SCHEMES } from '@/constants/incentiveConstants';
 
 /**
@@ -8,12 +8,13 @@ import { MOCK_SCHEMES } from '@/constants/incentiveConstants';
  * Service for interacting with incentive plan data from S/4 HANA
  */
 
-export type IncentiveStatus = 'DRAFT' | 'APPROVED';
+export type IncentiveStatus = 'DRAFT' | 'APPROVED' | 'SIMULATION' | 'PRODUCTION';
 
 export interface IncentivePlanWithStatus extends IncentivePlan {
   status: IncentiveStatus;
   lastExecutionDate?: string;
   hasBeenExecuted?: boolean;
+  metadata: Metadata; // Make metadata required in this interface
 }
 
 /**

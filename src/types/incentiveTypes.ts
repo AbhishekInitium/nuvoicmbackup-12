@@ -62,6 +62,13 @@ export interface CreditRules {
   levels: CreditLevel[];
 }
 
+export interface Metadata {
+  createdAt: string;
+  updatedAt: string;
+  version: number;
+  status: string;
+}
+
 export interface IncentivePlan {
   name: string;
   description: string;
@@ -78,5 +85,6 @@ export interface IncentivePlan {
     levels: CreditLevel[];
   };
   customRules: CustomRule[];
-  salesQuota: number; // Changed from optional number to required number
+  salesQuota: number;
+  metadata?: Metadata; // Add optional metadata field to IncentivePlan
 }
