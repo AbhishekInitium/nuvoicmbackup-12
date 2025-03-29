@@ -166,7 +166,13 @@ const getMockIncentivePlans = (): IncentivePlanWithStatus[] => {
     },
     creditRules: { levels: [] },
     customRules: [],
-    hasBeenExecuted: false
+    hasBeenExecuted: false,
+    metadata: {
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      version: 1,
+      status: 'APPROVED'
+    }
   }));
 };
 
