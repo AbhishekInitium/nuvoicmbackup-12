@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import NavBar from '@/components/layout/NavBar';
 import Container from '@/components/layout/Container';
@@ -8,12 +9,27 @@ import { useToast } from '@/hooks/use-toast';
 import { IncentivePlanWithStatus } from '@/services/incentive/incentivePlanService';
 import SchemeExecutionSelectDialog from '@/components/incentive/SchemeExecutionSelectDialog';
 import { Loader2, PlayCircle } from 'lucide-react';
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
+import { useForm } from "react-hook-form";
+
+type ExecutionMode = 'SIMULATE' | 'PRODUCTION';
+
+interface FormValues {
+  executionMode: ExecutionMode;
+}
 
 const CommissionExecutionEngine = () => {
   const { toast } = useToast();
   const [showSchemeSelector, setShowSchemeSelector] = useState(false);
   const [selectedScheme, setSelectedScheme] = useState<IncentivePlanWithStatus | null>(null);
   const [executing, setExecuting] = useState(false);
+  
+  const form = useForm<FormValues>({
+    defaultValues: {
+      executionMode: 'SIMULATE',
+    },
+  });
 
   const handleSchemeSelect = (scheme: IncentivePlanWithStatus) => {
     setSelectedScheme(scheme);
@@ -34,13 +50,14 @@ const CommissionExecutionEngine = () => {
       return;
     }
 
+    const executionMode = form.getValues().executionMode;
     setExecuting(true);
     
     try {
       // Simulate execution for now
       toast({
         title: "Execution Started",
-        description: `Executing scheme: ${selectedScheme.name}`,
+        description: `Executing scheme: ${selectedScheme.name} in ${executionMode} mode`,
         variant: "default"
       });
       
@@ -49,7 +66,7 @@ const CommissionExecutionEngine = () => {
       
       toast({
         title: "Execution Complete",
-        description: `Successfully executed scheme: ${selectedScheme.name}`,
+        description: `Successfully executed scheme: ${selectedScheme.name} in ${executionMode} mode`,
         variant: "default"
       });
     } catch (error) {
@@ -100,23 +117,63 @@ const CommissionExecutionEngine = () => {
                 </div>
                 
                 {selectedScheme && (
-                  <Button 
-                    onClick={handleExecuteScheme}
-                    disabled={executing}
-                    className="w-full mt-4"
-                  >
-                    {executing ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Executing...
-                      </>
-                    ) : (
-                      <>
-                        <PlayCircle className="mr-2 h-4 w-4" />
-                        Execute Commission Calculation
-                      </>
-                    )}
-                  </Button>
+                  <>
+                    <Form {...form}>
+                      <div className="mt-6 mb-4">
+                        <h3 className="text-lg font-medium mb-3">Execution Mode</h3>
+                        <FormField
+                          control={form.control}
+                          name="executionMode"
+                          render={({ field }) => (
+                            <FormItem className="space-y-3">
+                              <FormControl>
+                                <RadioGroup
+                                  onValueChange={field.onChange}
+                                  defaultValue={field.value}
+                                  className="flex flex-col space-y-1"
+                                >
+                                  <FormItem className="flex items-center space-x-3 space-y-0">
+                                    <FormControl>
+                                      <RadioGroupItem value="SIMULATE" />
+                                    </FormControl>
+                                    <FormLabel className="font-normal">
+                                      Simulation Run (Test calculation without affecting production data)
+                                    </FormLabel>
+                                  </FormItem>
+                                  <FormItem className="flex items-center space-x-3 space-y-0">
+                                    <FormControl>
+                                      <RadioGroupItem value="PRODUCTION" />
+                                    </FormControl>
+                                    <FormLabel className="font-normal">
+                                      Production Run (Final calculation that will be used for payments)
+                                    </FormLabel>
+                                  </FormItem>
+                                </RadioGroup>
+                              </FormControl>
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                    </Form>
+                  
+                    <Button 
+                      onClick={handleExecuteScheme}
+                      disabled={executing}
+                      className="w-full mt-6"
+                    >
+                      {executing ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Executing...
+                        </>
+                      ) : (
+                        <>
+                          <PlayCircle className="mr-2 h-4 w-4" />
+                          Execute Commission Calculation
+                        </>
+                      )}
+                    </Button>
+                  </>
                 )}
               </div>
             </CardContent>
