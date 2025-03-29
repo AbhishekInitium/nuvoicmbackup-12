@@ -18,7 +18,7 @@ const IncentiveDesigner = () => {
   const [showExistingSchemes, setShowExistingSchemes] = useState(false);
   const [planTemplate, setPlanTemplate] = useState<IncentivePlan | null>(null);
 
-  const generateTimestampName = () => {
+  const generateTimestampId = () => {
     const now = new Date();
     
     const day = String(now.getDate()).padStart(2, '0');
@@ -38,7 +38,8 @@ const IncentiveDesigner = () => {
       ...DEFAULT_PLAN,
       participants: [],
       salesQuota: 0,
-      name: generateTimestampName(),
+      name: '', // Empty name for user to fill in
+      schemeId: generateTimestampId(), // Generate a new scheme ID
       description: '',
       commissionStructure: {
         tiers: []
@@ -60,7 +61,8 @@ const IncentiveDesigner = () => {
   const handleCopyExistingScheme = (scheme: IncentivePlanWithStatus) => {
     // Create a clean copy with no default values
     const planData: IncentivePlan = {
-      name: generateTimestampName(),
+      name: `Copy of ${scheme.name}`, // Suggest a name, but user can change it
+      schemeId: generateTimestampId(), // Generate a new scheme ID
       description: `Copy of ${scheme.name}`,
       effectiveStart: scheme.effectiveStart,
       effectiveEnd: scheme.effectiveEnd,

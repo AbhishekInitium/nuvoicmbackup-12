@@ -13,7 +13,7 @@ const API_BASE_URL = 'http://localhost:3001/api/incentives';
 /**
  * Generate a scheme name with timestamp format ICM_DDMMYY_HHMMSS
  */
-const generateSchemeTimestampName = () => {
+const generateSchemeTimestampId = () => {
   const now = new Date();
   
   const day = String(now.getDate()).padStart(2, '0');
@@ -32,13 +32,13 @@ const generateSchemeTimestampName = () => {
  */
 export const saveIncentiveScheme = async (scheme: IncentivePlan, status: string = 'DRAFT'): Promise<string> => {
   try {
-    // Generate timestamp-based name if not provided
-    const schemeName = scheme.name || generateSchemeTimestampName();
+    // Generate a scheme ID if not provided
+    const schemeId = scheme.schemeId || generateSchemeTimestampId();
     
     // Prepare the scheme with required fields
     const schemeToSave = {
       ...scheme,
-      name: schemeName,
+      schemeId: schemeId,
       metadata: {
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),

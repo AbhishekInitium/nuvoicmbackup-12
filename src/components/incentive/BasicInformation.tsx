@@ -10,21 +10,37 @@ import { getCurrencySymbol } from '@/utils/incentiveUtils';
 interface BasicInformationProps {
   plan: IncentivePlan;
   updatePlan: (section: string, value: any) => void;
+  schemeId?: string;
 }
 
-const BasicInformation: React.FC<BasicInformationProps> = ({ plan, updatePlan }) => {
+const BasicInformation: React.FC<BasicInformationProps> = ({ plan, updatePlan, schemeId }) => {
   const currencySymbol = getCurrencySymbol(plan.currency);
   
   return (
     <div className="space-y-6">
-      <div>
-        <label className="block text-sm font-medium text-app-gray-700 mb-2">Plan Name</label>
-        <Input 
-          type="text"
-          value={plan.name}
-          onChange={(e) => updatePlan('name', e.target.value)}
-          placeholder="Enter plan name"
-        />
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+        <div>
+          <label className="block text-sm font-medium text-app-gray-700 mb-2">Plan Name</label>
+          <Input 
+            type="text"
+            value={plan.name}
+            onChange={(e) => updatePlan('name', e.target.value)}
+            placeholder="Enter plan name"
+          />
+        </div>
+        
+        <div>
+          <label className="block text-sm font-medium text-app-gray-700 mb-2">Scheme ID</label>
+          <Input 
+            type="text"
+            value={schemeId || ''}
+            readOnly
+            disabled
+            className="bg-app-gray-100 text-app-gray-500"
+            placeholder="Auto-generated ID"
+          />
+          <p className="text-xs text-app-gray-500 mt-1">Auto-generated unique identifier</p>
+        </div>
       </div>
       
       <div>

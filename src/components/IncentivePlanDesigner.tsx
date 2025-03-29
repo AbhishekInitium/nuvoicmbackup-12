@@ -37,6 +37,12 @@ const IncentivePlanDesigner: React.FC<IncentivePlanDesignerProps> = ({
   const [isLoading, setIsLoading] = useState(true);
   const [showStorageNotice, setShowStorageNotice] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [schemeId, setSchemeId] = useState<string>('');
+  
+  // Generate scheme ID when component mounts
+  useEffect(() => {
+    setSchemeId(generateTimestampId());
+  }, []);
 
   // Use the custom hook to manage the plan state and logic
   const {
@@ -55,6 +61,20 @@ const IncentivePlanDesigner: React.FC<IncentivePlanDesignerProps> = ({
     }
   }, [loadingPlans, refetchPlans]);
 
+  const generateTimestampId = () => {
+    const now = new Date();
+    
+    const day = String(now.getDate()).padStart(2, '0');
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const year = String(now.getFullYear()).substring(2);
+    
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const seconds = String(now.getSeconds()).padStart(2, '0');
+    
+    return `ICM_${day}${month}${year}_${hours}${minutes}${seconds}`;
+  };
+
   const handleSave = async () => {
     if (!plan) {
       toast({
@@ -68,11 +88,10 @@ const IncentivePlanDesigner: React.FC<IncentivePlanDesignerProps> = ({
     try {
       setIsSaving(true);
       
-      // Use timestamp-based naming if no name is provided
-      const schemeName = plan.name || generateTimestampName();
+      // Save the scheme with the current scheme ID
       const schemeToSave = {
         ...plan,
-        name: schemeName
+        schemeId: schemeId // Add the scheme ID to the plan
       };
       
       const id = await saveIncentiveScheme(schemeToSave, 'DRAFT');
@@ -81,7 +100,7 @@ const IncentivePlanDesigner: React.FC<IncentivePlanDesignerProps> = ({
       
       toast({
         title: "Scheme Saved",
-        description: `Scheme "${schemeName}" saved with ID: ${id}`,
+        description: `Scheme "${plan.name || 'Unnamed'}" saved with ID: ${id}`,
         variant: "default"
       });
     } catch (error) {
@@ -95,20 +114,6 @@ const IncentivePlanDesigner: React.FC<IncentivePlanDesignerProps> = ({
     } finally {
       setIsSaving(false);
     }
-  };
-
-  const generateTimestampName = () => {
-    const now = new Date();
-    
-    const day = String(now.getDate()).padStart(2, '0');
-    const month = String(now.getMonth() + 1).padStart(2, '0');
-    const year = String(now.getFullYear()).substring(2);
-    
-    const hours = String(now.getHours()).padStart(2, '0');
-    const minutes = String(now.getMinutes()).padStart(2, '0');
-    const seconds = String(now.getSeconds()).padStart(2, '0');
-    
-    return `ICM_${day}${month}${year}_${hours}${minutes}${seconds}`;
   };
 
   if (isLoading) {
@@ -134,7 +139,7 @@ const IncentivePlanDesigner: React.FC<IncentivePlanDesignerProps> = ({
           <Alert className="mb-6 bg-blue-50 border-blue-200">
             <AlertCircle className="h-4 w-4 text-blue-600" />
             <AlertDescription>
-              Your scheme has been saved in MongoDB with a timestamp-based name. 
+              Your scheme has been saved in MongoDB with the ID: {schemeId}. 
               The scheme status is set to DRAFT.
             </AlertDescription>
           </Alert>
@@ -144,7 +149,8 @@ const IncentivePlanDesigner: React.FC<IncentivePlanDesignerProps> = ({
         <SectionPanel title="1. Header Information" defaultExpanded={true}>
           <BasicInformation 
             plan={plan} 
-            updatePlan={updatePlan} 
+            updatePlan={updatePlan}
+            schemeId={schemeId}
           />
         </SectionPanel>
         

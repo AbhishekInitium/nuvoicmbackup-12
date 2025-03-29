@@ -86,5 +86,6 @@ export interface IncentivePlan {
   };
   customRules: CustomRule[];
   salesQuota: number;
-  metadata?: Metadata; // Add optional metadata field to IncentivePlan
+  metadata?: Metadata;
+  schemeId?: string; // Add the scheme ID field
 }
