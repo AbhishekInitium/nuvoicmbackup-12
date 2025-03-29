@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { useS4HanaData } from '@/hooks/useS4HanaData';
@@ -124,6 +125,7 @@ const IncentivePlanDesigner: React.FC<IncentivePlanDesignerProps> = ({
   const validatePlanFields = (plan: IncentivePlan): string[] => {
     const errors: string[] = [];
     
+    // Mandatory fields validation
     if (!plan.name || plan.name.trim() === '') {
       errors.push("Plan Name is required");
     }
@@ -140,31 +142,44 @@ const IncentivePlanDesigner: React.FC<IncentivePlanDesignerProps> = ({
       errors.push("Revenue Base is required");
     }
     
-    if (plan.commissionStructure.tiers.length === 0) {
+    // Sales quota validation
+    if (plan.salesQuota <= 0) {
+      errors.push("Sales Quota must be a positive value");
+    }
+    
+    // Commission structure validation
+    if (!plan.commissionStructure.tiers || plan.commissionStructure.tiers.length === 0) {
       errors.push("At least one commission tier is required");
+    } else {
+      plan.commissionStructure.tiers.forEach((tier, index) => {
+        if (tier.rate <= 0) {
+          errors.push(`Tier ${index + 1} must have a positive commission rate`);
+        }
+      });
     }
     
-    plan.commissionStructure.tiers.forEach((tier, index) => {
-      if (tier.rate <= 0) {
-        errors.push(`Tier ${index + 1} must have a positive commission rate`);
-      }
-    });
-    
-    if (plan.measurementRules.primaryMetrics.length === 0) {
+    // Qualifying criteria validation
+    if (!plan.measurementRules.primaryMetrics || plan.measurementRules.primaryMetrics.length === 0) {
       errors.push("At least one qualifying criteria is required");
+    } else {
+      plan.measurementRules.primaryMetrics.forEach((metric, index) => {
+        if (!metric.field || metric.field.trim() === '') {
+          errors.push(`Qualifying criteria ${index + 1} must have a field`);
+        }
+        if (!metric.operator || metric.operator.trim() === '') {
+          errors.push(`Qualifying criteria ${index + 1} must have an operator`);
+        }
+      });
     }
     
-    plan.measurementRules.primaryMetrics.forEach((metric, index) => {
-      if (!metric.field || metric.field.trim() === '') {
-        errors.push(`Qualifying criteria ${index + 1} must have a field`);
-      }
-      if (!metric.operator || metric.operator.trim() === '') {
-        errors.push(`Qualifying criteria ${index + 1} must have an operator`);
-      }
-    });
-    
+    // Participants validation
     if (!plan.participants || plan.participants.length === 0) {
-      errors.push("At least one participant must be assigned");
+      errors.push("At least one sales organization must be assigned");
+    }
+    
+    // Credit levels validation
+    if (!plan.creditRules.levels || plan.creditRules.levels.length === 0) {
+      errors.push("At least one credit level is required");
     }
     
     return errors;
