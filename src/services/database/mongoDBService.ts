@@ -11,11 +11,43 @@ import axios from 'axios';
 const API_BASE_URL = 'http://localhost:3001/api/incentives';
 
 /**
+ * Generate a scheme name with timestamp format ICM_DDMMYY_HHMMSS
+ */
+const generateSchemeTimestampName = () => {
+  const now = new Date();
+  
+  const day = String(now.getDate()).padStart(2, '0');
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const year = String(now.getFullYear()).substring(2);
+  
+  const hours = String(now.getHours()).padStart(2, '0');
+  const minutes = String(now.getMinutes()).padStart(2, '0');
+  const seconds = String(now.getSeconds()).padStart(2, '0');
+  
+  return `ICM_${day}${month}${year}_${hours}${minutes}${seconds}`;
+};
+
+/**
  * Save an incentive scheme in MongoDB
  */
-export const saveIncentiveScheme = async (scheme: IncentivePlan): Promise<string> => {
+export const saveIncentiveScheme = async (scheme: IncentivePlan, status: string = 'DRAFT'): Promise<string> => {
   try {
-    const response = await axios.post(API_BASE_URL, scheme);
+    // Generate timestamp-based name if not provided
+    const schemeName = scheme.name || generateSchemeTimestampName();
+    
+    // Prepare the scheme with required fields
+    const schemeToSave = {
+      ...scheme,
+      name: schemeName,
+      metadata: {
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        version: 1,
+        status: status
+      }
+    };
+    
+    const response = await axios.post(API_BASE_URL, schemeToSave);
     
     if (response.status === 201 && response.data._id) {
       console.log(`Saved scheme document with ID: ${response.data._id}`);
@@ -71,12 +103,36 @@ export const deleteIncentiveScheme = async (id: string): Promise<boolean> => {
 /**
  * Update an incentive scheme
  */
-export const updateIncentiveScheme = async (id: string, updates: Partial<IncentivePlan>): Promise<boolean> => {
+export const updateIncentiveScheme = async (id: string, updates: Partial<IncentivePlan>, status?: string): Promise<boolean> => {
   try {
-    const response = await axios.put(`${API_BASE_URL}/${id}`, updates);
+    // If status is provided, update it in metadata
+    let updatedData: any = { ...updates };
+    
+    if (status) {
+      updatedData.metadata = {
+        ...(updates.metadata || {}),
+        updatedAt: new Date().toISOString(),
+        status: status
+      };
+    }
+    
+    const response = await axios.put(`${API_BASE_URL}/${id}`, updatedData);
     return response.status === 200;
   } catch (error) {
     console.error(`Error updating incentive scheme with ID ${id}:`, error);
+    return false;
+  }
+};
+
+/**
+ * Update an incentive scheme status
+ */
+export const updateSchemeStatus = async (id: string, status: string): Promise<boolean> => {
+  try {
+    const response = await axios.patch(`${API_BASE_URL}/${id}/status`, { status });
+    return response.status === 200;
+  } catch (error) {
+    console.error(`Error updating scheme status with ID ${id}:`, error);
     return false;
   }
 };

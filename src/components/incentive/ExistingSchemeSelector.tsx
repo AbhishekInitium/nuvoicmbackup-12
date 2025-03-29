@@ -1,11 +1,13 @@
 
 import React, { useEffect, useState } from 'react';
-import { Copy, Loader2, AlertCircle } from 'lucide-react';
+import { Copy, Loader2, AlertCircle, RefreshCcw } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import ActionButton from '../ui-custom/ActionButton';
-import { MOCK_SCHEMES } from '@/constants/incentiveConstants';
 import { useToast } from "@/hooks/use-toast";
-import { IncentivePlanWithStatus, getIncentivePlans } from '@/services/incentive/incentivePlanService';
+import { IncentivePlanWithStatus } from '@/services/incentive/incentivePlanService';
+import { getIncentiveSchemes } from '@/services/database/mongoDBService';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { format } from 'date-fns';
 
 interface ExistingSchemeSelectorProps {
   open: boolean;
@@ -36,33 +38,28 @@ const ExistingSchemeSelector: React.FC<ExistingSchemeSelectorProps> = ({
     setError(null);
     
     try {
-      console.log('Loading incentive plans from service');
-      const plans = await getIncentivePlans();
+      console.log('Loading incentive plans from MongoDB');
+      const plans = await getIncentiveSchemes();
       console.log('Loaded incentive plans:', plans);
       
       if (plans && plans.length > 0) {
         console.log('Setting schemes with:', plans.length, 'plans');
         setSchemes(plans);
         
-        // If we have any non-mock plans (identified by unique property not in mocks),
-        // add a notice about successful load
-        const hasRealPlans = plans.some(p => p.hasOwnProperty('lastExecutionDate'));
-        if (hasRealPlans) {
-          toast({
-            title: "Plans Loaded",
-            description: `Successfully loaded ${plans.length} incentive plans.`,
-            variant: "default"
-          });
-        }
+        toast({
+          title: "Plans Loaded",
+          description: `Successfully loaded ${plans.length} incentive plans.`,
+          variant: "default"
+        });
       } else {
         // If no plans were returned, show error message
         console.log('No plans returned, showing error message');
-        setError('No schemes found. API returned empty response.');
+        setError('No schemes found. Database returned empty response.');
         setSchemes([]);
       }
     } catch (err) {
       console.error('Error loading incentive schemes:', err);
-      setError('Failed to load schemes. API request failed.');
+      setError('Failed to load schemes. Database request failed.');
       setSchemes([]);
     } finally {
       setLoading(false);
@@ -83,8 +80,27 @@ const ExistingSchemeSelector: React.FC<ExistingSchemeSelectorProps> = ({
     setOpen(false);
   };
 
-  const handleRefresh = () => {
-    loadIncentiveSchemes();
+  const formatDate = (dateString: string) => {
+    try {
+      return format(new Date(dateString), 'dd/MM/yyyy HH:mm');
+    } catch (error) {
+      return 'Invalid date';
+    }
+  };
+
+  const getStatusBadgeClass = (status: string) => {
+    switch (status?.toUpperCase()) {
+      case 'APPROVED':
+        return 'bg-green-100 text-green-800';
+      case 'DRAFT':
+        return 'bg-amber-100 text-amber-800';
+      case 'SIMULATION':
+        return 'bg-blue-100 text-blue-800';
+      case 'PRODUCTION':
+        return 'bg-purple-100 text-purple-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
   };
 
   const SchemeListContent = () => (
@@ -103,10 +119,10 @@ const ExistingSchemeSelector: React.FC<ExistingSchemeSelectorProps> = ({
           {schemes.length} {schemes.length === 1 ? 'scheme' : 'schemes'} available
         </span>
         <button
-          onClick={handleRefresh}
+          onClick={loadIncentiveSchemes}
           className="text-sm text-blue-600 hover:text-blue-800 flex items-center gap-1"
         >
-          {loading ? <Loader2 className="h-3 w-3 animate-spin" /> : null}
+          {loading ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCcw className="h-3 w-3" />}
           Refresh
         </button>
       </div>
@@ -125,26 +141,39 @@ const ExistingSchemeSelector: React.FC<ExistingSchemeSelectorProps> = ({
           No schemes found. Create your first scheme by clicking "New Scheme".
         </div>
       ) : (
-        <div className="max-h-64 overflow-y-auto space-y-2">
-          {schemes.map((scheme, index) => (
-            <div 
-              key={index}
-              className="p-3 border rounded-lg hover:bg-app-gray-50 cursor-pointer transition-colors"
-              onClick={() => handleCopyScheme(scheme)}
-            >
-              <div className="flex justify-between items-center">
-                <h4 className="font-medium">{scheme.name}</h4>
-                <span className={`text-xs px-2 py-1 rounded-full ${
-                  scheme.status === 'APPROVED' 
-                    ? 'bg-green-100 text-green-800' 
-                    : 'bg-amber-100 text-amber-800'
-                }`}>
-                  {scheme.status}
-                </span>
-              </div>
-              <p className="text-sm text-app-gray-500 mt-1 truncate">{scheme.description}</p>
-            </div>
-          ))}
+        <div className="max-h-[400px] overflow-y-auto">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Name</TableHead>
+                <TableHead>Date Created</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="text-right">Action</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {schemes.map((scheme, index) => (
+                <TableRow key={index} className="hover:bg-app-gray-50">
+                  <TableCell className="font-medium">{scheme.name}</TableCell>
+                  <TableCell>{formatDate(scheme.metadata?.createdAt || '')}</TableCell>
+                  <TableCell>
+                    <span className={`text-xs px-2 py-1 rounded-full ${getStatusBadgeClass(scheme.metadata?.status || '')}`}>
+                      {scheme.metadata?.status || 'DRAFT'}
+                    </span>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <button 
+                      onClick={() => handleCopyScheme(scheme)}
+                      className="text-blue-600 hover:text-blue-800 font-medium text-sm flex items-center gap-1 ml-auto"
+                    >
+                      <Copy size={14} />
+                      Copy
+                    </button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
         </div>
       )}
     </div>
@@ -165,7 +194,7 @@ const ExistingSchemeSelector: React.FC<ExistingSchemeSelectorProps> = ({
           <Copy size={16} className="mr-2" /> Copy Existing Scheme
         </ActionButton>
       </PopoverTrigger>
-      <PopoverContent className="w-96" align="end">
+      <PopoverContent className="w-[600px]" align="end">
         <SchemeListContent />
       </PopoverContent>
     </Popover>

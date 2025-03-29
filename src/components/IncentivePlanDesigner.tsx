@@ -13,7 +13,7 @@ import BasicInformation from './incentive/BasicInformation';
 import SchemeStructureSections from './incentive/SchemeStructureSections';
 import PayoutStructureSection from './incentive/PayoutStructureSection';
 import { Button } from './ui/button';
-import { Database, AlertCircle } from 'lucide-react';
+import { Save, AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription } from './ui/alert';
 
 interface IncentivePlanDesignerProps {
@@ -60,7 +60,7 @@ const IncentivePlanDesigner: React.FC<IncentivePlanDesignerProps> = ({
     }
   }, [loadingPlans, refetchPlans]);
 
-  const handleSaveToStorage = () => {
+  const handleSave = () => {
     if (onSaveToStorage) {
       setShowStorageNotice(true);
       onSaveToStorage(plan);
@@ -88,10 +88,10 @@ const IncentivePlanDesigner: React.FC<IncentivePlanDesignerProps> = ({
 
         {showStorageNotice && (
           <Alert className="mb-6 bg-blue-50 border-blue-200">
-            <Database className="h-4 w-4 text-blue-600" />
+            <AlertCircle className="h-4 w-4 text-blue-600" />
             <AlertDescription>
-              Your scheme has been saved in MongoDB. The data has been stored in your database
-              through the backend API.
+              Your scheme has been saved in MongoDB with a timestamp-based name. 
+              The scheme status is set to DRAFT.
             </AlertDescription>
           </Alert>
         )}
@@ -117,27 +117,18 @@ const IncentivePlanDesigner: React.FC<IncentivePlanDesignerProps> = ({
           updateCommissionStructure={(tiers) => updatePlan('commissionStructure', { tiers })}
         />
         
-        {/* Save buttons at the bottom */}
+        {/* Save button at the bottom */}
         <div className="mt-10 flex justify-end space-x-4">
           <Button
-            variant="outline"
+            variant="default"
             size="lg"
-            onClick={handleSaveToStorage}
+            onClick={handleSave}
             disabled={savingToStorage}
             className="flex items-center"
           >
-            <Database size={18} className="mr-2" /> 
-            {savingToStorage ? "Saving..." : "Save to MongoDB"}
+            <Save size={18} className="mr-2" /> 
+            {savingToStorage ? "Saving..." : "Save Scheme"}
           </Button>
-          
-          <DesignerActionButtons 
-            onSave={savePlanToS4}
-            isSaving={isSaving}
-            showExistingSchemes={showExistingSchemes}
-            setShowExistingSchemes={setShowExistingSchemes}
-            copyExistingScheme={copyExistingScheme}
-            hideSchemeButtons={true}
-          />
         </div>
       </div>
     </div>

@@ -20,12 +20,26 @@ const IncentiveDesigner = () => {
   const [planTemplate, setPlanTemplate] = useState<IncentivePlan | null>(null);
   const [savingToStorage, setSavingToStorage] = useState(false);
 
+  const generateTimestampName = () => {
+    const now = new Date();
+    
+    const day = String(now.getDate()).padStart(2, '0');
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const year = String(now.getFullYear()).substring(2);
+    
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const seconds = String(now.getSeconds()).padStart(2, '0');
+    
+    return `ICM_${day}${month}${year}_${hours}${minutes}${seconds}`;
+  };
+
   const handleCreateNewScheme = () => {
     setPlanTemplate({
       ...DEFAULT_PLAN,
       participants: [],
       salesQuota: 0,
-      name: '',
+      name: generateTimestampName(),
       description: ''
     });
     setShowInitialOptions(false);
@@ -55,8 +69,8 @@ const IncentiveDesigner = () => {
     };
     
     const planData: IncentivePlan = {
-      name: `Copy of ${scheme.name}`,
-      description: scheme.description,
+      name: generateTimestampName(),
+      description: `Copy of ${scheme.name}`,
       effectiveStart: scheme.effectiveStart,
       effectiveEnd: scheme.effectiveEnd,
       currency: scheme.currency,
@@ -81,10 +95,10 @@ const IncentiveDesigner = () => {
   };
 
   const handleSaveToStorage = async (plan: IncentivePlan) => {
-    if (!plan || !plan.name) {
+    if (!plan) {
       toast({
         title: "Validation Error",
-        description: "Please provide a name for the plan before saving",
+        description: "Please provide scheme details before saving",
         variant: "destructive"
       });
       return;
@@ -92,11 +106,19 @@ const IncentiveDesigner = () => {
 
     try {
       setSavingToStorage(true);
-      const id = await saveIncentiveScheme(plan);
+      
+      // Use timestamp-based naming if no name is provided
+      const schemeName = plan.name || generateTimestampName();
+      const schemeToSave = {
+        ...plan,
+        name: schemeName
+      };
+      
+      const id = await saveIncentiveScheme(schemeToSave, 'DRAFT');
       
       toast({
-        title: "MongoDB Document Created",
-        description: `Scheme saved with MongoDB _id: ${id}`,
+        title: "Scheme Saved",
+        description: `Scheme "${schemeName}" saved with ID: ${id}`,
         variant: "default"
       });
     } catch (error) {
@@ -104,7 +126,7 @@ const IncentiveDesigner = () => {
       
       toast({
         title: "Save Error",
-        description: `Failed to create MongoDB document: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        description: `Failed to save scheme: ${error instanceof Error ? error.message : 'Unknown error'}`,
         variant: "destructive"
       });
     } finally {

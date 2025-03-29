@@ -23,9 +23,12 @@ mongoose.connect(MONGODB_URI, {
 .then(() => console.log('Connected to MongoDB Atlas'))
 .catch(err => console.error('MongoDB connection error:', err));
 
-// Define Schema - using flexible schema to match your frontend data structure
+// Define Schema with required fields
 const incentiveSchema = new mongoose.Schema({
-  name: String,
+  name: {
+    type: String,
+    required: true
+  },
   description: String,
   effectiveStart: String,
   effectiveEnd: String,
@@ -38,10 +41,23 @@ const incentiveSchema = new mongoose.Schema({
   customRules: Array,
   salesQuota: Number,
   metadata: {
-    createdAt: String,
-    updatedAt: String,
-    version: Number,
-    status: String
+    createdAt: {
+      type: String,
+      default: () => new Date().toISOString()
+    },
+    updatedAt: {
+      type: String,
+      default: () => new Date().toISOString()
+    },
+    version: {
+      type: Number,
+      default: 1
+    },
+    status: {
+      type: String,
+      enum: ['DRAFT', 'APPROVED', 'SIMULATION', 'PRODUCTION'],
+      default: 'DRAFT'
+    }
   }
 }, { strict: false }); // Allow flexible structure
 
@@ -52,7 +68,7 @@ const Incentive = mongoose.model('incentivescheme', incentiveSchema);
 // GET all incentive schemes
 app.get('/api/incentives', async (req, res) => {
   try {
-    const schemes = await Incentive.find();
+    const schemes = await Incentive.find().sort({ 'metadata.createdAt': -1 });
     res.json(schemes);
   } catch (error) {
     console.error('Error fetching schemes:', error);
@@ -77,14 +93,14 @@ app.get('/api/incentives/:id', async (req, res) => {
 // POST - Create a new incentive scheme
 app.post('/api/incentives', async (req, res) => {
   try {
-    // Add metadata
+    // Ensure the scheme has required metadata
     const schemeData = {
       ...req.body,
       metadata: {
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         version: 1,
-        status: 'active'
+        status: req.body.metadata?.status || 'DRAFT'
       }
     };
     
@@ -112,8 +128,9 @@ app.put('/api/incentives/:id', async (req, res) => {
       ...req.body,
       metadata: {
         ...scheme.metadata,
+        ...req.body.metadata,
         updatedAt: new Date().toISOString(),
-        version: scheme.metadata.version + 1
+        version: (scheme.metadata.version || 0) + 1
       }
     };
     
@@ -127,6 +144,38 @@ app.put('/api/incentives/:id', async (req, res) => {
   } catch (error) {
     console.error('Error updating scheme:', error);
     res.status(500).json({ error: 'Failed to update incentive scheme' });
+  }
+});
+
+// PATCH - Update scheme status only
+app.patch('/api/incentives/:id/status', async (req, res) => {
+  try {
+    const { status } = req.body;
+    
+    if (!status || !['DRAFT', 'APPROVED', 'SIMULATION', 'PRODUCTION'].includes(status)) {
+      return res.status(400).json({ error: 'Invalid status value' });
+    }
+    
+    const scheme = await Incentive.findById(req.params.id);
+    
+    if (!scheme) {
+      return res.status(404).json({ error: 'Incentive scheme not found' });
+    }
+    
+    const updatedScheme = await Incentive.findByIdAndUpdate(
+      req.params.id,
+      { 
+        'metadata.status': status,
+        'metadata.updatedAt': new Date().toISOString(),
+        'metadata.version': (scheme.metadata.version || 0) + 1
+      },
+      { new: true }
+    );
+    
+    res.json(updatedScheme);
+  } catch (error) {
+    console.error('Error updating scheme status:', error);
+    res.status(500).json({ error: 'Failed to update incentive scheme status' });
   }
 });
 
