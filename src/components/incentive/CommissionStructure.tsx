@@ -21,8 +21,8 @@ const CommissionStructure: React.FC<CommissionStructureProps> = ({
 }) => {
   const currencySymbol = getCurrencySymbol(currency);
   const { tiers: tierState, addTier, removeTier, updateTier } = useCommissionTiers(
-    tiers, 
-    updateCommissionStructure
+    { tiers }, // Wrap tiers in an object with tiers property
+    (structure) => updateCommissionStructure(structure.tiers) // Extract tiers from structure
   );
 
   return (
