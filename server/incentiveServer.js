@@ -247,7 +247,7 @@ app.post('/api/incentives/:schemeId/version', async (req, res) => {
           createdAt: editedScheme.metadata?.createdAt || latest.metadata.createdAt,
           updatedAt: new Date().toISOString(),
           version: latest.metadata.version + 1,
-          status: 'DRAFT'
+          status: editedScheme.metadata?.status || 'DRAFT'
         }
       });
 
@@ -259,7 +259,6 @@ app.post('/api/incentives/:schemeId/version', async (req, res) => {
       
       res.status(201).json(savedVersion);
     } else {
-      console.error('MongoDB not connected');
       res.status(500).json({ error: 'Database connection not available' });
     }
   } catch (error) {
