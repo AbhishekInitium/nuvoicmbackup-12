@@ -103,11 +103,16 @@ export const deleteIncentiveScheme = async (id: string): Promise<boolean> => {
 
 /**
  * Update an incentive scheme by creating a new version
- * Instead of modifying the existing document, we create a new one with an incremented version
+ * Creates a completely new document with the same schemeId but incremented version
  */
 export const updateIncentiveScheme = async (schemeId: string, updates: Partial<IncentivePlan>, status?: string): Promise<boolean> => {
   try {
-    // Create a new document with the updated data and incremented version
+    console.log(`Creating new version of scheme ${schemeId}`);
+    
+    // Make sure we have the metadata with correct version
+    const version = updates.metadata?.version || 1;
+    
+    // Create a new document with the updated data
     const updatedScheme = {
       ...updates,
       schemeId: schemeId, // Keep the same schemeId for versioning
@@ -115,13 +120,17 @@ export const updateIncentiveScheme = async (schemeId: string, updates: Partial<I
         ...(updates.metadata || {}),
         createdAt: updates.metadata?.createdAt || new Date().toISOString(),
         updatedAt: new Date().toISOString(),
-        version: updates.metadata?.version || 1,
+        version: version,
         status: status || updates.metadata?.status || 'DRAFT'
       }
     };
     
-    // Save as a new document instead of updating
+    console.log("Saving new version with data:", JSON.stringify(updatedScheme).substring(0, 200) + "...");
+    
+    // Important: We use POST to create a new document, not PATCH/PUT to update existing one
     const response = await axios.post(API_BASE_URL, updatedScheme);
+    
+    console.log("Server response:", response.status, response.data ? JSON.stringify(response.data).substring(0, 100) + "..." : "No data");
     
     return response.status === 201;
   } catch (error) {

@@ -113,6 +113,7 @@ const IncentivePlanDesigner: React.FC<IncentivePlanDesignerProps> = ({
 
     try {
       setIsSaving(true);
+      console.log("Saving plan, isEditMode:", isEditMode);
       
       // Create metadata with the correct version
       const metadata: PlanMetadata = {
@@ -132,11 +133,12 @@ const IncentivePlanDesigner: React.FC<IncentivePlanDesignerProps> = ({
       
       if (isEditMode) {
         // For updates, we create a new document with the same schemeId but increased version
+        console.log("Creating new version for scheme:", schemeId, "with version:", versionNumber);
         try {
           const success = await updateIncentiveScheme(schemeId, schemeToSave);
           if (success) {
             // If successful, update the local version number
-            setVersionNumber(versionNumber);
+            console.log("Successfully created version:", versionNumber);
             
             toast({
               title: "New Version Created",
@@ -158,6 +160,7 @@ const IncentivePlanDesigner: React.FC<IncentivePlanDesignerProps> = ({
         }
       } else {
         // For new schemes, simply save
+        console.log("Saving new scheme");
         id = await saveIncentiveScheme(schemeToSave, 'DRAFT');
         
         toast({
