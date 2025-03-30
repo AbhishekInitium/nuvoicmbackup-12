@@ -1,116 +1,106 @@
 
 import { useState } from 'react';
 import { useToast } from "@/hooks/use-toast";
-import { Tier } from '@/types/incentiveTypes';
+import { CommissionStructure } from '@/types/incentiveTypes';
+
+// Define Tier type since it's being referenced but not exported from incentiveTypes
+interface Tier {
+  from: number;
+  to: number;
+  rate: number;
+  description?: string;
+}
 
 export const useCommissionTiers = (
-  initialTiers: Tier[], 
-  onUpdateCommissionStructure: (tiers: Tier[]) => void
+  initialCommissionStructure: CommissionStructure,
+  onUpdateCommissionStructure: (structure: CommissionStructure) => void
 ) => {
   const { toast } = useToast();
-  const [tiers, setTiers] = useState<Tier[]>(initialTiers);
+  const [tiers, setTiers] = useState<Tier[]>(initialCommissionStructure.tiers || []);
 
+  // Add new tier
   const addTier = () => {
-    const newTiers = [...tiers];
-    
-    // Define default values for the first tier if no tiers exist
-    if (newTiers.length === 0) {
-      newTiers.push({
-        from: 0,
-        to: 50000,
-        rate: 1.0
-      });
-    } else {
-      // Get the last tier
-      const lastTier = newTiers[newTiers.length - 1];
-      
-      // Ensure the new tier starts exactly 1 higher than the previous tier's end
-      const newFrom = lastTier.to + 1;
-      const newTo = newFrom + 50000;
-      const newRate = lastTier.rate + 1;
-      
-      newTiers.push({
-        from: newFrom,
-        to: newTo,
-        rate: newRate
-      });
-    }
-    
+    const lastTier = tiers.length > 0 ? tiers[tiers.length - 1] : null;
+    const newFrom = lastTier ? lastTier.to : 0;
+    const newTo = newFrom + 100000;
+    const newRate = 0.05;
+
+    const newTier: Tier = {
+      from: newFrom,
+      to: newTo,
+      rate: newRate,
+      description: `${newFrom} - ${newTo}`
+    };
+
+    const newTiers = [...tiers, newTier];
     setTiers(newTiers);
-    onUpdateCommissionStructure(newTiers);
+    onUpdateCommissionStructure({ tiers: newTiers });
+    
+    toast({
+      title: "Tier Added",
+      description: `Added tier for ${newFrom} - ${newTo}`,
+      variant: "default"
+    });
   };
 
+  // Remove tier
   const removeTier = (index: number) => {
-    // Don't allow removing the base tier (index 0)
-    if (index === 0 && tiers.length === 1) {
+    if (tiers.length <= 1) {
       toast({
-        title: "Cannot Remove Base Tier",
-        description: "The base tier cannot be removed as it defines the starting commission rate.",
+        title: "Cannot Remove Tier",
+        description: "You must have at least one tier in the commission structure.",
         variant: "destructive"
       });
       return;
     }
-    
+
     const newTiers = [...tiers];
     newTiers.splice(index, 1);
-    
     setTiers(newTiers);
-    onUpdateCommissionStructure(newTiers);
+    onUpdateCommissionStructure({ tiers: newTiers });
+    
+    toast({
+      title: "Tier Removed",
+      description: "Commission tier has been removed.",
+      variant: "default"
+    });
   };
 
-  const updateTier = (index: number, field: keyof Tier, value: string | number) => {
+  // Update tier
+  const updateTier = (index: number, field: keyof Tier, value: number) => {
     const newTiers = [...tiers];
+    newTiers[index] = { ...newTiers[index], [field]: value };
     
-    // Parse the value as a number with 2 decimal places
-    const numValue = parseFloat(parseFloat(value as string).toFixed(2));
+    // Update description
+    newTiers[index].description = `${newTiers[index].from} - ${newTiers[index].to}`;
     
-    // Validate tier boundaries
-    if (field === 'from' || field === 'to') {
-      // If updating the 'from' value, ensure it's greater than the previous tier's 'to'
-      if (field === 'from' && index > 0) {
-        const prevTier = newTiers[index - 1];
-        if (numValue <= prevTier.to) {
-          toast({
-            title: "Invalid Range",
-            description: `From value must be greater than previous tier's To value (${prevTier.to})`,
-            variant: "destructive"
-          });
-          return;
-        }
-      }
-      
-      // If updating the 'to' value, ensure it's greater than the current 'from'
-      if (field === 'to') {
-        const currentFrom = newTiers[index].from;
-        if (numValue <= currentFrom) {
-          toast({
-            title: "Invalid Range",
-            description: "To value must be greater than From value",
-            variant: "destructive"
-          });
-          return;
-        }
-        
-        // If not the last tier, ensure the 'to' value is less than the next tier's 'from'
-        if (index < newTiers.length - 1) {
-          const nextTier = newTiers[index + 1];
-          if (numValue >= nextTier.from) {
-            toast({
-            title: "Invalid Range",
-            description: `To value must be less than next tier's From value (${nextTier.from})`,
-            variant: "destructive"
-          });
-            return;
-          }
-        }
+    // Validate
+    if (field === 'from' && index > 0) {
+      const prevTier = newTiers[index - 1];
+      if (value < prevTier.to) {
+        toast({
+          title: "Invalid Range",
+          description: "From value must be greater than or equal to previous tier's To value.",
+          variant: "destructive"
+        });
+        return;
       }
     }
     
-    // Update the field
-    newTiers[index][field] = numValue;
+    if (field === 'to' && index < newTiers.length - 1) {
+      const nextTier = newTiers[index + 1];
+      if (value > nextTier.from) {
+        toast({
+          title: "Invalid Range",
+          description: "To value must be less than or equal to next tier's From value.",
+          variant: "destructive"
+        });
+        return;
+      }
+    }
     
     setTiers(newTiers);
-    onUpdateCommissionStructure(newTiers);
+    onUpdateCommissionStructure({ tiers: newTiers });
   };
 
   return {
