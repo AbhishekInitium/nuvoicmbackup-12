@@ -27,7 +27,10 @@ import {
   getExecutionLog
 } from '@/services/incentive/commissionExecutionService';
 import { 
-  IncentivePlanWithStatus, 
+  IncentivePlanWithStatus,
+  IncentiveStatus
+} from '@/services/incentive/types/incentiveServiceTypes';
+import { 
   getIncentivePlans, 
   markPlanAsExecuted 
 } from '@/services/incentive/incentivePlanService';
@@ -72,17 +75,22 @@ const CommissionExecutionEngine: React.FC = () => {
       
       if (plans && plans.length > 0) {
         // Transform MongoDB schemes to match IncentivePlanWithStatus structure
-        const transformedPlans: IncentivePlanWithStatus[] = plans.map(plan => ({
-          ...plan,
-          status: plan.metadata?.status || 'DRAFT',
-          hasBeenExecuted: false,
-          metadata: plan.metadata || {
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-            version: 1,
-            status: 'DRAFT'
-          }
-        }));
+        const transformedPlans: IncentivePlanWithStatus[] = plans.map(plan => {
+          // Properly cast the status to IncentiveStatus type
+          const status = (plan.metadata?.status || 'DRAFT') as IncentiveStatus;
+          
+          return {
+            ...plan,
+            status: status,
+            hasBeenExecuted: false,
+            metadata: {
+              createdAt: plan.metadata?.createdAt || new Date().toISOString(),
+              updatedAt: plan.metadata?.updatedAt || new Date().toISOString(),
+              version: plan.metadata?.version || 1,
+              status: status
+            }
+          };
+        });
         
         setIncentivePlans(transformedPlans);
         

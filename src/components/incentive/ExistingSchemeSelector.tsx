@@ -4,7 +4,7 @@ import { Copy, Loader2, AlertCircle, RefreshCcw, Edit } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import ActionButton from '../ui-custom/ActionButton';
 import { useToast } from "@/hooks/use-toast";
-import { IncentivePlanWithStatus } from '@/services/incentive/incentivePlanService';
+import { IncentivePlanWithStatus } from '@/services/incentive/types/incentiveServiceTypes';
 import { getIncentiveSchemes } from '@/services/database/mongoDBService';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { format } from 'date-fns';
@@ -47,8 +47,11 @@ const ExistingSchemeSelector: React.FC<ExistingSchemeSelectorProps> = ({
       if (plans && plans.length > 0) {
         console.log('Setting schemes with:', plans.length, 'plans');
         
-        // Ensure all required fields are present in each plan
+        // Ensure all required fields are present in each plan and properly typed
         const validPlans = plans.map(plan => {
+          // Cast status to IncentiveStatus type
+          const status = (plan.metadata?.status || 'DRAFT') as 'DRAFT' | 'APPROVED' | 'SIMULATION' | 'PRODUCTION';
+          
           return {
             _id: plan._id || '',
             name: plan.name || 'Unnamed Plan',
@@ -59,7 +62,7 @@ const ExistingSchemeSelector: React.FC<ExistingSchemeSelectorProps> = ({
             currency: plan.currency || 'USD',
             revenueBase: plan.revenueBase || '',
             participants: Array.isArray(plan.participants) ? plan.participants : [],
-            status: plan.metadata?.status || 'DRAFT',
+            status: status,
             salesQuota: plan.salesQuota || 0,
             commissionStructure: {
               tiers: Array.isArray(plan.commissionStructure?.tiers) ? plan.commissionStructure.tiers : []
@@ -84,9 +87,9 @@ const ExistingSchemeSelector: React.FC<ExistingSchemeSelectorProps> = ({
               createdAt: plan.metadata?.createdAt || new Date().toISOString(),
               updatedAt: plan.metadata?.updatedAt || new Date().toISOString(),
               version: plan.metadata?.version || 1,
-              status: plan.metadata?.status || 'DRAFT'
+              status: status
             }
-          };
+          } as IncentivePlanWithStatus; // Type assertion to fix type errors
         });
         
         setSchemes(validPlans);
