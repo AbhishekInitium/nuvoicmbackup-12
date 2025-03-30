@@ -48,6 +48,7 @@ export const saveIncentiveScheme = async (scheme: IncentivePlan, status: string 
       }
     };
     
+    console.log("Saving new scheme:", schemeToSave.name);
     const response = await axios.post(API_BASE_URL, schemeToSave);
     
     if (response.status === 201 && response.data._id) {

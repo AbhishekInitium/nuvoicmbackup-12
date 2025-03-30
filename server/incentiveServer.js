@@ -1,4 +1,3 @@
-
 const express = require('express');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
@@ -13,15 +12,20 @@ app.use(cors()); // Enable CORS for frontend requests
 app.use(bodyParser.json());
 
 // MongoDB Connection
-// Replace this URI with your actual MongoDB connection string
-const MONGODB_URI = "mongodb+srv://your_username:your_password@your_cluster.mongodb.net/your_database?retryWrites=true&w=majority";
+// Using a local MongoDB instance since we don't have the actual MongoDB Atlas credentials
+// This will use a locally running MongoDB instance or MongoDB memory server for testing
+const MONGODB_URI = process.env.MONGODB_URI || "mongodb://localhost:27017/incentives";
 
 mongoose.connect(MONGODB_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true
 })
-.then(() => console.log('Connected to MongoDB Atlas'))
-.catch(err => console.error('MongoDB connection error:', err));
+.then(() => console.log('Connected to MongoDB'))
+.catch(err => {
+  console.error('MongoDB connection error:', err);
+  console.warn('Using in-memory data storage instead. Data will be lost when server restarts.');
+  // Continue execution even without a DB connection - we'll use in-memory storage
+});
 
 // Define Schema with required fields
 const incentiveSchema = new mongoose.Schema({
@@ -64,34 +68,59 @@ const incentiveSchema = new mongoose.Schema({
 
 const Incentive = mongoose.model('incentivescheme', incentiveSchema);
 
+// In-memory fallback for when MongoDB is not available
+let inMemorySchemes = [];
+let nextInMemoryId = 1;
+
+// Helper function to determine if MongoDB is connected
+const isMongoConnected = () => mongoose.connection.readyState === 1;
+
 // API Routes
 
 // GET all incentive schemes - return latest version of each schemeId
 app.get('/api/incentives', async (req, res) => {
   try {
-    // Group by schemeId and find the highest version for each
-    const schemes = await Incentive.aggregate([
-      { 
-        $sort: { 
-          schemeId: 1, 
-          "metadata.version": -1 
-        } 
-      },
-      {
-        $group: {
-          _id: "$schemeId",
-          doc: { $first: "$$ROOT" }
+    if (isMongoConnected()) {
+      // Group by schemeId and find the highest version for each
+      const schemes = await Incentive.aggregate([
+        { 
+          $sort: { 
+            schemeId: 1, 
+            "metadata.version": -1 
+          } 
+        },
+        {
+          $group: {
+            _id: "$schemeId",
+            doc: { $first: "$$ROOT" }
+          }
+        },
+        {
+          $replaceRoot: { newRoot: "$doc" }
+        },
+        {
+          $sort: { 'metadata.updatedAt': -1 }
         }
-      },
-      {
-        $replaceRoot: { newRoot: "$doc" }
-      },
-      {
-        $sort: { 'metadata.updatedAt': -1 }
-      }
-    ]);
-    
-    res.json(schemes);
+      ]);
+      
+      res.json(schemes);
+    } else {
+      // Fallback to in-memory data if MongoDB is not connected
+      console.log('Returning in-memory schemes:', inMemorySchemes.length);
+      
+      // Group by schemeId and get latest version
+      const schemes = Object.values(
+        inMemorySchemes.reduce((acc, scheme) => {
+          const { schemeId } = scheme;
+          if (!acc[schemeId] || acc[schemeId].metadata.version < scheme.metadata.version) {
+            acc[schemeId] = scheme;
+          }
+          return acc;
+        }, {})
+      );
+      
+      res.json(schemes);
+    }
   } catch (error) {
     console.error('Error fetching schemes:', error);
     res.status(500).json({ error: 'Failed to fetch incentive schemes' });
@@ -101,15 +130,28 @@ app.get('/api/incentives', async (req, res) => {
 // GET all versions of a specific scheme by schemeId
 app.get('/api/incentives/versions/:schemeId', async (req, res) => {
   try {
-    const schemes = await Incentive.find({ 
-      schemeId: req.params.schemeId 
-    }).sort({ 'metadata.version': -1 });
-    
-    if (!schemes || schemes.length === 0) {
-      return res.status(404).json({ error: 'No versions found for this scheme ID' });
+    if (isMongoConnected()) {
+      const schemes = await Incentive.find({ 
+        schemeId: req.params.schemeId 
+      }).sort({ 'metadata.version': -1 });
+      
+      if (!schemes || schemes.length === 0) {
+        return res.status(404).json({ error: 'No versions found for this scheme ID' });
+      }
+      
+      res.json(schemes);
+    } else {
+      // Fallback to in-memory data
+      const schemes = inMemorySchemes
+        .filter(scheme => scheme.schemeId === req.params.schemeId)
+        .sort((a, b) => b.metadata.version - a.metadata.version);
+        
+      if (schemes.length === 0) {
+        return res.status(404).json({ error: 'No versions found for this scheme ID' });
+      }
+      
+      res.json(schemes);
     }
-    
-    res.json(schemes);
   } catch (error) {
     console.error('Error fetching scheme versions:', error);
     res.status(500).json({ error: 'Failed to fetch scheme versions' });
@@ -119,11 +161,22 @@ app.get('/api/incentives/versions/:schemeId', async (req, res) => {
 // GET a specific incentive scheme by ID
 app.get('/api/incentives/:id', async (req, res) => {
   try {
-    const scheme = await Incentive.findById(req.params.id);
-    if (!scheme) {
-      return res.status(404).json({ error: 'Incentive scheme not found' });
+    if (isMongoConnected()) {
+      const scheme = await Incentive.findById(req.params.id);
+      if (!scheme) {
+        return res.status(404).json({ error: 'Incentive scheme not found' });
+      }
+      res.json(scheme);
+    } else {
+      // Fallback to in-memory data
+      const scheme = inMemorySchemes.find(s => s._id === req.params.id);
+      
+      if (!scheme) {
+        return res.status(404).json({ error: 'Incentive scheme not found' });
+      }
+      
+      res.json(scheme);
     }
-    res.json(scheme);
   } catch (error) {
     console.error('Error fetching scheme:', error);
     res.status(500).json({ error: 'Failed to fetch incentive scheme' });
@@ -144,10 +197,21 @@ app.post('/api/incentives', async (req, res) => {
       }
     };
     
-    const newScheme = new Incentive(schemeData);
-    const savedScheme = await newScheme.save();
-    
-    res.status(201).json(savedScheme);
+    if (isMongoConnected()) {
+      const newScheme = new Incentive(schemeData);
+      const savedScheme = await newScheme.save();
+      res.status(201).json(savedScheme);
+    } else {
+      // Fallback to in-memory storage
+      const inMemoryScheme = {
+        ...schemeData,
+        _id: String(nextInMemoryId++)
+      };
+      
+      inMemorySchemes.push(inMemoryScheme);
+      console.log(`Saved in-memory scheme with ID: ${inMemoryScheme._id}`);
+      res.status(201).json(inMemoryScheme);
+    }
   } catch (error) {
     console.error('Error creating scheme:', error);
     res.status(500).json({ error: `Failed to create incentive scheme: ${error.message}` });
@@ -160,28 +224,54 @@ app.post('/api/incentives/:schemeId/version', async (req, res) => {
     const { schemeId } = req.params;
     const editedScheme = req.body;
 
-    // Get latest version
-    const latest = await Incentive.findOne({ schemeId }).sort({ 'metadata.version': -1 });
+    if (isMongoConnected()) {
+      // Get latest version from MongoDB
+      const latest = await Incentive.findOne({ schemeId }).sort({ 'metadata.version': -1 });
 
-    if (!latest) {
-      return res.status(404).json({ error: 'Scheme not found' });
-    }
-
-    // Create new version
-    const newVersion = new Incentive({
-      ...editedScheme,
-      schemeId,
-      metadata: {
-        createdAt: editedScheme.metadata?.createdAt || latest.metadata.createdAt,
-        updatedAt: new Date().toISOString(),
-        version: latest.metadata.version + 1,
-        status: 'DRAFT'
+      if (!latest) {
+        return res.status(404).json({ error: 'Scheme not found' });
       }
-    });
 
-    const savedVersion = await newVersion.save();
-    
-    res.status(201).json(savedVersion);
+      // Create new version
+      const newVersion = new Incentive({
+        ...editedScheme,
+        schemeId,
+        metadata: {
+          createdAt: editedScheme.metadata?.createdAt || latest.metadata.createdAt,
+          updatedAt: new Date().toISOString(),
+          version: latest.metadata.version + 1,
+          status: 'DRAFT'
+        }
+      });
+
+      const savedVersion = await newVersion.save();
+      res.status(201).json(savedVersion);
+    } else {
+      // In-memory version
+      const latest = [...inMemorySchemes]
+        .filter(s => s.schemeId === schemeId)
+        .sort((a, b) => b.metadata.version - a.metadata.version)[0];
+        
+      if (!latest) {
+        return res.status(404).json({ error: 'Scheme not found' });
+      }
+      
+      const newVersion = {
+        ...editedScheme,
+        _id: String(nextInMemoryId++),
+        schemeId,
+        metadata: {
+          createdAt: editedScheme.metadata?.createdAt || latest.metadata.createdAt,
+          updatedAt: new Date().toISOString(),
+          version: latest.metadata.version + 1,
+          status: 'DRAFT'
+        }
+      };
+      
+      inMemorySchemes.push(newVersion);
+      console.log(`Saved in-memory version ${newVersion.metadata.version} for scheme ${schemeId}`);
+      res.status(201).json(newVersion);
+    }
   } catch (error) {
     console.error('Error saving new version:', error);
     res.status(500).json({ error: 'Failed to save version' });

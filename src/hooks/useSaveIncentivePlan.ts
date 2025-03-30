@@ -56,6 +56,9 @@ export const useSaveIncentivePlan = ({
         status: 'DRAFT'
       };
       
+      console.log("Current plan metadata:", plan.metadata);
+      console.log("New metadata to use:", metadata);
+      
       const schemeToSave: IncentivePlan = {
         ...plan,
         schemeId: schemeId,
@@ -68,6 +71,11 @@ export const useSaveIncentivePlan = ({
         // For updates, we create a new document with the same schemeId but increased version
         console.log("Creating new version for scheme:", schemeId, "with version:", versionNumber);
         try {
+          console.log("About to call updateIncentiveScheme with:", {
+            schemeId,
+            version: versionNumber
+          });
+          
           const success = await updateIncentiveScheme(schemeId, schemeToSave);
           if (success) {
             // If successful, update the local version number
@@ -114,9 +122,14 @@ export const useSaveIncentivePlan = ({
     } catch (error) {
       console.error('Error saving to MongoDB:', error);
       
+      // Provide more detailed error message
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : 'Unknown error';
+        
       toast({
         title: "Save Error",
-        description: `Failed to save scheme: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        description: `Failed to save scheme: ${errorMessage}. Make sure the server is running.`,
         variant: "destructive"
       });
     } finally {
