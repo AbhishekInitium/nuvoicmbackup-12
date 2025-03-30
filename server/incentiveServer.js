@@ -154,6 +154,40 @@ app.post('/api/incentives', async (req, res) => {
   }
 });
 
+// POST - Save a new version of an existing scheme
+app.post('/api/incentives/:schemeId/version', async (req, res) => {
+  try {
+    const { schemeId } = req.params;
+    const editedScheme = req.body;
+
+    // Get latest version
+    const latest = await Incentive.findOne({ schemeId }).sort({ 'metadata.version': -1 });
+
+    if (!latest) {
+      return res.status(404).json({ error: 'Scheme not found' });
+    }
+
+    // Create new version
+    const newVersion = new Incentive({
+      ...editedScheme,
+      schemeId,
+      metadata: {
+        createdAt: editedScheme.metadata?.createdAt || latest.metadata.createdAt,
+        updatedAt: new Date().toISOString(),
+        version: latest.metadata.version + 1,
+        status: 'DRAFT'
+      }
+    });
+
+    const savedVersion = await newVersion.save();
+    
+    res.status(201).json(savedVersion);
+  } catch (error) {
+    console.error('Error saving new version:', error);
+    res.status(500).json({ error: 'Failed to save version' });
+  }
+});
+
 // PUT - Update an existing incentive scheme
 // This is kept for compatibility but we're now using POST for new versions
 app.put('/api/incentives/:id', async (req, res) => {

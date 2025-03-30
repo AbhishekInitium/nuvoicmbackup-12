@@ -127,8 +127,8 @@ export const updateIncentiveScheme = async (schemeId: string, updates: Partial<I
     
     console.log("Saving new version with metadata:", JSON.stringify(updatedScheme.metadata));
     
-    // Important: We use POST to create a new document, not PATCH/PUT to update existing one
-    const response = await axios.post(API_BASE_URL, updatedScheme);
+    // Use the new versioning endpoint instead of the regular POST
+    const response = await axios.post(`${API_BASE_URL}/${schemeId}/version`, updatedScheme);
     
     if (response.status === 201 && response.data._id) {
       console.log(`Successfully created new version with MongoDB ID: ${response.data._id}`);
