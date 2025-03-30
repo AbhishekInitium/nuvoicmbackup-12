@@ -46,7 +46,7 @@ export const useSaveIncentivePlan = ({
 
     try {
       setIsSaving(true);
-      console.log("Saving plan, isEditMode:", isEditMode);
+      console.log("Saving plan, isEditMode:", isEditMode, "versionNumber:", versionNumber);
       
       // Create metadata with the correct version
       const metadata: PlanMetadata = {

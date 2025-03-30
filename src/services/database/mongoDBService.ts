@@ -125,14 +125,18 @@ export const updateIncentiveScheme = async (schemeId: string, updates: Partial<I
       }
     };
     
-    console.log("Saving new version with data:", JSON.stringify(updatedScheme).substring(0, 200) + "...");
+    console.log("Saving new version with metadata:", JSON.stringify(updatedScheme.metadata));
     
     // Important: We use POST to create a new document, not PATCH/PUT to update existing one
     const response = await axios.post(API_BASE_URL, updatedScheme);
     
-    console.log("Server response:", response.status, response.data ? JSON.stringify(response.data).substring(0, 100) + "..." : "No data");
-    
-    return response.status === 201;
+    if (response.status === 201 && response.data._id) {
+      console.log(`Successfully created new version with MongoDB ID: ${response.data._id}`);
+      return true;
+    } else {
+      console.error("Failed to create new version: Unexpected response", response.status, response.data);
+      return false;
+    }
   } catch (error) {
     console.error(`Error creating new version of scheme ${schemeId}:`, error);
     throw new Error(`Failed to update scheme: ${error instanceof Error ? error.message : String(error)}`);
