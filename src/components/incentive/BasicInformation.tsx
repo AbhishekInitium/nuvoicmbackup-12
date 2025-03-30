@@ -8,6 +8,7 @@ import GlassCard from '../ui-custom/GlassCard';
 import { IncentivePlan } from '@/types/incentiveTypes';
 import RevenueBaseSelector from './RevenueBaseSelector';
 import { Badge } from '../ui/badge';
+import { CURRENCIES } from '@/constants/incentiveConstants';
 
 interface BasicInformationProps {
   plan: IncentivePlan;
@@ -16,17 +17,6 @@ interface BasicInformationProps {
   version?: number;
   isEditMode?: boolean;
 }
-
-const CURRENCIES = [
-  { value: 'USD', label: 'USD - US Dollar', symbol: '$' },
-  { value: 'EUR', label: 'EUR - Euro', symbol: '€' },
-  { value: 'GBP', label: 'GBP - British Pound', symbol: '£' },
-  { value: 'JPY', label: 'JPY - Japanese Yen', symbol: '¥' },
-  { value: 'CAD', label: 'CAD - Canadian Dollar', symbol: 'C$' },
-  { value: 'AUD', label: 'AUD - Australian Dollar', symbol: 'A$' },
-  { value: 'INR', label: 'INR - Indian Rupee', symbol: '₹' },
-  { value: 'CNY', label: 'CNY - Chinese Yuan', symbol: '¥' }
-];
 
 const BasicInformation: React.FC<BasicInformationProps> = ({
   plan,
@@ -41,11 +31,11 @@ const BasicInformation: React.FC<BasicInformationProps> = ({
     }
   };
 
-  const selectedCurrency = CURRENCIES.find(c => c.value === plan.currency) || CURRENCIES[0];
+  const selectedCurrency = CURRENCIES.find(c => c.code === plan.currency) || CURRENCIES[0];
 
   return (
     <div className="space-y-6">
-      <GlassCard variant="filled" className="p-5">
+      <GlassCard variant="default" className="p-5">
         <div className="grid md:grid-cols-2 gap-6">
           <div>
             <div className="mb-4">
@@ -136,7 +126,7 @@ const BasicInformation: React.FC<BasicInformationProps> = ({
                 </SelectTrigger>
                 <SelectContent>
                   {CURRENCIES.map((currency) => (
-                    <SelectItem key={currency.value} value={currency.value}>
+                    <SelectItem key={currency.code} value={currency.code}>
                       {currency.label}
                     </SelectItem>
                   ))}
@@ -145,8 +135,8 @@ const BasicInformation: React.FC<BasicInformationProps> = ({
             </div>
 
             <RevenueBaseSelector 
-              value={plan.revenueBase} 
-              onChange={(value) => updatePlan('revenueBase', value)}
+              revenueBase={plan.revenueBase}
+              updateRevenueBase={(value) => updatePlan('revenueBase', value)}
             />
           </div>
         </div>

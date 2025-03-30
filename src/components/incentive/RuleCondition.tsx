@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { X, Plus } from 'lucide-react';
+import { X } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RuleCondition } from '@/types/incentiveTypes';
 import { OPERATORS, METRICS, TIME_PERIODS } from '@/constants/incentiveConstants';
@@ -24,7 +24,7 @@ const RuleConditionComponent: React.FC<RuleConditionProps> = ({
         <div className="flex-1 grid grid-cols-1 sm:grid-cols-11 gap-3 items-center">
           <div className="sm:col-span-3">
             <Select 
-              value={condition.period}
+              value={condition.period || 'current'}
               onValueChange={(value) => onUpdate('period', value)}
             >
               <SelectTrigger className="w-full">
@@ -40,7 +40,7 @@ const RuleConditionComponent: React.FC<RuleConditionProps> = ({
           
           <div className="sm:col-span-3">
             <Select 
-              value={condition.metric}
+              value={condition.metric || ''}
               onValueChange={(value) => onUpdate('metric', value)}
             >
               <SelectTrigger className="w-full">

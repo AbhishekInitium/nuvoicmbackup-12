@@ -15,6 +15,7 @@ export const useIncentivePlan = (
     ...DEFAULT_PLAN,
     participants: [],
     salesQuota: 0,
+    schemeId: '',
     name: '',
     description: '',
     commissionStructure: {
@@ -50,6 +51,7 @@ export const useIncentivePlan = (
       ...DEFAULT_PLAN,
       participants: [],
       salesQuota: 0,
+      schemeId: '',
       name: '',
       description: '',
       commissionStructure: {
@@ -117,6 +119,7 @@ export const useIncentivePlan = (
     
     const planData: IncentivePlan = {
       name: `Copy of ${name}`,
+      schemeId: '',
       description,
       effectiveStart,
       effectiveEnd,

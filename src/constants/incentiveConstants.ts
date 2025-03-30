@@ -1,4 +1,3 @@
-
 import { IncentivePlan } from "@/types/incentiveTypes";
 
 // Incentive Types constants
@@ -47,9 +46,16 @@ export const DATABASE_FIELDS = [
   { value: 'CreationDate', label: 'Creation Date' },
   { value: 'ProductCategory', label: 'Product Category' },
   { value: 'MaterialCode', label: 'Material Code' },
-  { value: 'SalesOrder', label: 'Sales Order Number' }, // Added as requested
-  { value: 'SalesRepId', label: 'Sales Rep ID' }        // Added as requested
+  { value: 'SalesOrder', label: 'Sales Order Number' },
+  { value: 'SalesRepId', label: 'Sales Rep ID' }
 ];
+
+// DB fields based on revenue base
+export const DB_FIELDS = {
+  salesOrders: DATABASE_FIELDS,
+  invoices: DATABASE_FIELDS,
+  paidInvoices: DATABASE_FIELDS
+};
 
 // Credit rule levels
 export const DEFAULT_CREDIT_LEVELS = [
@@ -60,20 +66,57 @@ export const DEFAULT_CREDIT_LEVELS = [
   }
 ];
 
-// Measurement rules
-export const DEFAULT_PRIMARY_METRIC = {
-  field: 'TotalNetAmount',
-  operator: '>=',
-  value: 1000,
-  description: 'Minimum order value'
-};
+// Currency options
+export const CURRENCIES = [
+  { code: 'USD', label: 'US Dollar', symbol: '$' },
+  { code: 'EUR', label: 'Euro', symbol: '€' },
+  { code: 'GBP', label: 'British Pound', symbol: '£' },
+  { code: 'JPY', label: 'Japanese Yen', symbol: '¥' },
+  { code: 'CAD', label: 'Canadian Dollar', symbol: 'C$' },
+  { code: 'AUD', label: 'Australian Dollar', symbol: 'A$' },
+  { code: 'INR', label: 'Indian Rupee', symbol: '₹' },
+  { code: 'CNY', label: 'Chinese Yuan', symbol: '¥' }
+];
 
-// Rule actions
-export const RULE_ACTIONS = [
-  { value: 'boost', label: 'Boost Value' },
-  { value: 'cap', label: 'Cap Value' },
-  { value: 'qualify', label: 'Force Qualify' },
-  { value: 'disqualify', label: 'Disqualify' }
+// Time periods for rule conditions
+export const TIME_PERIODS = [
+  { value: 'current', label: 'Current Period' },
+  { value: 'previous', label: 'Previous Period' },
+  { value: 'ytd', label: 'Year to Date' },
+  { value: 'rolling3', label: 'Rolling 3 Months' },
+  { value: 'rolling6', label: 'Rolling 6 Months' },
+  { value: 'rolling12', label: 'Rolling 12 Months' }
+];
+
+// Available metrics for rule conditions
+export const METRICS = [
+  { value: 'sales', label: 'Sales Amount' },
+  { value: 'quota', label: 'Quota Attainment' },
+  { value: 'orders', label: 'Order Count' },
+  { value: 'customers', label: 'Customer Count' },
+  { value: 'productMix', label: 'Product Mix %' }
+];
+
+// Mock schemes for testing
+export const MOCK_SCHEMES = [
+  {
+    name: 'Standard Sales Commission',
+    description: 'Standard commission scheme for sales representatives',
+    status: 'APPROVED',
+    hasBeenExecuted: false
+  },
+  {
+    name: 'Premium Product Incentive',
+    description: 'Special incentives for premium product sales',
+    status: 'APPROVED',
+    hasBeenExecuted: false
+  },
+  {
+    name: 'Q4 Accelerator Program',
+    description: 'Enhanced commission rates for Q4 sales push',
+    status: 'APPROVED',
+    hasBeenExecuted: false
+  }
 ];
 
 export const SAMPLE_TIERS = [

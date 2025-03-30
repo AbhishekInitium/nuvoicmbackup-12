@@ -1,7 +1,8 @@
+
 import React, { useState, useEffect } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { useS4HanaData } from '@/hooks/useS4HanaData';
-import { IncentivePlan } from '@/types/incentiveTypes';
+import { IncentivePlan, PlanMetadata } from '@/types/incentiveTypes';
 import { useIncentivePlan } from '@/hooks/useIncentivePlan';
 
 // Import refactored components
@@ -104,18 +105,14 @@ const IncentivePlanDesigner: React.FC<IncentivePlanDesignerProps> = ({
     try {
       setIsSaving(true);
       
-      const metadata = {
-        ...(plan.metadata || {}),
+      const metadata: PlanMetadata = {
+        createdAt: plan.metadata?.createdAt || new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         version: isEditMode ? versionNumber : 1,
         status: 'DRAFT'
       };
       
-      if (!metadata.createdAt) {
-        metadata.createdAt = new Date().toISOString();
-      }
-      
-      const schemeToSave = {
+      const schemeToSave: IncentivePlan = {
         ...plan,
         schemeId: schemeId,
         metadata: metadata

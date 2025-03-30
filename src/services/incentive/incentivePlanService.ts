@@ -1,6 +1,6 @@
 
 import { S4_API_BASE_URL, s4Request } from '../base/s4BaseService';
-import { IncentivePlan, Metadata } from '@/types/incentiveTypes';
+import { IncentivePlan, PlanMetadata } from '@/types/incentiveTypes';
 import { MOCK_SCHEMES } from '@/constants/incentiveConstants';
 
 /**
@@ -14,7 +14,7 @@ export interface IncentivePlanWithStatus extends IncentivePlan {
   status: IncentiveStatus;
   lastExecutionDate?: string;
   hasBeenExecuted?: boolean;
-  metadata: Metadata; // Make metadata required in this interface
+  metadata: PlanMetadata; // Make metadata required in this interface
 }
 
 /**
@@ -43,6 +43,7 @@ export const getIncentivePlans = async (statusFilter?: IncentiveStatus): Promise
       // Transform response to match IncentivePlanWithStatus interface
       return response.value.map((item: any) => ({
         name: item.Name || 'Unnamed Plan',
+        schemeId: item.SchemeId || '',
         description: item.Description || '',
         effectiveStart: item.EffectiveStart || new Date().toISOString().split('T')[0],
         effectiveEnd: item.EffectiveEnd || new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split('T')[0],
@@ -79,11 +80,13 @@ export const getIncentivePlans = async (statusFilter?: IncentiveStatus): Promise
           minQualification: item.MeasurementRules?.MinQualification || 0,
           adjustments: Array.isArray(item.MeasurementRules?.Adjustments) 
             ? item.MeasurementRules.Adjustments.map((adj: any) => ({
+                id: adj.Id || '',
+                description: adj.Description || '',
+                impact: adj.Impact || 1,
+                type: adj.Type || 'PERCENTAGE_BOOST',
                 field: adj.Field || '',
                 operator: adj.Operator || '=',
-                value: adj.Value || '',
-                factor: adj.Factor || 1,
-                description: adj.Description || ''
+                value: adj.Value || ''
               }))
             : [],
           exclusions: Array.isArray(item.MeasurementRules?.Exclusions)
@@ -118,7 +121,13 @@ export const getIncentivePlans = async (statusFilter?: IncentiveStatus): Promise
               action: rule.Action || '',
               active: rule.Active || false
             }))
-          : []
+          : [],
+        metadata: {
+          createdAt: item.CreatedAt || new Date().toISOString(),
+          updatedAt: item.UpdatedAt || new Date().toISOString(),
+          version: item.Version || 1,
+          status: item.Status || 'DRAFT'
+        }
       }));
     } else {
       // If we get a response but it doesn't have the expected structure
@@ -138,6 +147,7 @@ const getMockIncentivePlans = (): IncentivePlanWithStatus[] => {
   console.log('Using mock incentive plans data');
   return MOCK_SCHEMES.map(mock => ({
     name: mock.name,
+    schemeId: `MOCK_${Date.now().toString()}`,
     description: mock.description,
     status: 'APPROVED' as const,
     effectiveStart: '2023-01-01',
@@ -161,7 +171,12 @@ const getMockIncentivePlans = (): IncentivePlanWithStatus[] => {
         description: 'Net Revenue' 
       }],
       minQualification: 0,
-      adjustments: [],
+      adjustments: [{
+        id: 'adj1',
+        description: 'Default adjustment',
+        impact: 1.1,
+        type: 'PERCENTAGE_BOOST'
+      }],
       exclusions: []
     },
     creditRules: { levels: [] },
@@ -184,6 +199,7 @@ export const saveIncentivePlan = async (plan: IncentivePlanWithStatus): Promise<
     // Transform plan to match S/4 HANA entity structure
     const transformedPlan = {
       Name: plan.name,
+      SchemeId: plan.schemeId,
       Description: plan.description,
       EffectiveStart: plan.effectiveStart,
       EffectiveEnd: plan.effectiveEnd,

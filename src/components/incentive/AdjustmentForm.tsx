@@ -29,7 +29,7 @@ const AdjustmentForm: React.FC<AdjustmentFormProps> = ({
           <div className="sm:col-span-3">
             <label className="block text-sm font-medium text-app-gray-700 mb-2">Field</label>
             <Select 
-              value={adjustment.field}
+              value={adjustment.field || ''}
               onValueChange={(value) => onUpdate(index, 'field', value)}
             >
               <SelectTrigger className="w-full">
@@ -46,7 +46,7 @@ const AdjustmentForm: React.FC<AdjustmentFormProps> = ({
           <div className="sm:col-span-2">
             <label className="block text-sm font-medium text-app-gray-700 mb-2">Operator</label>
             <Select 
-              value={adjustment.operator}
+              value={adjustment.operator || ''}
               onValueChange={(value) => onUpdate(index, 'operator', value)}
             >
               <SelectTrigger className="w-full">
@@ -64,7 +64,7 @@ const AdjustmentForm: React.FC<AdjustmentFormProps> = ({
             <label className="block text-sm font-medium text-app-gray-700 mb-2">Value</label>
             <Input 
               type="number" 
-              value={adjustment.value}
+              value={adjustment.value || 0}
               onChange={(e) => onUpdate(index, 'value', parseFloat(e.target.value))}
               step="0.01"
             />
@@ -75,7 +75,7 @@ const AdjustmentForm: React.FC<AdjustmentFormProps> = ({
             <Input 
               type="number" 
               step="0.01"
-              value={adjustment.factor}
+              value={adjustment.factor || 1}
               onChange={(e) => onUpdate(index, 'factor', parseFloat(e.target.value))}
             />
           </div>

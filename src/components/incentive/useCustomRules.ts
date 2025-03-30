@@ -18,7 +18,7 @@ export const useCustomRules = (
       name: 'New Custom Rule',
       description: 'Define criteria for this rule',
       conditions: [
-        { period: 'current', metric: 'sales', operator: '>=', value: 1000 }
+        { operator: '>=', value: 1000, metric: 'sales', period: 'current' }
       ],
       action: 'qualify',
       active: true
@@ -40,10 +40,10 @@ export const useCustomRules = (
     const newRules = [...rules];
     
     newRules[ruleIndex].conditions.push({
-      period: 'current',
-      metric: 'sales',
       operator: '>=',
-      value: 1000
+      value: 1000,
+      metric: 'sales',
+      period: 'current'
     });
     
     setRules(newRules);
@@ -85,8 +85,8 @@ export const useCustomRules = (
   const updateCustomRuleCondition = (ruleIndex: number, conditionIndex: number, field: keyof RuleCondition, value: string | number) => {
     const newRules = [...rules];
     
-    // Type assertion to handle the specific field types
-    if (field === 'period' || field === 'metric' || field === 'operator') {
+    // Handle all available fields in RuleCondition
+    if (field === 'metric' || field === 'field' || field === 'operator' || field === 'period') {
       (newRules[ruleIndex].conditions[conditionIndex][field] as string) = value as string;
     } else if (field === 'value') {
       (newRules[ruleIndex].conditions[conditionIndex][field] as number) = value as number;

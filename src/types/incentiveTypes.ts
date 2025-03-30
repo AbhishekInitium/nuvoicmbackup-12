@@ -1,8 +1,9 @@
+
 export interface CommissionStructure {
-  tiers: CommissionTier[];
+  tiers: Tier[];
 }
 
-export interface CommissionTier {
+export interface Tier {
   from: number;
   to: number;
   rate: number;
@@ -28,6 +29,11 @@ export interface Adjustment {
   description: string;
   impact: number;
   type: 'ADDITION' | 'PERCENTAGE_BOOST' | 'REDUCTION';
+  // Additional fields needed by components
+  field?: string;
+  operator?: string;
+  value?: any;
+  factor?: number;
 }
 
 export interface Exclusion {
@@ -47,6 +53,15 @@ export interface CreditLevel {
   description?: string;
 }
 
+export interface RuleCondition {
+  field?: string;
+  metric?: string;
+  operator: string;
+  value: any;
+  // Additional fields used in components
+  period?: string;
+}
+
 export interface CustomRule {
   name: string;
   description?: string;
@@ -57,12 +72,14 @@ export interface CustomRule {
   active: boolean;
 }
 
-export interface RuleCondition {
-  field?: string;
-  metric?: string;
-  operator: string;
-  value: any;
+export interface PlanMetadata {
+  createdAt: string;
+  updatedAt: string;
+  version: number;
+  status: string;
 }
+
+export interface Metadata extends PlanMetadata {} // For backward compatibility
 
 export interface IncentivePlan {
   name: string;
@@ -79,11 +96,4 @@ export interface IncentivePlan {
   creditRules: CreditRules;
   customRules: CustomRule[];
   metadata?: PlanMetadata;
-}
-
-export interface PlanMetadata {
-  createdAt: string;
-  updatedAt: string;
-  version: number;
-  status: string;
 }

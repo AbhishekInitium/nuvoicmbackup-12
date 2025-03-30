@@ -1,6 +1,8 @@
+
 import { useState, useEffect } from 'react';
 import { DB_FIELDS } from '@/constants/incentiveConstants';
 import { MeasurementRules, Adjustment, Exclusion, PrimaryMetric } from '@/types/incentiveTypes';
+import { v4 as uuidv4 } from 'uuid';
 
 export const useMeasurementRules = (
   initialRules: MeasurementRules,
@@ -31,12 +33,13 @@ export const useMeasurementRules = (
 
   // Helper function to get database fields based on revenue base
   const getDbFields = () => {
-    return DB_FIELDS[revenueBase] || [];
+    const fields = DB_FIELDS[revenueBase as keyof typeof DB_FIELDS] || [];
+    return fields.map(field => field.value);
   };
 
   // Primary Metric handlers
   const addPrimaryMetric = () => {
-    const defaultField = DB_FIELDS[revenueBase]?.[0] || '';
+    const defaultField = getDbFields()[0] || '';
     const newMetric: PrimaryMetric = {
       field: defaultField,
       operator: '>',
@@ -95,13 +98,16 @@ export const useMeasurementRules = (
 
   // Adjustment handlers
   const addAdjustment = () => {
-    const defaultField = DB_FIELDS[revenueBase]?.[0] || '';
-    const newAdjustment = {
+    const defaultField = getDbFields()[0] || '';
+    const newAdjustment: Adjustment = {
+      id: uuidv4(),
+      description: 'New adjustment rule',
+      impact: 1.0,
+      type: 'PERCENTAGE_BOOST',
       field: defaultField,
       operator: '>',
       value: 0,
-      factor: 1.0,
-      description: 'New adjustment rule'
+      factor: 1.0
     };
     
     const updatedRules = {
@@ -144,8 +150,8 @@ export const useMeasurementRules = (
 
   // Exclusion handlers
   const addExclusion = () => {
-    const defaultField = DB_FIELDS[revenueBase]?.[0] || '';
-    const newExclusion = {
+    const defaultField = getDbFields()[0] || '';
+    const newExclusion: Exclusion = {
       field: defaultField,
       operator: '>',
       value: 0,
