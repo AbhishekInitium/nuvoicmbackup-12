@@ -2,6 +2,7 @@
 import { IncentivePlan } from '@/types/incentiveTypes';
 import { s4Request } from '../../base/s4BaseService';
 import { SAP_CONFIG } from '@/config/sapConfig';
+import { LogLevel, addSystemLogEntry } from './loggingModule';
 
 export interface DataSelectionParams {
   planId: string;
@@ -9,6 +10,8 @@ export interface DataSelectionParams {
   processingDate: string;
   salesOrgs?: string[];
   participants?: string[];
+  salesOrderNumber?: string; // Added to filter by sales order number
+  salesRepId?: string;       // Added to filter by sales rep ID
 }
 
 export interface SelectedData {
@@ -23,6 +26,8 @@ export interface SelectedData {
       },
       participants?: string[];
       salesOrgs?: string[];
+      salesOrderNumber?: string;
+      salesRepId?: string;
     }
   }
 }
@@ -66,6 +71,16 @@ const selectSalesOrdersData = async (params: DataSelectionParams): Promise<Selec
       filter += ` and (${salesOrgFilter})`;
     }
     
+    // Add sales order filter if specified
+    if (params.salesOrderNumber) {
+      filter += ` and SalesOrder eq '${params.salesOrderNumber}'`;
+    }
+    
+    // Add sales rep filter if specified
+    if (params.salesRepId) {
+      filter += ` and SalesRepId eq '${params.salesRepId}'`;
+    }
+    
     // Make API call to S/4HANA
     const response = await s4Request<any>(
       'GET',
@@ -73,7 +88,7 @@ const selectSalesOrdersData = async (params: DataSelectionParams): Promise<Selec
       undefined,
       {
         '$filter': filter,
-        '$select': 'SalesOrder,SalesOrganization,CreationDate,TotalNetAmount,SoldToParty,SalesOrderType,DistributionChannel',
+        '$select': 'SalesOrder,SalesOrganization,CreationDate,TotalNetAmount,SoldToParty,SalesOrderType,DistributionChannel,SalesRepId',
         '$expand': 'to_Item'
       }
     );
@@ -93,7 +108,9 @@ const selectSalesOrdersData = async (params: DataSelectionParams): Promise<Selec
             to: params.processingDate
           },
           participants: params.participants,
-          salesOrgs: params.salesOrgs
+          salesOrgs: params.salesOrgs,
+          salesOrderNumber: params.salesOrderNumber,
+          salesRepId: params.salesRepId
         }
       }
     };
@@ -119,6 +136,16 @@ const selectInvoiceData = async (params: DataSelectionParams): Promise<SelectedD
       filter += ` and (${salesOrgFilter})`;
     }
     
+    // Add sales order filter if specified (assuming BillingDocument can be filtered by SalesOrder)
+    if (params.salesOrderNumber) {
+      filter += ` and SalesOrder eq '${params.salesOrderNumber}'`;
+    }
+    
+    // Add sales rep filter if specified
+    if (params.salesRepId) {
+      filter += ` and SalesRepId eq '${params.salesRepId}'`;
+    }
+    
     // Make API call to S/4HANA
     const response = await s4Request<any>(
       'GET',
@@ -126,7 +153,7 @@ const selectInvoiceData = async (params: DataSelectionParams): Promise<SelectedD
       undefined,
       {
         '$filter': filter,
-        '$select': 'BillingDocument,SalesOrganization,BillingDocumentDate,TotalNetAmount,SoldToParty,PaymentStatus,DistributionChannel',
+        '$select': 'BillingDocument,SalesOrganization,BillingDocumentDate,TotalNetAmount,SoldToParty,PaymentStatus,DistributionChannel,SalesOrder,SalesRepId',
         '$expand': 'to_Item'
       }
     );
@@ -146,7 +173,9 @@ const selectInvoiceData = async (params: DataSelectionParams): Promise<SelectedD
             to: params.processingDate
           },
           participants: params.participants,
-          salesOrgs: params.salesOrgs
+          salesOrgs: params.salesOrgs,
+          salesOrderNumber: params.salesOrderNumber,
+          salesRepId: params.salesRepId
         }
       }
     };
@@ -173,6 +202,16 @@ const selectPaidInvoiceData = async (params: DataSelectionParams): Promise<Selec
       filter += ` and (${salesOrgFilter})`;
     }
     
+    // Add sales order filter if specified
+    if (params.salesOrderNumber) {
+      filter += ` and SalesOrder eq '${params.salesOrderNumber}'`;
+    }
+    
+    // Add sales rep filter if specified
+    if (params.salesRepId) {
+      filter += ` and SalesRepId eq '${params.salesRepId}'`;
+    }
+    
     // Make API call to S/4HANA
     const response = await s4Request<any>(
       'GET',
@@ -180,7 +219,7 @@ const selectPaidInvoiceData = async (params: DataSelectionParams): Promise<Selec
       undefined,
       {
         '$filter': filter,
-        '$select': 'BillingDocument,SalesOrganization,BillingDocumentDate,TotalNetAmount,SoldToParty,PaymentStatus,DistributionChannel',
+        '$select': 'BillingDocument,SalesOrganization,BillingDocumentDate,TotalNetAmount,SoldToParty,PaymentStatus,DistributionChannel,SalesOrder,SalesRepId',
         '$expand': 'to_Item'
       }
     );
@@ -200,7 +239,9 @@ const selectPaidInvoiceData = async (params: DataSelectionParams): Promise<Selec
             to: params.processingDate
           },
           participants: params.participants,
-          salesOrgs: params.salesOrgs
+          salesOrgs: params.salesOrgs,
+          salesOrderNumber: params.salesOrderNumber,
+          salesRepId: params.salesRepId
         }
       }
     };
@@ -213,12 +254,29 @@ const selectPaidInvoiceData = async (params: DataSelectionParams): Promise<Selec
 /**
  * Apply initial qualifying criteria to raw data
  */
-export const applyQualifyingCriteria = (data: SelectedData, plan: IncentivePlan): SelectedData => {
+export const applyQualifyingCriteria = (
+  data: SelectedData, 
+  plan: IncentivePlan,
+  executionId?: string
+): SelectedData => {
   console.log('Applying qualifying criteria to raw data');
   
   if (!plan.measurementRules || !plan.measurementRules.primaryMetrics || plan.measurementRules.primaryMetrics.length === 0) {
     console.log('No qualifying criteria found, using all data');
+    if (executionId) {
+      addSystemLogEntry(executionId, 'Qualifying Criteria', 'No qualifying criteria defined, all records pass', 'INFO');
+    }
     return data;
+  }
+
+  // Log start of qualification
+  if (executionId) {
+    addSystemLogEntry(
+      executionId, 
+      'Qualifying Criteria', 
+      `Applying ${plan.measurementRules.primaryMetrics.length} qualifying criteria to ${data.records.length} records`, 
+      'INFO'
+    );
   }
 
   // Apply primary metrics as qualifying criteria
@@ -226,9 +284,18 @@ export const applyQualifyingCriteria = (data: SelectedData, plan: IncentivePlan)
     // Check each primary metric
     const meetsAllCriteria = plan.measurementRules.primaryMetrics.every(metric => {
       const recordValue = record[metric.field];
+      let passes = false;
       
       if (recordValue === undefined) {
         console.log(`Field ${metric.field} not found in record`);
+        if (executionId) {
+          addSystemLogEntry(
+            executionId, 
+            'Qualification Error', 
+            `Field ${metric.field} not found in record`, 
+            'WARNING'
+          );
+        }
         return false;
       }
       
@@ -236,26 +303,69 @@ export const applyQualifyingCriteria = (data: SelectedData, plan: IncentivePlan)
       switch (metric.operator) {
         case '=':
         case '==':
-          return recordValue === metric.value;
+          passes = recordValue === metric.value;
+          break;
         case '!=':
-          return recordValue !== metric.value;
+          passes = recordValue !== metric.value;
+          break;
         case '>':
-          return recordValue > metric.value;
+          passes = recordValue > metric.value;
+          break;
         case '>=':
-          return recordValue >= metric.value;
+          passes = recordValue >= metric.value;
+          break;
         case '<':
-          return recordValue < metric.value;
+          passes = recordValue < metric.value;
+          break;
         case '<=':
-          return recordValue <= metric.value;
+          passes = recordValue <= metric.value;
+          break;
         default:
-          return false;
+          passes = false;
       }
+      
+      // Log result for each criterion if execution ID is provided
+      if (executionId) {
+        const status = passes ? 'PASS' : 'FAIL';
+        const logLevel: LogLevel = passes ? 'INFO' : 'WARNING';
+        
+        addSystemLogEntry(
+          executionId,
+          'Criterion Evaluation',
+          `Record ${record.SalesOrder || record.BillingDocument}: ${metric.description || metric.field} ${metric.operator} ${metric.value} => ${status}`,
+          logLevel,
+          {
+            criterion: metric.description || metric.field,
+            operator: metric.operator,
+            expected: metric.value,
+            actual: recordValue,
+            result: status
+          }
+        );
+      }
+      
+      return passes;
     });
     
     return meetsAllCriteria;
   });
   
   console.log(`Applied qualifying criteria: ${qualifiedRecords.length} out of ${data.records.length} records qualified`);
+  
+  // Log qualification summary
+  if (executionId) {
+    addSystemLogEntry(
+      executionId,
+      'Qualification Summary',
+      `${qualifiedRecords.length} out of ${data.records.length} records qualified (${Math.round((qualifiedRecords.length / data.records.length) * 100)}%)`,
+      'INFO',
+      {
+        totalRecords: data.records.length,
+        qualifiedRecords: qualifiedRecords.length,
+        percentage: `${Math.round((qualifiedRecords.length / data.records.length) * 100)}%`
+      }
+    );
+  }
   
   return {
     ...data,

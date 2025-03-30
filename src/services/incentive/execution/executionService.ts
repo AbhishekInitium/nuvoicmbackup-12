@@ -4,7 +4,15 @@ import { IncentivePlan } from '@/types/incentiveTypes';
 import { IncentivePlanWithStatus, markPlanAsExecuted } from '../incentivePlanService';
 import { selectPrimaryData, applyQualifyingCriteria, DataSelectionParams } from './dataSelectionModule';
 import { processData, ProcessedData } from './processingModule';
-import { createExecutionLog, completeExecutionLog, getExecutionLog as getLogFromLoggingModule, addSystemLogEntry } from './loggingModule';
+import { 
+  createExecutionLog, 
+  completeExecutionLog, 
+  getExecutionLog as getLogFromLoggingModule, 
+  addSystemLogEntry,
+  LogEntry,
+  addLogEntry,
+  LogLevel
+} from './loggingModule';
 
 // Define ExecutionMode as a type
 export type ExecutionMode = 'SIMULATE' | 'PRODUCTION';
@@ -18,6 +26,8 @@ export interface CommissionExecutionParams {
   salesOrgs?: string[];
   participants?: string[];
   description?: string;
+  salesOrderNumber?: string; // Added to filter by specific sales order
+  salesRepId?: string;       // Added to filter by specific sales rep
 }
 
 export interface CommissionExecutionResult {
@@ -36,6 +46,10 @@ export interface CommissionExecutionResult {
     errors: number;
     warnings: number;
   };
+  dataSelection?: {
+    totalRecords: number;
+    qualifiedRecords: number;
+  };
 }
 
 export interface ParticipantCommissionResult {
@@ -48,6 +62,7 @@ export interface ParticipantCommissionResult {
   customRulesApplied: string[];
   qualifiedRecords: number;
   disqualifiedRecords: number;
+  logEntries?: LogEntry[]; // Added to store participant-specific log entries
 }
 
 export interface AdjustmentApplication {
@@ -72,27 +87,79 @@ export const executeCommissionCalculation = async (
   const executionLog = createExecutionLog(executionId, params.executionMode);
   
   try {
-    // STEP 1: DATA SELECTION - Select primary data based on revenue base
+    // SECTION 1: DATA SELECTION - Select primary data based on revenue base
+    addSystemLogEntry(executionId, 'Execution Start', 'Starting execution with plan: ' + plan.name, 'INFO');
+    addSystemLogEntry(executionId, 'Execution Parameters', JSON.stringify(params), 'INFO');
+    
+    addSystemLogEntry(executionId, 'Data Selection', 'Starting data selection phase', 'INFO');
+    
     const dataSelectionParams: DataSelectionParams = {
       planId: plan.name,
       planStartDate: params.periodStart,
       processingDate: params.executionDate,
       salesOrgs: params.salesOrgs,
-      participants: params.participants || plan.participants
+      participants: params.participants || plan.participants,
+      salesOrderNumber: params.salesOrderNumber, // Add filter by sales order number
+      salesRepId: params.salesRepId           // Add filter by sales rep ID
     };
     
-    addSystemLogEntry(executionId, 'Data Selection', 'Starting data selection phase');
     const selectedData = await selectPrimaryData(plan, dataSelectionParams);
     
-    // STEP 2: Apply qualifying criteria up front
-    addSystemLogEntry(executionId, 'Qualifying Criteria', 'Applying qualifying criteria');
-    const qualifiedData = applyQualifyingCriteria(selectedData, plan);
+    // Log data selection results
+    addSystemLogEntry(
+      executionId, 
+      'Data Selection Results', 
+      `Selected ${selectedData.records.length} records from ${plan.revenueBase} for processing`,
+      'INFO',
+      {
+        source: plan.revenueBase,
+        totalRecords: selectedData.records.length,
+        dateRange: selectedData.metadata.filterApplied.dateRange,
+        salesOrgs: selectedData.metadata.filterApplied.salesOrgs,
+        participants: selectedData.metadata.filterApplied.participants
+      }
+    );
     
-    // STEP 3: PROCESSING - Process the data per participant
-    addSystemLogEntry(executionId, 'Data Processing', 'Starting data processing phase');
+    // SECTION 2: Apply qualifying criteria up front
+    addSystemLogEntry(executionId, 'Qualifying Criteria', 'Applying qualifying criteria', 'INFO');
+    const qualifiedData = applyQualifyingCriteria(selectedData, plan, executionId);
+    
+    // Log qualifying criteria results
+    const qualificationRate = selectedData.records.length > 0 
+      ? Math.round((qualifiedData.records.length / selectedData.records.length) * 100) 
+      : 0;
+    
+    addSystemLogEntry(
+      executionId,
+      'Qualification Results',
+      `${qualifiedData.records.length} of ${selectedData.records.length} records qualified (${qualificationRate}%)`,
+      'INFO',
+      {
+        totalRecords: selectedData.records.length,
+        qualifiedRecords: qualifiedData.records.length,
+        qualificationRate: `${qualificationRate}%`
+      }
+    );
+    
+    // SECTION 3: PROCESSING - Process the data per participant
+    addSystemLogEntry(executionId, 'Data Processing', 'Starting data processing phase', 'INFO');
     const processedData = processData(qualifiedData, plan, executionId);
     
-    // STEP 4: Convert processed data to result format
+    // Log processing results
+    addSystemLogEntry(
+      executionId,
+      'Processing Results',
+      `Processed data for ${processedData.participantResults.length} participants with total commission: ${processedData.totalCommissionAmount}`,
+      'INFO',
+      {
+        participantsProcessed: processedData.participantResults.length,
+        totalSales: processedData.totalSalesAmount,
+        totalCommission: processedData.totalCommissionAmount,
+        processingTime: processedData.metadata.processedAt
+      }
+    );
+    
+    // SECTION 4: Convert processed data to result format
     const participantResults = processedData.participantResults.map(pr => ({
       participantId: pr.participantId,
       salesAmount: pr.salesAmount,
@@ -102,10 +169,11 @@ export const executeCommissionCalculation = async (
       adjustments: pr.adjustments,
       customRulesApplied: pr.customRulesApplied,
       qualifiedRecords: pr.qualifiedRecords,
-      disqualifiedRecords: pr.disqualifiedRecords
+      disqualifiedRecords: pr.disqualifiedRecords,
+      logEntries: pr.logEntries // Include log entries for this participant
     }));
     
-    // STEP 5: Create result object
+    // SECTION 5: Create result object
     const result: CommissionExecutionResult = {
       executionId,
       planId: plan.name,
@@ -117,6 +185,10 @@ export const executeCommissionCalculation = async (
       timestamp: new Date().toISOString(),
       totalCommission: processedData.totalCommissionAmount,
       participantResults,
+      dataSelection: {
+        totalRecords: selectedData.records.length,
+        qualifiedRecords: qualifiedData.records.length
+      },
       logSummary: {
         totalEntries: executionLog.entries.length,
         errors: executionLog.entries.filter(e => e.level === 'ERROR').length,
@@ -124,17 +196,38 @@ export const executeCommissionCalculation = async (
       }
     };
     
-    // Complete execution log
+    // SECTION 6: Complete execution log
+    addSystemLogEntry(
+      executionId,
+      'Execution Summary',
+      `Execution completed with ${participantResults.length} participants processed and total commission: ${processedData.totalCommissionAmount}`,
+      'INFO'
+    );
+    
     completeExecutionLog(executionId, true, {
       totalRecordsProcessed: selectedData.records.length,
       participantsProcessed: participantResults.length,
       totalCommission: processedData.totalCommissionAmount
     });
     
-    // STEP 6: Save the execution result if this is a production run
+    // SECTION 7: Save the execution result if this is a production run
     if (params.executionMode === 'PRODUCTION') {
       await saveExecutionResult(result);
       await markPlanAsExecuted(plan.name);
+      
+      addSystemLogEntry(
+        executionId,
+        'Production Run',
+        `Production run completed and saved with ID: ${executionId}`,
+        'INFO'
+      );
+    } else {
+      addSystemLogEntry(
+        executionId,
+        'Simulation Run',
+        `Simulation run completed with ID: ${executionId}`,
+        'INFO'
+      );
     }
     
     return result;

@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState } from 'react';
-import { Copy, Loader2, AlertCircle, RefreshCcw } from 'lucide-react';
+import { Copy, Loader2, AlertCircle, RefreshCcw, Edit } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import ActionButton from '../ui-custom/ActionButton';
 import { useToast } from "@/hooks/use-toast";
@@ -14,13 +14,15 @@ interface ExistingSchemeSelectorProps {
   setOpen: (open: boolean) => void;
   onSchemeCopy: (scheme: IncentivePlanWithStatus) => void;
   useDialogMode?: boolean;
+  editMode?: boolean;
 }
 
 const ExistingSchemeSelector: React.FC<ExistingSchemeSelectorProps> = ({ 
   open, 
   setOpen, 
   onSchemeCopy,
-  useDialogMode = false
+  useDialogMode = false,
+  editMode = false
 }) => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
@@ -71,8 +73,8 @@ const ExistingSchemeSelector: React.FC<ExistingSchemeSelectorProps> = ({
     
     if (!useDialogMode) {
       toast({
-        title: "Scheme Copied",
-        description: `${scheme.name} has been loaded as a template.`,
+        title: editMode ? "Scheme Selected for Editing" : "Scheme Copied",
+        description: `${scheme.name} has been loaded${editMode ? " for editing" : " as a template"}.`,
         variant: "default"
       });
     }
@@ -109,9 +111,11 @@ const ExistingSchemeSelector: React.FC<ExistingSchemeSelectorProps> = ({
     <div className="space-y-4">
       {!useDialogMode && (
         <>
-          <h3 className="font-medium text-lg">Select a Scheme to Copy</h3>
+          <h3 className="font-medium text-lg">{editMode ? "Select a Scheme to Edit" : "Select a Scheme to Copy"}</h3>
           <p className="text-sm text-app-gray-500">
-            Choose an existing scheme to use as a template
+            {editMode 
+              ? "Choose an existing scheme to edit and create a new version" 
+              : "Choose an existing scheme to use as a template"}
           </p>
         </>
       )}
@@ -148,8 +152,9 @@ const ExistingSchemeSelector: React.FC<ExistingSchemeSelectorProps> = ({
             <TableHeader>
               <TableRow>
                 <TableHead>Name</TableHead>
-                <TableHead>Date Created</TableHead>
+                <TableHead>Date Updated</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead>Version</TableHead>
                 <TableHead className="text-right">Action</TableHead>
               </TableRow>
             </TableHeader>
@@ -157,19 +162,29 @@ const ExistingSchemeSelector: React.FC<ExistingSchemeSelectorProps> = ({
               {schemes.map((scheme, index) => (
                 <TableRow key={index} className="hover:bg-app-gray-50">
                   <TableCell className="font-medium">{scheme.name}</TableCell>
-                  <TableCell>{formatDate(scheme.metadata?.createdAt)}</TableCell>
+                  <TableCell>{formatDate(scheme.metadata?.updatedAt || scheme.metadata?.createdAt)}</TableCell>
                   <TableCell>
                     <span className={`text-xs px-2 py-1 rounded-full ${getStatusBadgeClass(scheme.metadata?.status)}`}>
                       {scheme.metadata?.status || 'DRAFT'}
                     </span>
                   </TableCell>
+                  <TableCell>{scheme.metadata?.version || 1}</TableCell>
                   <TableCell className="text-right">
                     <button 
                       onClick={() => handleCopyScheme(scheme)}
                       className="text-blue-600 hover:text-blue-800 font-medium text-sm flex items-center gap-1 ml-auto"
                     >
-                      <Copy size={14} />
-                      Copy
+                      {editMode ? (
+                        <>
+                          <Edit size={14} />
+                          Edit
+                        </>
+                      ) : (
+                        <>
+                          <Copy size={14} />
+                          Copy
+                        </>
+                      )}
                     </button>
                   </TableCell>
                 </TableRow>
@@ -193,7 +208,15 @@ const ExistingSchemeSelector: React.FC<ExistingSchemeSelectorProps> = ({
           size="sm"
           onClick={() => setOpen(true)}
         >
-          <Copy size={16} className="mr-2" /> Copy Existing Scheme
+          {editMode ? (
+            <>
+              <Edit size={16} className="mr-2" /> Edit Existing Scheme
+            </>
+          ) : (
+            <>
+              <Copy size={16} className="mr-2" /> Copy Existing Scheme
+            </>
+          )}
         </ActionButton>
       </PopoverTrigger>
       <PopoverContent className="w-[600px]" align="end">

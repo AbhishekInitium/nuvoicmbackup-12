@@ -1,119 +1,156 @@
 
 import React from 'react';
+import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { CURRENCIES } from '@/constants/incentiveConstants';
+import GlassCard from '../ui-custom/GlassCard';
 import { IncentivePlan } from '@/types/incentiveTypes';
-import { getCurrencySymbol } from '@/utils/incentiveUtils';
+import RevenueBaseSelector from './RevenueBaseSelector';
+import { Badge } from '../ui/badge';
 
 interface BasicInformationProps {
   plan: IncentivePlan;
-  updatePlan: (section: string, value: any) => void;
-  schemeId?: string;
+  updatePlan: <K extends keyof IncentivePlan>(field: K, value: IncentivePlan[K]) => void;
+  schemeId: string;
+  version?: number;
+  isEditMode?: boolean;
 }
 
-const BasicInformation: React.FC<BasicInformationProps> = ({ plan, updatePlan, schemeId }) => {
-  const currencySymbol = getCurrencySymbol(plan.currency);
-  
+const CURRENCIES = [
+  { value: 'USD', label: 'USD - US Dollar', symbol: '$' },
+  { value: 'EUR', label: 'EUR - Euro', symbol: '€' },
+  { value: 'GBP', label: 'GBP - British Pound', symbol: '£' },
+  { value: 'JPY', label: 'JPY - Japanese Yen', symbol: '¥' },
+  { value: 'CAD', label: 'CAD - Canadian Dollar', symbol: 'C$' },
+  { value: 'AUD', label: 'AUD - Australian Dollar', symbol: 'A$' },
+  { value: 'INR', label: 'INR - Indian Rupee', symbol: '₹' },
+  { value: 'CNY', label: 'CNY - Chinese Yuan', symbol: '¥' }
+];
+
+const BasicInformation: React.FC<BasicInformationProps> = ({
+  plan,
+  updatePlan,
+  schemeId,
+  version = 1,
+  isEditMode = false
+}) => {
+  const handleDateChange = (field: 'effectiveStart' | 'effectiveEnd') => (date: Date | undefined) => {
+    if (date) {
+      updatePlan(field, date.toISOString());
+    }
+  };
+
+  const selectedCurrency = CURRENCIES.find(c => c.value === plan.currency) || CURRENCIES[0];
+
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-        <div>
-          <label className="block text-sm font-medium text-app-gray-700 mb-2">Plan Name</label>
-          <Input 
-            type="text"
-            value={plan.name}
-            onChange={(e) => updatePlan('name', e.target.value)}
-            placeholder="Enter plan name"
-          />
-        </div>
-        
-        <div>
-          <label className="block text-sm font-medium text-app-gray-700 mb-2">Scheme ID</label>
-          <Input 
-            type="text"
-            value={schemeId || ''}
-            readOnly
-            disabled
-            className="bg-app-gray-100 text-app-gray-500"
-            placeholder="Auto-generated ID"
-          />
-          <p className="text-xs text-app-gray-500 mt-1">Auto-generated unique identifier</p>
-        </div>
-      </div>
-      
-      <div>
-        <label className="block text-sm font-medium text-app-gray-700 mb-2">Description</label>
-        <Textarea 
-          className="min-h-[80px]"
-          value={plan.description}
-          onChange={(e) => updatePlan('description', e.target.value)}
-          rows={2}
-          placeholder="Enter plan description"
-        />
-      </div>
-      
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-        <div>
-          <label className="block text-sm font-medium text-app-gray-700 mb-2">Effective Start Date</label>
-          <Input 
-            type="date"
-            value={plan.effectiveStart}
-            onChange={(e) => updatePlan('effectiveStart', e.target.value)}
-          />
-        </div>
-        
-        <div>
-          <label className="block text-sm font-medium text-app-gray-700 mb-2">Effective End Date</label>
-          <Input 
-            type="date"
-            value={plan.effectiveEnd}
-            onChange={(e) => updatePlan('effectiveEnd', e.target.value)}
-          />
-        </div>
-        
-        <div>
-          <label className="block text-sm font-medium text-app-gray-700 mb-2">Currency</label>
-          <Select 
-            value={plan.currency}
-            onValueChange={(value) => updatePlan('currency', value)}
-          >
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Select currency" />
-            </SelectTrigger>
-            <SelectContent>
-              {CURRENCIES.map(currency => (
-                <SelectItem key={currency.code} value={currency.code}>
-                  {`${currency.symbol} ${currency.name} (${currency.code})`}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
+      <GlassCard variant="filled" className="p-5">
+        <div className="grid md:grid-cols-2 gap-6">
+          <div>
+            <div className="mb-4">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="name" className="text-sm font-medium text-app-gray-700 mb-2">
+                  Scheme Name
+                </Label>
+                {isEditMode && (
+                  <Badge variant="outline" className="ml-2">
+                    Version {version}
+                  </Badge>
+                )}
+              </div>
+              <Input
+                id="name"
+                value={plan.name}
+                onChange={(e) => updatePlan('name', e.target.value)}
+                placeholder="Enter scheme name"
+                className="w-full"
+              />
+            </div>
 
-      <div>
-        <label className="block text-sm font-medium text-app-gray-700 mb-2">Sales Quota / Target</label>
-        <div className="relative">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <span className="text-gray-500">{currencySymbol}</span>
+            <div className="mb-4">
+              <Label htmlFor="description" className="text-sm font-medium text-app-gray-700 mb-2">
+                Description
+              </Label>
+              <Input
+                id="description"
+                value={plan.description}
+                onChange={(e) => updatePlan('description', e.target.value)}
+                placeholder="Brief description of this incentive scheme"
+                className="w-full"
+              />
+            </div>
+
+            <div className="mb-4">
+              <Label className="text-sm font-medium text-app-gray-700 mb-2">
+                Scheme ID
+              </Label>
+              <div className="flex items-center space-x-2">
+                <Input
+                  value={schemeId}
+                  readOnly
+                  className="w-full bg-app-gray-100"
+                />
+              </div>
+              <p className="mt-1 text-xs text-app-gray-500">
+                Unique identifier for this scheme
+              </p>
+            </div>
           </div>
-          <Input 
-            type="text"
-            className="pl-8"
-            value={plan.salesQuota || ''}
-            onChange={(e) => {
-              const value = e.target.value.replace(/[^0-9]/g, '');
-              updatePlan('salesQuota', value ? parseInt(value) : 0);
-            }}
-            placeholder="Enter sales quota"
-          />
+
+          <div>
+            <div className="flex flex-col mb-4">
+              <Label htmlFor="effectiveStart" className="text-sm font-medium text-app-gray-700 mb-2">
+                Effective Period
+              </Label>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="effectiveStart" className="text-xs text-app-gray-600 mb-1">Start Date</Label>
+                  <DatePicker
+                    date={plan.effectiveStart ? new Date(plan.effectiveStart) : undefined}
+                    setDate={handleDateChange('effectiveStart')}
+                    placeholder="Select start date"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="effectiveEnd" className="text-xs text-app-gray-600 mb-1">End Date</Label>
+                  <DatePicker
+                    date={plan.effectiveEnd ? new Date(plan.effectiveEnd) : undefined}
+                    setDate={handleDateChange('effectiveEnd')}
+                    placeholder="Select end date"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="mb-4">
+              <Label htmlFor="currency" className="text-sm font-medium text-app-gray-700 mb-2">
+                Currency
+              </Label>
+              <Select
+                value={plan.currency}
+                onValueChange={(value) => updatePlan('currency', value)}
+              >
+                <SelectTrigger id="currency">
+                  <SelectValue placeholder="Select currency" />
+                </SelectTrigger>
+                <SelectContent>
+                  {CURRENCIES.map((currency) => (
+                    <SelectItem key={currency.value} value={currency.value}>
+                      {currency.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <RevenueBaseSelector 
+              value={plan.revenueBase} 
+              onChange={(value) => updatePlan('revenueBase', value)}
+            />
+          </div>
         </div>
-        <p className="text-sm text-app-gray-500 mt-2">
-          Target amount to measure quota attainment against the selected revenue base
-        </p>
-      </div>
+      </GlassCard>
     </div>
   );
 };

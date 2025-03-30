@@ -15,15 +15,17 @@ import CreditDistributionSection from './incentive/CreditDistributionSection';
 import { Button } from './ui/button';
 import { Save, AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription } from './ui/alert';
-import { saveIncentiveScheme } from '@/services/database/mongoDBService';
+import { saveIncentiveScheme, updateIncentiveScheme } from '@/services/database/mongoDBService';
 
 interface IncentivePlanDesignerProps {
   initialPlan?: IncentivePlan | null;
+  isEditMode?: boolean;
   onBack?: () => void;
 }
 
 const IncentivePlanDesigner: React.FC<IncentivePlanDesignerProps> = ({ 
   initialPlan = null,
+  isEditMode = false,
   onBack
 }) => {
   const { toast } = useToast();
@@ -38,10 +40,17 @@ const IncentivePlanDesigner: React.FC<IncentivePlanDesignerProps> = ({
   const [showStorageNotice, setShowStorageNotice] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [schemeId, setSchemeId] = useState<string>('');
+  const [versionNumber, setVersionNumber] = useState<number>(1);
   
   useEffect(() => {
-    setSchemeId(generateTimestampId());
-  }, []);
+    if (isEditMode && initialPlan?.schemeId) {
+      setSchemeId(initialPlan.schemeId);
+      setVersionNumber(initialPlan.metadata?.version || 1);
+    } else {
+      setSchemeId(generateTimestampId());
+      setVersionNumber(1);
+    }
+  }, [initialPlan, isEditMode]);
 
   const {
     plan,
@@ -95,20 +104,49 @@ const IncentivePlanDesigner: React.FC<IncentivePlanDesignerProps> = ({
     try {
       setIsSaving(true);
       
-      const schemeToSave = {
-        ...plan,
-        schemeId: schemeId
+      const metadata = {
+        ...(plan.metadata || {}),
+        updatedAt: new Date().toISOString(),
+        version: isEditMode ? versionNumber : 1,
+        status: 'DRAFT'
       };
       
-      const id = await saveIncentiveScheme(schemeToSave, 'DRAFT');
+      if (!metadata.createdAt) {
+        metadata.createdAt = new Date().toISOString();
+      }
+      
+      const schemeToSave = {
+        ...plan,
+        schemeId: schemeId,
+        metadata: metadata
+      };
+      
+      let id;
+      
+      if (isEditMode) {
+        const success = await updateIncentiveScheme(schemeId, schemeToSave);
+        id = success ? schemeId : null;
+        
+        if (success) {
+          toast({
+            title: "Scheme Updated",
+            description: `Scheme "${plan.name || 'Unnamed'}" updated to version ${versionNumber}`,
+            variant: "default"
+          });
+        } else {
+          throw new Error('Failed to update existing scheme');
+        }
+      } else {
+        id = await saveIncentiveScheme(schemeToSave, 'DRAFT');
+        
+        toast({
+          title: "Scheme Saved",
+          description: `Scheme "${plan.name || 'Unnamed'}" saved with ID: ${id}`,
+          variant: "default"
+        });
+      }
       
       setShowStorageNotice(true);
-      
-      toast({
-        title: "Scheme Saved",
-        description: `Scheme "${plan.name || 'Unnamed'}" saved with ID: ${id}`,
-        variant: "default"
-      });
     } catch (error) {
       console.error('Error saving to MongoDB:', error);
       
@@ -125,7 +163,6 @@ const IncentivePlanDesigner: React.FC<IncentivePlanDesignerProps> = ({
   const validatePlanFields = (plan: IncentivePlan): string[] => {
     const errors: string[] = [];
     
-    // Mandatory fields validation
     if (!plan.name || plan.name.trim() === '') {
       errors.push("Plan Name is required");
     }
@@ -142,12 +179,10 @@ const IncentivePlanDesigner: React.FC<IncentivePlanDesignerProps> = ({
       errors.push("Revenue Base is required");
     }
     
-    // Sales quota validation
     if (plan.salesQuota <= 0) {
       errors.push("Sales Quota must be a positive value");
     }
     
-    // Commission structure validation
     if (!plan.commissionStructure.tiers || plan.commissionStructure.tiers.length === 0) {
       errors.push("At least one commission tier is required");
     } else {
@@ -158,7 +193,6 @@ const IncentivePlanDesigner: React.FC<IncentivePlanDesignerProps> = ({
       });
     }
     
-    // Qualifying criteria validation
     if (!plan.measurementRules.primaryMetrics || plan.measurementRules.primaryMetrics.length === 0) {
       errors.push("At least one qualifying criteria is required");
     } else {
@@ -172,12 +206,10 @@ const IncentivePlanDesigner: React.FC<IncentivePlanDesignerProps> = ({
       });
     }
     
-    // Participants validation
     if (!plan.participants || plan.participants.length === 0) {
       errors.push("At least one sales organization must be assigned");
     }
     
-    // Credit levels validation
     if (!plan.creditRules.levels || plan.creditRules.levels.length === 0) {
       errors.push("At least one credit level is required");
     }
@@ -208,8 +240,8 @@ const IncentivePlanDesigner: React.FC<IncentivePlanDesignerProps> = ({
           <Alert className="mb-6 bg-blue-50 border-blue-200">
             <AlertCircle className="h-4 w-4 text-blue-600" />
             <AlertDescription>
-              Your scheme has been saved in MongoDB with the ID: {schemeId}. 
-              The scheme status is set to DRAFT.
+              Your scheme has been {isEditMode ? 'updated' : 'saved'} in MongoDB with the ID: {schemeId}. 
+              The scheme {isEditMode ? `is now version ${versionNumber}` : 'status is set to DRAFT'}.
             </AlertDescription>
           </Alert>
         )}
@@ -219,6 +251,8 @@ const IncentivePlanDesigner: React.FC<IncentivePlanDesignerProps> = ({
             plan={plan} 
             updatePlan={updatePlan}
             schemeId={schemeId}
+            version={versionNumber}
+            isEditMode={isEditMode}
           />
         </SectionPanel>
         
@@ -247,7 +281,7 @@ const IncentivePlanDesigner: React.FC<IncentivePlanDesignerProps> = ({
             className="flex items-center"
           >
             <Save size={18} className="mr-2" /> 
-            {isSaving ? "Saving..." : "Save Scheme"}
+            {isSaving ? "Saving..." : isEditMode ? "Update Scheme" : "Save Scheme"}
           </Button>
         </div>
       </div>

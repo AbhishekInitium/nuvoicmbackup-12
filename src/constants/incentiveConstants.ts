@@ -1,122 +1,123 @@
 
-// Mock data for existing schemes
-export const MOCK_SCHEMES = [
-  { id: 1, name: 'Enterprise Sales Plan 2024', description: 'For enterprise sales team' },
-  { id: 2, name: 'SMB Commission Structure', description: 'For small and medium business sales' },
-  { id: 3, name: 'APAC Regional Sales Plan', description: 'For Asia Pacific region' },
-  { id: 4, name: 'Partner Channel Incentive', description: 'For partner sales channel' }
-];
+import { IncentivePlan } from "@/types/incentiveTypes";
 
-// Currency options
-export const CURRENCIES = [
-  { code: 'USD', symbol: '$', name: 'US Dollar' },
-  { code: 'EUR', symbol: '€', name: 'Euro' },
-  { code: 'GBP', symbol: '£', name: 'British Pound' },
-  { code: 'JPY', symbol: '¥', name: 'Japanese Yen' },
-  { code: 'CNY', symbol: '¥', name: 'Chinese Yuan' },
-  { code: 'INR', symbol: '₹', name: 'Indian Rupee' },
-  { code: 'CAD', symbol: 'C$', name: 'Canadian Dollar' },
-  { code: 'AUD', symbol: 'A$', name: 'Australian Dollar' },
-];
-
-// Database field options based on the revenue base
-export const DB_FIELDS = {
-  salesOrders: [
-    'DiscountPercent', 'TotalAmount', 'ProductCategory', 'CustomerSegment', 
-    'SalesRegion', 'DealSize', 'ContractTerm', 'PaymentTerms'
-  ],
-  invoices: [
-    'InvoiceAmount', 'PaymentStatus', 'DueDate', 'DiscountApplied', 
-    'TaxAmount', 'CustomerType', 'PaymentMethod', 'Currency'
-  ],
-  collections: [
-    'CollectionAmount', 'CollectionDate', 'PaymentDelay', 'PaymentSource', 
-    'CustomerCredit', 'LatePaymentFee', 'SettlementType', 'BankAccount'
-  ]
-};
-
-// Operator options for conditions (removed starts_with and ends_with)
-export const OPERATORS = [
-  { value: '=', label: 'Equals (=)' },
-  { value: '!=', label: 'Not Equals (≠)' },
-  { value: '>', label: 'Greater Than (>)' },
-  { value: '>=', label: 'Greater Than or Equal (≥)' },
-  { value: '<', label: 'Less Than (<)' },
-  { value: '<=', label: 'Less Than or Equal (≤)' },
-  { value: 'contains', label: 'Contains' }
-];
-
-// Time periods for custom rules
-export const TIME_PERIODS = [
-  { value: 'current', label: 'Current Period' },
-  { value: 'past1month', label: 'Past Month' },
-  { value: 'past3months', label: 'Past 3 Months' },
-  { value: 'past6months', label: 'Past 6 Months' },
-  { value: 'pastyear', label: 'Past Year' },
-  { value: 'ytd', label: 'Year to Date' },
-  { value: 'qtd', label: 'Quarter to Date' }
-];
-
-// Metrics for custom rules
-export const METRICS = [
-  { value: 'sales', label: 'Sales Amount' },
-  { value: 'units', label: 'Units Sold' },
-  { value: 'deals', label: 'Number of Deals' },
-  { value: 'monthlySales', label: 'Monthly Sales' },
-  { value: 'averageDealSize', label: 'Average Deal Size' },
-  { value: 'customerRetention', label: 'Customer Retention' },
-  { value: 'newCustomers', label: 'New Customers' }
-];
-
-// Default plan data structure
-export const DEFAULT_PLAN = {
-  name: 'New Sales Incentive Plan',
-  description: 'Describe the purpose and goals of this incentive plan',
-  effectiveStart: new Date().toISOString().substring(0, 10), // Today's date in YYYY-MM-DD format
-  effectiveEnd: new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().substring(0, 10), // One year from today
-  currency: 'USD',
-  revenueBase: 'salesOrders',
-  participants: ['ALL'], // Default to 'ALL' participants
+// Incentive Types constants
+export const DEFAULT_PLAN: IncentivePlan = {
+  name: "",
+  schemeId: "",
+  description: "",
+  effectiveStart: "",
+  effectiveEnd: "",
+  currency: "USD",
+  revenueBase: "salesOrders",
+  participants: [],
+  salesQuota: 100000,
   commissionStructure: {
-    tiers: [
-      {
-        from: 0,
-        to: 100000,
-        rate: 1
-      },
-      {
-        from: 100001,
-        to: 250000,
-        rate: 2
-      },
-      {
-        from: 250001,
-        to: 999999999, // Use a large number instead of null
-        rate: 3
-      }
-    ]
+    tiers: []
   },
   measurementRules: {
-    primaryMetrics: [
-      {
-        field: 'TotalAmount',
-        operator: '>',
-        value: 0,
-        description: 'Qualifying Revenue'
-      }
-    ],
-    minQualification: 50000, // Minimum qualification threshold
+    primaryMetrics: [],
+    minQualification: 0,
     adjustments: [],
     exclusions: []
   },
   creditRules: {
-    levels: [
-      {
-        name: 'Primary Sales Rep',
-        percentage: 100
-      }
-    ]
+    levels: []
   },
-  customRules: [],
-  salesQuota: 1000000 // Default sales quota of 1M
+  customRules: []
 };
+
+// Available operators for conditions
+export const OPERATORS = [
+  { value: '==', label: 'Equal to (=)' },
+  { value: '!=', label: 'Not equal to (≠)' },
+  { value: '>', label: 'Greater than (>)' },
+  { value: '>=', label: 'Greater than or equal to (≥)' },
+  { value: '<', label: 'Less than (<)' },
+  { value: '<=', label: 'Less than or equal to (≤)' },
+];
+
+// SAP S/4HANA database fields available for selection
+export const DATABASE_FIELDS = [
+  { value: 'SalesOrganization', label: 'Sales Organization' },
+  { value: 'DistributionChannel', label: 'Distribution Channel' },
+  { value: 'SalesOrderType', label: 'Sales Order Type' },
+  { value: 'SoldToParty', label: 'Sold To Party' },
+  { value: 'TotalNetAmount', label: 'Net Amount' },
+  { value: 'CreationDate', label: 'Creation Date' },
+  { value: 'ProductCategory', label: 'Product Category' },
+  { value: 'MaterialCode', label: 'Material Code' },
+  { value: 'SalesOrder', label: 'Sales Order Number' }, // Added as requested
+  { value: 'SalesRepId', label: 'Sales Rep ID' }        // Added as requested
+];
+
+// Credit rule levels
+export const DEFAULT_CREDIT_LEVELS = [
+  {
+    name: 'Primary Sales Rep',
+    percentage: 100,
+    description: 'Full credit to primary sales representative'
+  }
+];
+
+// Measurement rules
+export const DEFAULT_PRIMARY_METRIC = {
+  field: 'TotalNetAmount',
+  operator: '>=',
+  value: 1000,
+  description: 'Minimum order value'
+};
+
+// Rule actions
+export const RULE_ACTIONS = [
+  { value: 'boost', label: 'Boost Value' },
+  { value: 'cap', label: 'Cap Value' },
+  { value: 'qualify', label: 'Force Qualify' },
+  { value: 'disqualify', label: 'Disqualify' }
+];
+
+export const SAMPLE_TIERS = [
+  {
+    from: 0,
+    to: 100000,
+    rate: 1.5,
+    description: "Base tier"
+  },
+  {
+    from: 100001,
+    to: 250000,
+    rate: 2.0,
+    description: "Mid tier"
+  },
+  {
+    from: 250001,
+    to: 500000,
+    rate: 3.0,
+    description: "High tier"
+  },
+  {
+    from: 500001,
+    to: 99999999,
+    rate: 5.0,
+    description: "Premium tier"
+  }
+];
+
+// Revenue base options
+export const REVENUE_BASE_OPTIONS = [
+  {
+    value: 'salesOrders',
+    label: 'Sales Orders',
+    description: 'Commission based on sales order value regardless of payment status'
+  },
+  {
+    value: 'invoices',
+    label: 'Invoices',
+    description: 'Commission based on invoice value regardless of payment status'
+  },
+  {
+    value: 'paidInvoices',
+    label: 'Paid Invoices',
+    description: 'Commission based only on paid invoices'
+  }
+];

@@ -1,53 +1,12 @@
+export interface CommissionStructure {
+  tiers: CommissionTier[];
+}
 
-export interface Tier {
+export interface CommissionTier {
   from: number;
   to: number;
   rate: number;
-}
-
-export interface Adjustment {
-  field: string;
-  operator: string;
-  value: number;
-  factor: number;
-  description: string;
-}
-
-export interface Exclusion {
-  field: string;
-  operator: string;
-  value: number;
-  description: string;
-}
-
-export interface PrimaryMetric {
-  field: string;
-  operator: string;
-  value: number;
-  description: string;
-}
-
-export interface CreditLevel {
-  name: string;
-  percentage: number;
-}
-
-export interface RuleCondition {
-  period: string;
-  metric: string;
-  operator: string;
-  value: number;
-  field?: string;
-}
-
-export interface CustomRule {
-  name: string;
-  description: string;
-  conditions: RuleCondition[];
-  action: string;
-  active: boolean;
-  factor?: number;
-  value?: number;
+  description?: string;
 }
 
 export interface MeasurementRules {
@@ -57,38 +16,74 @@ export interface MeasurementRules {
   exclusions: Exclusion[];
 }
 
-export interface CommissionStructure {
-  tiers: Tier[];
+export interface PrimaryMetric {
+  field: string;
+  operator: string;
+  value: any;
+  description?: string;
+}
+
+export interface Adjustment {
+  id: string;
+  description: string;
+  impact: number;
+  type: 'ADDITION' | 'PERCENTAGE_BOOST' | 'REDUCTION';
+}
+
+export interface Exclusion {
+  field: string;
+  operator: string;
+  value: any;
+  description: string;
 }
 
 export interface CreditRules {
   levels: CreditLevel[];
 }
 
-export interface Metadata {
-  createdAt: string;
-  updatedAt: string;
-  version: number;
-  status: string;
+export interface CreditLevel {
+  name: string;
+  percentage: number;
+  description?: string;
+}
+
+export interface CustomRule {
+  name: string;
+  description?: string;
+  conditions: RuleCondition[];
+  action: string;
+  factor?: number;
+  value?: number;
+  active: boolean;
+}
+
+export interface RuleCondition {
+  field?: string;
+  metric?: string;
+  operator: string;
+  value: any;
 }
 
 export interface IncentivePlan {
   name: string;
+  schemeId: string;
   description: string;
   effectiveStart: string;
   effectiveEnd: string;
   currency: string;
   revenueBase: string;
   participants: string[];
-  commissionStructure: {
-    tiers: Tier[];
-  };
-  measurementRules: MeasurementRules;
-  creditRules: {
-    levels: CreditLevel[];
-  };
-  customRules: CustomRule[];
   salesQuota: number;
-  metadata?: Metadata;
-  schemeId?: string;
+  commissionStructure: CommissionStructure;
+  measurementRules: MeasurementRules;
+  creditRules: CreditRules;
+  customRules: CustomRule[];
+  metadata?: PlanMetadata;
+}
+
+export interface PlanMetadata {
+  createdAt: string;
+  updatedAt: string;
+  version: number;
+  status: string;
 }

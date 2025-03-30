@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import NavBar from '@/components/layout/NavBar';
 import Container from '@/components/layout/Container';
@@ -16,7 +15,9 @@ const IncentiveDesigner = () => {
   const { toast } = useToast();
   const [showInitialOptions, setShowInitialOptions] = useState(true);
   const [showExistingSchemes, setShowExistingSchemes] = useState(false);
+  const [showEditSchemes, setShowEditSchemes] = useState(false);
   const [planTemplate, setPlanTemplate] = useState<IncentivePlan | null>(null);
+  const [isEditMode, setIsEditMode] = useState(false);
 
   const generateTimestampId = () => {
     const now = new Date();
@@ -55,6 +56,7 @@ const IncentiveDesigner = () => {
       },
       customRules: []
     });
+    setIsEditMode(false);
     setShowInitialOptions(false);
   };
 
@@ -87,11 +89,35 @@ const IncentiveDesigner = () => {
     
     setPlanTemplate(planData);
     setShowExistingSchemes(false);
+    setIsEditMode(false);
     setShowInitialOptions(false);
     
     toast({
       title: "Plan Loaded",
       description: `Loaded plan: ${scheme.name}`,
+      variant: "default"
+    });
+  };
+
+  const handleEditExistingScheme = (scheme: IncentivePlanWithStatus) => {
+    // Create a clean copy with no default values but keep the original ID
+    const planData: IncentivePlan = {
+      ...scheme,
+      metadata: {
+        ...scheme.metadata,
+        version: (scheme.metadata?.version || 1) + 1, // Increment version
+        updatedAt: new Date().toISOString()
+      }
+    };
+    
+    setPlanTemplate(planData);
+    setShowEditSchemes(false);
+    setIsEditMode(true);
+    setShowInitialOptions(false);
+    
+    toast({
+      title: "Plan Loaded for Editing",
+      description: `Editing plan: ${scheme.name} (Version ${scheme.metadata?.version || 1})`,
       variant: "default"
     });
   };
@@ -109,10 +135,12 @@ const IncentiveDesigner = () => {
           <SchemeOptionsScreen 
             onCreateNewScheme={handleCreateNewScheme}
             onOpenExistingSchemes={() => setShowExistingSchemes(true)}
+            onEditExistingScheme={() => setShowEditSchemes(true)}
           />
         ) : (
           <IncentivePlanDesigner 
             initialPlan={planTemplate} 
+            isEditMode={isEditMode}
             onBack={() => setShowInitialOptions(true)}
           />
         )}
@@ -121,6 +149,17 @@ const IncentiveDesigner = () => {
           open={showExistingSchemes}
           setOpen={setShowExistingSchemes}
           onSchemeCopy={handleCopyExistingScheme}
+          title="Copy Existing Scheme"
+          description="Select a scheme to use as a template for a new scheme"
+        />
+
+        <SchemeSelectionDialog 
+          open={showEditSchemes}
+          setOpen={setShowEditSchemes}
+          onSchemeCopy={handleEditExistingScheme}
+          title="Edit Existing Scheme"
+          description="Select a scheme to edit. A new version will be created."
+          editMode={true}
         />
       </Container>
     </div>

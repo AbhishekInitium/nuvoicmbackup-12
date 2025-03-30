@@ -40,9 +40,10 @@ export const saveIncentiveScheme = async (scheme: IncentivePlan, status: string 
       ...scheme,
       schemeId: schemeId,
       metadata: {
-        createdAt: new Date().toISOString(),
+        ...(scheme.metadata || {}),
+        createdAt: scheme.metadata?.createdAt || new Date().toISOString(),
         updatedAt: new Date().toISOString(),
-        version: 1,
+        version: scheme.metadata?.version || 1,
         status: status
       }
     };
@@ -134,5 +135,18 @@ export const updateSchemeStatus = async (id: string, status: string): Promise<bo
   } catch (error) {
     console.error(`Error updating scheme status with ID ${id}:`, error);
     return false;
+  }
+};
+
+/**
+ * Get all versions of a specific scheme by scheme ID
+ */
+export const getSchemeVersions = async (schemeId: string): Promise<any[]> => {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/versions/${schemeId}`);
+    return response.data;
+  } catch (error) {
+    console.error(`Error fetching versions for scheme ${schemeId}:`, error);
+    return [];
   }
 };
