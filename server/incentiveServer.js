@@ -224,12 +224,19 @@ app.post('/api/incentives/:schemeId/version', async (req, res) => {
     const { schemeId } = req.params;
     const editedScheme = req.body;
 
+    console.log('Attempting to create new version for schemeId:', schemeId);
+    console.log('Edited scheme data:', JSON.stringify(editedScheme, null, 2));
+
     if (isMongoConnected()) {
-      // Get latest version from MongoDB
+      // Find ALL documents with this schemeId and sort to get the latest
       const latest = await Incentive.findOne({ schemeId }).sort({ 'metadata.version': -1 });
 
       if (!latest) {
-        return res.status(404).json({ error: 'Scheme not found' });
+        console.error(`No scheme found with schemeId: ${schemeId}`);
+        return res.status(404).json({ 
+          error: 'Scheme not found', 
+          details: `No scheme exists with schemeId: ${schemeId}` 
+        });
       }
 
       // Create new version
@@ -244,37 +251,23 @@ app.post('/api/incentives/:schemeId/version', async (req, res) => {
         }
       });
 
+      console.log('New version to be saved:', JSON.stringify(newVersion.toObject(), null, 2));
+
       const savedVersion = await newVersion.save();
+      
+      console.log(`Successfully created version ${savedVersion.metadata.version} for scheme ${schemeId}`);
+      
       res.status(201).json(savedVersion);
     } else {
-      // In-memory version
-      const latest = [...inMemorySchemes]
-        .filter(s => s.schemeId === schemeId)
-        .sort((a, b) => b.metadata.version - a.metadata.version)[0];
-        
-      if (!latest) {
-        return res.status(404).json({ error: 'Scheme not found' });
-      }
-      
-      const newVersion = {
-        ...editedScheme,
-        _id: String(nextInMemoryId++),
-        schemeId,
-        metadata: {
-          createdAt: editedScheme.metadata?.createdAt || latest.metadata.createdAt,
-          updatedAt: new Date().toISOString(),
-          version: latest.metadata.version + 1,
-          status: 'DRAFT'
-        }
-      };
-      
-      inMemorySchemes.push(newVersion);
-      console.log(`Saved in-memory version ${newVersion.metadata.version} for scheme ${schemeId}`);
-      res.status(201).json(newVersion);
+      console.error('MongoDB not connected');
+      res.status(500).json({ error: 'Database connection not available' });
     }
   } catch (error) {
     console.error('Error saving new version:', error);
-    res.status(500).json({ error: 'Failed to save version' });
+    res.status(500).json({ 
+      error: 'Failed to save version', 
+      details: error.message 
+    });
   }
 });
 
