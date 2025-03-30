@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { useS4HanaData } from '@/hooks/useS4HanaData';
@@ -41,11 +42,20 @@ const IncentivePlanDesigner: React.FC<IncentivePlanDesignerProps> = ({
   const [isSaving, setIsSaving] = useState(false);
   const [schemeId, setSchemeId] = useState<string>('');
   const [versionNumber, setVersionNumber] = useState<number>(1);
+  const [documentId, setDocumentId] = useState<string>('');
   
   useEffect(() => {
-    if (isEditMode && initialPlan?.schemeId) {
-      setSchemeId(initialPlan.schemeId);
-      setVersionNumber(initialPlan.metadata?.version || 1);
+    if (initialPlan) {
+      // Set the scheme ID from the initial plan
+      setSchemeId(initialPlan.schemeId || generateTimestampId());
+      
+      // Set the version number for editing (current version + 1) or new (1)
+      setVersionNumber(isEditMode ? (initialPlan.metadata?.version || 0) + 1 : 1);
+      
+      // Store the MongoDB document ID if available
+      if (initialPlan._id) {
+        setDocumentId(initialPlan._id);
+      }
     } else {
       setSchemeId(generateTimestampId());
       setVersionNumber(1);
@@ -104,13 +114,11 @@ const IncentivePlanDesigner: React.FC<IncentivePlanDesignerProps> = ({
     try {
       setIsSaving(true);
       
-      // Increment version number if in edit mode
-      const newVersionNumber = isEditMode ? versionNumber + 1 : 1;
-      
+      // Create metadata with the correct version
       const metadata: PlanMetadata = {
         createdAt: plan.metadata?.createdAt || new Date().toISOString(),
         updatedAt: new Date().toISOString(),
-        version: newVersionNumber,
+        version: versionNumber,
         status: 'DRAFT'
       };
       
@@ -120,25 +128,36 @@ const IncentivePlanDesigner: React.FC<IncentivePlanDesignerProps> = ({
         metadata: metadata
       };
       
-      let id;
+      let id: string | null = null;
       
       if (isEditMode) {
-        const success = await updateIncentiveScheme(schemeId, schemeToSave);
-        id = success ? schemeId : null;
-        
-        if (success) {
-          // Update the local version number after successful save
-          setVersionNumber(newVersionNumber);
-          
-          toast({
-            title: "Scheme Updated",
-            description: `Scheme "${plan.name || 'Unnamed'}" updated to version ${newVersionNumber}`,
-            variant: "default"
-          });
-        } else {
-          throw new Error('Failed to update existing scheme');
+        // For updates, we create a new document with the same schemeId but increased version
+        try {
+          const success = await updateIncentiveScheme(schemeId, schemeToSave);
+          if (success) {
+            // If successful, update the local version number
+            setVersionNumber(versionNumber);
+            
+            toast({
+              title: "New Version Created",
+              description: `Scheme "${plan.name || 'Unnamed'}" saved as version ${versionNumber}`,
+              variant: "default"
+            });
+            
+            setShowStorageNotice(true);
+            // Refresh the plans to see the new version
+            refetchPlans();
+            
+            id = schemeId;
+          } else {
+            throw new Error('Failed to create new version');
+          }
+        } catch (error) {
+          console.error('Error creating new version:', error);
+          throw error;
         }
       } else {
+        // For new schemes, simply save
         id = await saveIncentiveScheme(schemeToSave, 'DRAFT');
         
         toast({
@@ -146,9 +165,10 @@ const IncentivePlanDesigner: React.FC<IncentivePlanDesignerProps> = ({
           description: `Scheme "${plan.name || 'Unnamed'}" saved with ID: ${id}`,
           variant: "default"
         });
+        
+        setShowStorageNotice(true);
       }
       
-      setShowStorageNotice(true);
     } catch (error) {
       console.error('Error saving to MongoDB:', error);
       
@@ -242,8 +262,8 @@ const IncentivePlanDesigner: React.FC<IncentivePlanDesignerProps> = ({
           <Alert className="mb-6 bg-blue-50 border-blue-200">
             <AlertCircle className="h-4 w-4 text-blue-600" />
             <AlertDescription>
-              Your scheme has been {isEditMode ? 'updated' : 'saved'} in MongoDB with the ID: {schemeId}. 
-              The scheme {isEditMode ? `is now version ${versionNumber}` : 'status is set to DRAFT'}.
+              Your scheme has been {isEditMode ? 'saved as a new version' : 'saved'} in MongoDB with the ID: {schemeId}. 
+              The scheme is {isEditMode ? `now version ${versionNumber}` : 'set to DRAFT status'}.
             </AlertDescription>
           </Alert>
         )}
@@ -283,7 +303,7 @@ const IncentivePlanDesigner: React.FC<IncentivePlanDesignerProps> = ({
             className="flex items-center"
           >
             <Save size={18} className="mr-2" /> 
-            {isSaving ? "Saving..." : isEditMode ? "Update Scheme" : "Save Scheme"}
+            {isSaving ? "Saving..." : isEditMode ? "Save New Version" : "Save Scheme"}
           </Button>
         </div>
       </div>

@@ -61,24 +61,31 @@ const IncentiveDesigner = () => {
   };
 
   const handleCopyExistingScheme = (scheme: IncentivePlanWithStatus) => {
-    // Create a clean copy with no default values
+    // Keep the _id field from MongoDB for reference
     const planData: IncentivePlan = {
+      _id: scheme._id, // MongoDB document ID
       name: `Copy of ${scheme.name}`, // Suggest a name, but user can change it
-      schemeId: generateTimestampId(), // Generate a new scheme ID
+      schemeId: generateTimestampId(), // Generate a new scheme ID for the copy
       description: `Copy of ${scheme.name}`,
       effectiveStart: scheme.effectiveStart,
       effectiveEnd: scheme.effectiveEnd,
       currency: scheme.currency,
       revenueBase: scheme.revenueBase,
-      participants: scheme.participants,
+      participants: Array.isArray(scheme.participants) ? [...scheme.participants] : [],
       commissionStructure: {
         tiers: Array.isArray(scheme.commissionStructure?.tiers) ? [...scheme.commissionStructure.tiers] : []
       },
       measurementRules: {
-        primaryMetrics: Array.isArray(scheme.measurementRules?.primaryMetrics) ? [...scheme.measurementRules.primaryMetrics] : [],
+        primaryMetrics: Array.isArray(scheme.measurementRules?.primaryMetrics) 
+          ? [...scheme.measurementRules.primaryMetrics] 
+          : [],
         minQualification: scheme.measurementRules?.minQualification || 0,
-        adjustments: Array.isArray(scheme.measurementRules?.adjustments) ? [...scheme.measurementRules.adjustments] : [],
-        exclusions: Array.isArray(scheme.measurementRules?.exclusions) ? [...scheme.measurementRules.exclusions] : []
+        adjustments: Array.isArray(scheme.measurementRules?.adjustments) 
+          ? [...scheme.measurementRules.adjustments] 
+          : [],
+        exclusions: Array.isArray(scheme.measurementRules?.exclusions) 
+          ? [...scheme.measurementRules.exclusions] 
+          : []
       },
       creditRules: {
         levels: Array.isArray(scheme.creditRules?.levels) ? [...scheme.creditRules.levels] : []
@@ -100,12 +107,13 @@ const IncentiveDesigner = () => {
   };
 
   const handleEditExistingScheme = (scheme: IncentivePlanWithStatus) => {
-    // Create a clean copy with no default values but keep the original ID
+    // Include all fields from MongoDB including _id
     const planData: IncentivePlan = {
+      _id: scheme._id, // MongoDB document ID 
       ...scheme,
+      // Don't modify version here, IncentivePlanDesigner will handle it
       metadata: {
         ...scheme.metadata,
-        version: (scheme.metadata?.version || 1) + 1, // Increment version
         updatedAt: new Date().toISOString()
       }
     };

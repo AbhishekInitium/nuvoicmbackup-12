@@ -30,6 +30,7 @@ const incentiveSchema = new mongoose.Schema({
     required: true
   },
   description: String,
+  schemeId: String, // Used to group versions together
   effectiveStart: String,
   effectiveEnd: String,
   currency: String,
@@ -65,14 +66,53 @@ const Incentive = mongoose.model('incentivescheme', incentiveSchema);
 
 // API Routes
 
-// GET all incentive schemes
+// GET all incentive schemes - return latest version of each schemeId
 app.get('/api/incentives', async (req, res) => {
   try {
-    const schemes = await Incentive.find().sort({ 'metadata.createdAt': -1 });
+    // Group by schemeId and find the highest version for each
+    const schemes = await Incentive.aggregate([
+      { 
+        $sort: { 
+          schemeId: 1, 
+          "metadata.version": -1 
+        } 
+      },
+      {
+        $group: {
+          _id: "$schemeId",
+          doc: { $first: "$$ROOT" }
+        }
+      },
+      {
+        $replaceRoot: { newRoot: "$doc" }
+      },
+      {
+        $sort: { 'metadata.updatedAt': -1 }
+      }
+    ]);
+    
     res.json(schemes);
   } catch (error) {
     console.error('Error fetching schemes:', error);
     res.status(500).json({ error: 'Failed to fetch incentive schemes' });
+  }
+});
+
+// GET all versions of a specific scheme by schemeId
+app.get('/api/incentives/versions/:schemeId', async (req, res) => {
+  try {
+    const schemes = await Incentive.find({ 
+      schemeId: req.params.schemeId 
+    }).sort({ 'metadata.version': -1 });
+    
+    if (!schemes || schemes.length === 0) {
+      return res.status(404).json({ error: 'No versions found for this scheme ID' });
+    }
+    
+    res.json(schemes);
+  } catch (error) {
+    console.error('Error fetching scheme versions:', error);
+    res.status(500).json({ error: 'Failed to fetch scheme versions' });
   }
 });
 
@@ -99,7 +139,7 @@ app.post('/api/incentives', async (req, res) => {
       metadata: {
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
-        version: 1,
+        version: req.body.metadata?.version || 1,
         status: req.body.metadata?.status || 'DRAFT'
       }
     };
@@ -110,11 +150,12 @@ app.post('/api/incentives', async (req, res) => {
     res.status(201).json(savedScheme);
   } catch (error) {
     console.error('Error creating scheme:', error);
-    res.status(500).json({ error: 'Failed to create incentive scheme' });
+    res.status(500).json({ error: `Failed to create incentive scheme: ${error.message}` });
   }
 });
 
 // PUT - Update an existing incentive scheme
+// This is kept for compatibility but we're now using POST for new versions
 app.put('/api/incentives/:id', async (req, res) => {
   try {
     const scheme = await Incentive.findById(req.params.id);
@@ -127,10 +168,9 @@ app.put('/api/incentives/:id', async (req, res) => {
     const updates = {
       ...req.body,
       metadata: {
-        ...scheme.metadata,
+        ...scheme.metadata.toObject(),
         ...req.body.metadata,
-        updatedAt: new Date().toISOString(),
-        version: (scheme.metadata.version || 0) + 1
+        updatedAt: new Date().toISOString()
       }
     };
     
@@ -166,8 +206,7 @@ app.patch('/api/incentives/:id/status', async (req, res) => {
       req.params.id,
       { 
         'metadata.status': status,
-        'metadata.updatedAt': new Date().toISOString(),
-        'metadata.version': (scheme.metadata.version || 0) + 1
+        'metadata.updatedAt': new Date().toISOString()
       },
       { new: true }
     );

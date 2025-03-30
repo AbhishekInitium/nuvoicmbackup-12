@@ -82,6 +82,7 @@ export interface PlanMetadata {
 export interface Metadata extends PlanMetadata {} // For backward compatibility
 
 export interface IncentivePlan {
+  _id?: string;  // MongoDB document ID
   name: string;
   schemeId: string;
   description: string;

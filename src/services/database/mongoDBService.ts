@@ -102,26 +102,31 @@ export const deleteIncentiveScheme = async (id: string): Promise<boolean> => {
 };
 
 /**
- * Update an incentive scheme
+ * Update an incentive scheme by creating a new version
+ * Instead of modifying the existing document, we create a new one with an incremented version
  */
-export const updateIncentiveScheme = async (id: string, updates: Partial<IncentivePlan>, status?: string): Promise<boolean> => {
+export const updateIncentiveScheme = async (schemeId: string, updates: Partial<IncentivePlan>, status?: string): Promise<boolean> => {
   try {
-    // If status is provided, update it in metadata
-    let updatedData: any = { ...updates };
-    
-    if (status) {
-      updatedData.metadata = {
+    // Create a new document with the updated data and incremented version
+    const updatedScheme = {
+      ...updates,
+      schemeId: schemeId, // Keep the same schemeId for versioning
+      metadata: {
         ...(updates.metadata || {}),
+        createdAt: updates.metadata?.createdAt || new Date().toISOString(),
         updatedAt: new Date().toISOString(),
-        status: status
-      };
-    }
+        version: updates.metadata?.version || 1,
+        status: status || updates.metadata?.status || 'DRAFT'
+      }
+    };
     
-    const response = await axios.put(`${API_BASE_URL}/${id}`, updatedData);
-    return response.status === 200;
+    // Save as a new document instead of updating
+    const response = await axios.post(API_BASE_URL, updatedScheme);
+    
+    return response.status === 201;
   } catch (error) {
-    console.error(`Error updating incentive scheme with ID ${id}:`, error);
-    return false;
+    console.error(`Error creating new version of scheme ${schemeId}:`, error);
+    throw new Error(`Failed to update scheme: ${error instanceof Error ? error.message : String(error)}`);
   }
 };
 

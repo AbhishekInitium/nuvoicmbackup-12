@@ -46,7 +46,50 @@ const ExistingSchemeSelector: React.FC<ExistingSchemeSelectorProps> = ({
       
       if (plans && plans.length > 0) {
         console.log('Setting schemes with:', plans.length, 'plans');
-        setSchemes(plans);
+        
+        // Ensure all required fields are present in each plan
+        const validPlans = plans.map(plan => {
+          return {
+            _id: plan._id || '',
+            name: plan.name || 'Unnamed Plan',
+            schemeId: plan.schemeId || '',
+            description: plan.description || '',
+            effectiveStart: plan.effectiveStart || '',
+            effectiveEnd: plan.effectiveEnd || '',
+            currency: plan.currency || 'USD',
+            revenueBase: plan.revenueBase || '',
+            participants: Array.isArray(plan.participants) ? plan.participants : [],
+            status: plan.metadata?.status || 'DRAFT',
+            salesQuota: plan.salesQuota || 0,
+            commissionStructure: {
+              tiers: Array.isArray(plan.commissionStructure?.tiers) ? plan.commissionStructure.tiers : []
+            },
+            measurementRules: {
+              primaryMetrics: Array.isArray(plan.measurementRules?.primaryMetrics) 
+                ? plan.measurementRules.primaryMetrics 
+                : [],
+              minQualification: plan.measurementRules?.minQualification || 0,
+              adjustments: Array.isArray(plan.measurementRules?.adjustments) 
+                ? plan.measurementRules.adjustments 
+                : [],
+              exclusions: Array.isArray(plan.measurementRules?.exclusions) 
+                ? plan.measurementRules.exclusions 
+                : []
+            },
+            creditRules: {
+              levels: Array.isArray(plan.creditRules?.levels) ? plan.creditRules.levels : []
+            },
+            customRules: Array.isArray(plan.customRules) ? plan.customRules : [],
+            metadata: {
+              createdAt: plan.metadata?.createdAt || new Date().toISOString(),
+              updatedAt: plan.metadata?.updatedAt || new Date().toISOString(),
+              version: plan.metadata?.version || 1,
+              status: plan.metadata?.status || 'DRAFT'
+            }
+          };
+        });
+        
+        setSchemes(validPlans);
         
         toast({
           title: "Plans Loaded",
