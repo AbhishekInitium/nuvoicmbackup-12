@@ -67,18 +67,12 @@ const PrimaryMetricSelector: React.FC<PrimaryMetricSelectorProps> = ({
           
           <div className="sm:col-span-3">
             <label className="block text-sm font-medium text-app-gray-700 mb-2">Value</label>
-            <div className="relative">
-              <input 
-                type="number" 
-                className="form-input pl-8 w-full"
-                value={metric.value}
-                onChange={(e) => onUpdateMetric('value', parseFloat(e.target.value))}
-                step="0.01"
-              />
-              <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                <span className="text-app-gray-400">{currencySymbol}</span>
-              </div>
-            </div>
+            <Input 
+              type="number" 
+              value={metric.value}
+              onChange={(e) => onUpdateMetric('value', parseFloat(e.target.value))}
+              step="0.01"
+            />
           </div>
           
           <div className="sm:col-span-3">

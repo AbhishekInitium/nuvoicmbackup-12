@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { useS4HanaData } from '@/hooks/useS4HanaData';
@@ -105,10 +104,13 @@ const IncentivePlanDesigner: React.FC<IncentivePlanDesignerProps> = ({
     try {
       setIsSaving(true);
       
+      // Increment version number if in edit mode
+      const newVersionNumber = isEditMode ? versionNumber + 1 : 1;
+      
       const metadata: PlanMetadata = {
         createdAt: plan.metadata?.createdAt || new Date().toISOString(),
         updatedAt: new Date().toISOString(),
-        version: isEditMode ? versionNumber : 1,
+        version: newVersionNumber,
         status: 'DRAFT'
       };
       
@@ -125,9 +127,12 @@ const IncentivePlanDesigner: React.FC<IncentivePlanDesignerProps> = ({
         id = success ? schemeId : null;
         
         if (success) {
+          // Update the local version number after successful save
+          setVersionNumber(newVersionNumber);
+          
           toast({
             title: "Scheme Updated",
-            description: `Scheme "${plan.name || 'Unnamed'}" updated to version ${versionNumber}`,
+            description: `Scheme "${plan.name || 'Unnamed'}" updated to version ${newVersionNumber}`,
             variant: "default"
           });
         } else {

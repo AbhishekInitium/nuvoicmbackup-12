@@ -4,6 +4,7 @@ import { X } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RuleCondition } from '@/types/incentiveTypes';
 import { OPERATORS, METRICS, TIME_PERIODS } from '@/constants/incentiveConstants';
+import { Input } from "@/components/ui/input";
 
 interface RuleConditionProps {
   condition: RuleCondition;
@@ -71,18 +72,12 @@ const RuleConditionComponent: React.FC<RuleConditionProps> = ({
           </div>
           
           <div className="sm:col-span-2">
-            <div className="relative">
-              <input 
-                type="number" 
-                className="form-input pl-8 w-full"
-                value={condition.value}
-                onChange={(e) => onUpdate('value', parseFloat(e.target.value))}
-                step="0.01"
-              />
-              <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                <span className="text-app-gray-400">{currencySymbol}</span>
-              </div>
-            </div>
+            <Input 
+              type="number" 
+              value={condition.value}
+              onChange={(e) => onUpdate('value', parseFloat(e.target.value))}
+              step="0.01"
+            />
           </div>
           
           <div className="sm:col-span-1 flex justify-end">
