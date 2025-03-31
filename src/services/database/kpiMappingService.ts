@@ -26,6 +26,12 @@ export interface SchemeMaster {
   updatedAt?: string;
 }
 
+export interface DatabaseConnectionStatus {
+  connected: boolean;
+  message: string;
+  details?: any;
+}
+
 // Predefined KPI section options
 export const KPI_SECTIONS = [
   'BASE_DATA',
@@ -38,6 +44,24 @@ export const KPI_SECTIONS = [
 // In-memory storage as fallback when API fails
 let inMemoryKpiMappings: KPIFieldMapping[] = [];
 let nextId = 1;
+
+/**
+ * Check database connection status
+ */
+export const checkDatabaseConnection = async (): Promise<DatabaseConnectionStatus> => {
+  try {
+    console.log('Checking database connection status...');
+    const response = await axios.get(`${API_BASE_URL}/db-status`);
+    console.log('Database connection status:', response.data);
+    return response.data;
+  } catch (error) {
+    console.error('Error checking database connection:', error);
+    return { 
+      connected: false, 
+      message: 'Failed to connect to database, using in-memory storage instead'
+    };
+  }
+};
 
 /**
  * Get all KPI field mappings

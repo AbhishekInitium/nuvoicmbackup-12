@@ -11,7 +11,8 @@ import {
   uploadExcelFormat,
   assignKpiFieldsToScheme,
   getSchemeMaster,
-  deleteKpiFieldMapping
+  deleteKpiFieldMapping,
+  checkDatabaseConnection
 } from '@/services/database/kpiMappingService';
 
 export const useKpiMappings = () => {
@@ -19,6 +20,19 @@ export const useKpiMappings = () => {
   const queryClient = useQueryClient();
   const [fileHeaders, setFileHeaders] = useState<string[]>([]);
   const [editingKpi, setEditingKpi] = useState<KPIFieldMapping | null>(null);
+  const [isUsingInMemoryStorage, setIsUsingInMemoryStorage] = useState<boolean>(false);
+
+  // Check if using in-memory storage
+  const { data: connectionStatus } = useQuery({
+    queryKey: ['dbConnectionStatus'],
+    queryFn: checkDatabaseConnection,
+    onSuccess: (data) => {
+      setIsUsingInMemoryStorage(!data.connected);
+    },
+    onError: () => {
+      setIsUsingInMemoryStorage(true);
+    }
+  });
 
   // Query for fetching all KPI mappings
   const { 
@@ -237,6 +251,9 @@ export const useKpiMappings = () => {
     mappingsError,
     refetchMappings,
     
+    // Storage type indicator
+    isUsingInMemoryStorage,
+    
     // Ensure availableKpis is always an array
     availableKpis: Array.isArray(availableKpis) ? availableKpis : [],
     isLoadingAvailableKpis,
@@ -266,4 +283,3 @@ export const useKpiMappings = () => {
     getSchemeMasterBySchemeId,
   };
 };
-

@@ -1,11 +1,13 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
-import { Plus, X } from 'lucide-react';
+import { Plus, X, Database } from 'lucide-react';
 import { KPIFieldMapping } from '@/services/database/kpiMappingService';
 import KpiMappingForm from '@/components/scheme-administrator/KpiMappingForm';
 import KpiMappingList from '@/components/scheme-administrator/KpiMappingList';
 import { useToast } from "@/hooks/use-toast";
+import { Badge } from '@/components/ui/badge';
 
 interface KpiMappingCardProps {
   kpiMappings: KPIFieldMapping[];
@@ -18,6 +20,7 @@ interface KpiMappingCardProps {
   cancelEditingKpi: () => void;
   isCreatingKpi: boolean;
   isUpdatingKpi: boolean;
+  isUsingInMemoryStorage?: boolean;
 }
 
 const KpiMappingCard: React.FC<KpiMappingCardProps> = ({
@@ -30,7 +33,8 @@ const KpiMappingCard: React.FC<KpiMappingCardProps> = ({
   startEditingKpi,
   cancelEditingKpi,
   isCreatingKpi,
-  isUpdatingKpi
+  isUpdatingKpi,
+  isUsingInMemoryStorage = false
 }) => {
   const [showForm, setShowForm] = useState(false);
   const { toast } = useToast();
@@ -99,11 +103,18 @@ const KpiMappingCard: React.FC<KpiMappingCardProps> = ({
   return (
     <Card className="mb-6 shadow-sm">
       <CardHeader className="flex flex-row items-center justify-between space-y-0">
-        <div>
-          <CardTitle>KPI Mapping Table</CardTitle>
-          <CardDescription>
-            Define KPI fields that will be available to scheme designers
-          </CardDescription>
+        <div className="flex items-center space-x-2">
+          <div>
+            <CardTitle>KPI Mapping Table</CardTitle>
+            <CardDescription>
+              Define KPI fields that will be available to scheme designers
+            </CardDescription>
+          </div>
+          {isUsingInMemoryStorage && (
+            <Badge variant="destructive" className="ml-2 flex items-center">
+              <Database size={14} className="mr-1" /> In-Memory
+            </Badge>
+          )}
         </div>
         <Button 
           onClick={toggleForm} 
@@ -144,6 +155,7 @@ const KpiMappingCard: React.FC<KpiMappingCardProps> = ({
           isLoading={isLoadingMappings}
           onDelete={handleDeleteKpi}
           onEdit={handleEditKpi}
+          isUsingInMemoryStorage={isUsingInMemoryStorage}
         />
       </CardContent>
     </Card>

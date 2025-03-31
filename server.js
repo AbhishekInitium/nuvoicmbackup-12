@@ -1,4 +1,3 @@
-
 const express = require('express');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
@@ -37,14 +36,55 @@ const upload = multer({ storage: storage });
 // MongoDB Connection
 const MONGODB_URI = process.env.MONGODB_URI || "mongodb://localhost:27017/incentives";
 
+// Function to check if MongoDB is connected
+const isMongoConnected = () => mongoose.connection.readyState === 1;
+
+// Track connection status
+let mongoConnectionStatus = {
+  connected: false,
+  lastError: null,
+  lastAttempt: null,
+  connectionString: MONGODB_URI.replace(/\/\/([^:]+):([^@]+)@/, '//***:***@') // Hide credentials in logs
+};
+
 mongoose.connect(MONGODB_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true
 })
-.then(() => console.log('Connected to MongoDB'))
+.then(() => {
+  console.log('Connected to MongoDB');
+  mongoConnectionStatus.connected = true;
+  mongoConnectionStatus.lastAttempt = new Date().toISOString();
+  mongoConnectionStatus.lastError = null;
+})
 .catch(err => {
   console.error('MongoDB connection error:', err);
-  process.exit(1); // Exit the process if MongoDB connection fails
+  console.warn('Using in-memory data storage instead. Data will be lost when server restarts.');
+  mongoConnectionStatus.connected = false;
+  mongoConnectionStatus.lastAttempt = new Date().toISOString();
+  mongoConnectionStatus.lastError = err.message;
+  // Continue execution even without a DB connection - we'll use in-memory storage
+});
+
+// Database status endpoint
+app.get('/api/db-status', (req, res) => {
+  const currentStatus = isMongoConnected();
+  
+  // Update status if it's changed
+  if (mongoConnectionStatus.connected !== currentStatus) {
+    mongoConnectionStatus.connected = currentStatus;
+    mongoConnectionStatus.lastAttempt = new Date().toISOString();
+  }
+  
+  res.json({ 
+    connected: currentStatus,
+    message: currentStatus ? 'Connected to MongoDB' : 'Using in-memory storage',
+    details: {
+      lastAttempt: mongoConnectionStatus.lastAttempt,
+      connectionString: mongoConnectionStatus.connectionString,
+      lastError: mongoConnectionStatus.lastError
+    }
+  });
 });
 
 // KPI Field Mapping Schema
