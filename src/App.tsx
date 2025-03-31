@@ -6,6 +6,7 @@ import NotFound from '@/pages/NotFound';
 import AgentPortal from '@/pages/agent/AgentPortal';
 import ManagerPortal from '@/pages/manager/ManagerPortal';
 import IncentiveDesigner from '@/pages/manager/IncentiveDesigner';
+import SchemeAdministrator from '@/pages/manager/SchemeAdministrator';
 import CommissionExecutionEngine from '@/pages/manager/CommissionExecutionEngine';
 import TeamManagementPage from '@/pages/manager/TeamManagementPage';
 import SapApiTester from '@/pages/SapApiTester';
@@ -30,6 +31,7 @@ function App() {
             {/* Manager Routes */}
             <Route path="/manager" element={<ManagerPortal />} />
             <Route path="/manager/incentive-designer" element={<IncentiveDesigner />} />
+            <Route path="/manager/scheme-administrator" element={<SchemeAdministrator />} />
             <Route path="/manager/commission-execution" element={<CommissionExecutionEngine />} />
             <Route path="/manager/team" element={<TeamManagementPage />} />
             
