@@ -62,7 +62,7 @@ const KpiMappingList: React.FC<KpiMappingListProps> = ({
               <TableCell>{mapping.dataType}</TableCell>
               <TableCell>
                 {mapping.availableToDesigner ? (
-                  <Badge variant="success" className="bg-green-100 text-green-800 hover:bg-green-200">
+                  <Badge variant="default" className="bg-green-100 text-green-800 hover:bg-green-200">
                     Active
                   </Badge>
                 ) : (
