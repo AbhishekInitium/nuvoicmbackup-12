@@ -5,8 +5,11 @@ import Container from '@/components/layout/Container';
 import { useKpiMappings } from '@/hooks/useKpiMappings';
 import SchemeAdministratorHeader from '@/components/scheme-administrator/SchemeAdministratorHeader';
 import KpiMappingCard from '@/components/scheme-administrator/KpiMappingCard';
+import { useToast } from "@/hooks/use-toast";
 
 const SchemeAdministrator: React.FC = () => {
+  const { toast } = useToast();
+  
   const {
     kpiMappings,
     isLoadingMappings,
@@ -17,8 +20,14 @@ const SchemeAdministrator: React.FC = () => {
     startEditingKpi,
     cancelEditingKpi,
     isCreatingKpi,
-    isUpdatingKpi
+    isUpdatingKpi,
+    refetchMappings
   } = useKpiMappings();
+
+  React.useEffect(() => {
+    // Make sure data is refreshed when component mounts
+    refetchMappings();
+  }, [refetchMappings]);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-app-gray-50 to-white">

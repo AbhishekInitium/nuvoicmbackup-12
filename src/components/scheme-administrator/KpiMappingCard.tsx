@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
-import { Plus } from 'lucide-react';
+import { Plus, X } from 'lucide-react';
 import { KPIFieldMapping } from '@/services/database/kpiMappingService';
 import KpiMappingForm from '@/components/scheme-administrator/KpiMappingForm';
 import KpiMappingList from '@/components/scheme-administrator/KpiMappingList';
@@ -51,6 +51,7 @@ const KpiMappingCard: React.FC<KpiMappingCardProps> = ({
       // If currently editing this KPI, cancel the edit
       if (editingKpi && editingKpi._id === id) {
         cancelEditingKpi();
+        setShowForm(false);
       }
     }
   };
@@ -67,14 +68,14 @@ const KpiMappingCard: React.FC<KpiMappingCardProps> = ({
 
   // Toggle form visibility and reset editing state
   const toggleForm = () => {
-    if (showForm && editingKpi) {
+    setShowForm(!showForm);
+    if (showForm) {
       cancelEditingKpi();
     }
-    setShowForm(!showForm);
   };
 
   return (
-    <Card className="mb-6">
+    <Card className="mb-6 shadow-sm">
       <CardHeader className="flex flex-row items-center justify-between space-y-0">
         <div>
           <CardTitle>KPI Mapping Table</CardTitle>
@@ -82,16 +83,29 @@ const KpiMappingCard: React.FC<KpiMappingCardProps> = ({
             Define KPI fields that will be available to scheme designers
           </CardDescription>
         </div>
-        <Button onClick={toggleForm} className="flex items-center">
-          <Plus size={16} className="mr-2" />
-          {showForm && editingKpi ? 'Cancel Edit' : 'Add New KPI'}
+        <Button 
+          onClick={toggleForm} 
+          className="flex items-center"
+          variant={showForm ? "secondary" : "default"}
+        >
+          {showForm ? (
+            <>
+              <X size={16} className="mr-2" />
+              Cancel
+            </>
+          ) : (
+            <>
+              <Plus size={16} className="mr-2" />
+              Add New KPI
+            </>
+          )}
         </Button>
       </CardHeader>
       <CardContent>
         {showForm && (
           <div className="mb-8 p-4 border rounded-md bg-gray-50">
             <h3 className="text-lg font-medium mb-4">
-              {editingKpi ? 'Edit KPI Mapping' : 'New KPI Mapping'}
+              {editingKpi ? `Edit KPI: ${editingKpi.kpiName}` : 'New KPI Mapping'}
             </h3>
             <KpiMappingForm 
               onSubmit={handleKpiSubmit}

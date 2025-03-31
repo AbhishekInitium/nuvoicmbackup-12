@@ -42,6 +42,7 @@ export const getKpiFieldMappings = async (): Promise<KPIFieldMapping[]> => {
   try {
     console.log('Fetching KPI field mappings...');
     const response = await axios.get(`${API_BASE_URL}/kpi-fields`);
+    console.log('KPI mappings response:', response.data);
     // Ensure we always return an array
     return Array.isArray(response.data) ? response.data : [];
   } catch (error) {
@@ -72,7 +73,7 @@ export const saveKpiFieldMapping = async (kpiMapping: KPIFieldMapping): Promise<
   try {
     console.log('Saving KPI field mapping:', kpiMapping);
     const response = await axios.post(`${API_BASE_URL}/kpi-fields`, kpiMapping);
-    return response.data.kpi;
+    return response.data.kpi || response.data;
   } catch (error) {
     console.error('Error saving KPI field mapping:', error);
     throw new Error(`Failed to save KPI field mapping: ${error instanceof Error ? error.message : String(error)}`);
@@ -86,7 +87,7 @@ export const updateKpiFieldMapping = async (id: string, kpiMapping: KPIFieldMapp
   try {
     console.log(`Updating KPI field mapping with ID: ${id}`, kpiMapping);
     const response = await axios.put(`${API_BASE_URL}/kpi-fields/${id}`, kpiMapping);
-    return response.data.kpi;
+    return response.data.kpi || response.data;
   } catch (error) {
     console.error('Error updating KPI field mapping:', error);
     throw new Error(`Failed to update KPI field mapping: ${error instanceof Error ? error.message : String(error)}`);
