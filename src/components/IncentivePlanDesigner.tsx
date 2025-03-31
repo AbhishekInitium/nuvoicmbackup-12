@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useS4HanaData } from '@/hooks/useS4HanaData';
 import { IncentivePlan, PlanMetadata } from '@/types/incentiveTypes';
@@ -100,9 +101,10 @@ const IncentivePlanDesigner: React.FC<IncentivePlanDesignerProps> = ({
       ...selectedVersion,
       name: selectedVersion.name, // Keep original name (no "Copy of" prefix)
       metadata: {
-        ...(selectedVersion.metadata || {}),
+        createdAt: selectedVersion.metadata?.createdAt || new Date().toISOString(), // Ensure createdAt is not optional
+        updatedAt: new Date().toISOString(),
         version: (selectedVersion.metadata?.version || 0) + 1, // New version number
-        updatedAt: new Date().toISOString()
+        status: selectedVersion.metadata?.status || 'DRAFT' // Ensure status is not optional
       }
     });
     

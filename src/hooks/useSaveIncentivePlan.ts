@@ -48,12 +48,12 @@ export const useSaveIncentivePlan = ({
       setIsSaving(true);
       console.log("Saving plan, isEditMode:", isEditMode, "versionNumber:", versionNumber);
       
-      // Create metadata with the correct version
+      // Create metadata with the correct version, ensuring all required fields are present
       const metadata: PlanMetadata = {
-        createdAt: plan.metadata?.createdAt || new Date().toISOString(),
+        createdAt: plan.metadata?.createdAt || new Date().toISOString(), // Always ensure createdAt is present
         updatedAt: new Date().toISOString(),
         version: versionNumber,
-        status: 'DRAFT'
+        status: plan.metadata?.status || 'DRAFT'
       };
       
       console.log("Current plan metadata:", plan.metadata);
