@@ -1,6 +1,6 @@
-
-import axios from 'axios';
 import { IncentivePlan } from '@/types/incentiveTypes';
+import { IncentivePlanWithStatus } from '@/services/incentive/types/incentiveServiceTypes';
+import axios from 'axios';
 
 // Base URL for API requests
 const API_BASE_URL = 'http://localhost:3001/api/incentives';
@@ -17,6 +17,22 @@ export const getIncentiveSchemes = async (): Promise<IncentivePlan[]> => {
   } catch (error) {
     console.error('Error fetching incentive schemes:', error);
     throw new Error(`Failed to fetch incentive schemes: ${error instanceof Error ? error.message : String(error)}`);
+  }
+};
+
+/**
+ * Get all versions of a specific incentive scheme
+ * @param schemeId The unique identifier for the scheme family
+ */
+export const getSchemeVersions = async (schemeId: string): Promise<IncentivePlan[]> => {
+  try {
+    console.log(`Fetching all versions of scheme with ID: ${schemeId}`);
+    const response = await axios.get(`${API_BASE_URL}/versions/${schemeId}`);
+    console.log(`Fetched ${response.data.length} versions of scheme ${schemeId}`);
+    return response.data;
+  } catch (error) {
+    console.error(`Error fetching scheme versions for ${schemeId}:`, error);
+    throw new Error(`Failed to fetch scheme versions: ${error instanceof Error ? error.message : String(error)}`);
   }
 };
 

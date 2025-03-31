@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useS4HanaData } from '@/hooks/useS4HanaData';
 import { IncentivePlan, PlanMetadata } from '@/types/incentiveTypes';
@@ -14,8 +13,11 @@ import PayoutStructureSection from './incentive/PayoutStructureSection';
 import CreditDistributionSection from './incentive/CreditDistributionSection';
 import SavePlanButton from './incentive/SavePlanButton';
 import StorageNotice from './incentive/StorageNotice';
+import SchemeVersionHistory from './incentive/SchemeVersionHistory';
 import { generateTimestampId } from '@/utils/idGenerators';
 import { useSaveIncentivePlan } from '@/hooks/useSaveIncentivePlan';
+import { Button } from './ui/button';
+import { History } from 'lucide-react';
 
 interface IncentivePlanDesignerProps {
   initialPlan?: IncentivePlan | null;
@@ -39,6 +41,7 @@ const IncentivePlanDesigner: React.FC<IncentivePlanDesignerProps> = ({
   const [schemeId, setSchemeId] = useState<string>('');
   const [versionNumber, setVersionNumber] = useState<number>(1);
   const [documentId, setDocumentId] = useState<string>('');
+  const [showVersionHistory, setShowVersionHistory] = useState(false);
   
   useEffect(() => {
     if (initialPlan) {
@@ -86,8 +89,43 @@ const IncentivePlanDesigner: React.FC<IncentivePlanDesignerProps> = ({
     onSaveSuccess: refetchPlans
   });
 
+  const handleEditVersion = (selectedVersion: IncentivePlan) => {
+    // When a specific version is selected for editing, load it and create a new version
+    // Keep the schemeId but increment the version
+    setSchemeId(selectedVersion.schemeId);
+    setVersionNumber((selectedVersion.metadata?.version || 0) + 1);
+    
+    // Copy all data from the selected version
+    copyExistingScheme({
+      ...selectedVersion,
+      name: selectedVersion.name, // Keep original name (no "Copy of" prefix)
+      metadata: {
+        ...(selectedVersion.metadata || {}),
+        version: (selectedVersion.metadata?.version || 0) + 1, // New version number
+        updatedAt: new Date().toISOString()
+      }
+    });
+    
+    // Return to the editing view
+    setShowVersionHistory(false);
+  };
+
   if (isLoading) {
     return <div className="flex justify-center items-center h-screen">Loading plans...</div>;
+  }
+
+  // Show version history view when requested
+  if (showVersionHistory && schemeId) {
+    return (
+      <div className="py-12 sm:py-16 px-4 md:px-8 max-w-4xl mx-auto">
+        <IncentiveDesignerHeader />
+        <SchemeVersionHistory 
+          schemeId={schemeId}
+          onBack={() => setShowVersionHistory(false)}
+          onEditVersion={handleEditVersion}
+        />
+      </div>
+    );
   }
 
   return (
@@ -103,6 +141,18 @@ const IncentivePlanDesigner: React.FC<IncentivePlanDesignerProps> = ({
             copyExistingScheme={copyExistingScheme}
             hideSchemeButtons={true}
           />
+          
+          {/* Version history button - only show for existing schemes */}
+          {isEditMode && schemeId && (
+            <Button 
+              variant="outline" 
+              onClick={() => setShowVersionHistory(true)} 
+              className="ml-auto flex items-center"
+            >
+              <History size={16} className="mr-2" />
+              View Version History
+            </Button>
+          )}
         </div>
 
         {showStorageNotice && (

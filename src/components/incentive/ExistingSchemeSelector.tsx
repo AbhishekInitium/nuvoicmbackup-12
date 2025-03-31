@@ -1,8 +1,8 @@
-
 import React, { useEffect, useState } from 'react';
-import { Copy, Loader2, AlertCircle, RefreshCcw, Edit } from 'lucide-react';
+import { Copy, Loader2, AlertCircle, RefreshCcw, Edit, History } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import ActionButton from '../ui-custom/ActionButton';
+import { Button } from '../ui/button';
 import { useToast } from "@/hooks/use-toast";
 import { IncentivePlanWithStatus } from '@/services/incentive/types/incentiveServiceTypes';
 import { getIncentiveSchemes } from '@/services/database/mongoDBService';
@@ -47,9 +47,7 @@ const ExistingSchemeSelector: React.FC<ExistingSchemeSelectorProps> = ({
       if (plans && plans.length > 0) {
         console.log('Setting schemes with:', plans.length, 'plans');
         
-        // Ensure all required fields are present in each plan and properly typed
         const validPlans = plans.map(plan => {
-          // Cast status to IncentiveStatus type
           const status = (plan.metadata?.status || 'DRAFT') as 'DRAFT' | 'APPROVED' | 'SIMULATION' | 'PRODUCTION';
           
           return {
@@ -89,7 +87,7 @@ const ExistingSchemeSelector: React.FC<ExistingSchemeSelectorProps> = ({
               version: plan.metadata?.version || 1,
               status: status
             }
-          } as IncentivePlanWithStatus; // Type assertion to fix type errors
+          } as IncentivePlanWithStatus;
         });
         
         setSchemes(validPlans);
@@ -100,7 +98,6 @@ const ExistingSchemeSelector: React.FC<ExistingSchemeSelectorProps> = ({
           variant: "default"
         });
       } else {
-        // If no plans were returned, show error message
         console.log('No plans returned, showing error message');
         setError('No schemes found. Database returned empty response.');
         setSchemes([]);
@@ -216,27 +213,38 @@ const ExistingSchemeSelector: React.FC<ExistingSchemeSelectorProps> = ({
                   </TableCell>
                   <TableCell>{scheme.metadata?.version || 1}</TableCell>
                   <TableCell className="text-right">
-                    <button 
-                      onClick={() => handleCopyScheme(scheme)}
-                      className="text-blue-600 hover:text-blue-800 font-medium text-sm flex items-center gap-1 ml-auto"
-                    >
-                      {editMode ? (
-                        <>
-                          <Edit size={14} />
-                          Edit
-                        </>
-                      ) : (
-                        <>
-                          <Copy size={14} />
-                          Copy
-                        </>
-                      )}
-                    </button>
+                    <div className="flex justify-end gap-2">
+                      <button 
+                        onClick={() => handleCopyScheme(scheme)}
+                        className="text-blue-600 hover:text-blue-800 font-medium text-sm flex items-center gap-1"
+                      >
+                        {editMode ? (
+                          <>
+                            <Edit size={14} />
+                            Edit
+                          </>
+                        ) : (
+                          <>
+                            <Copy size={14} />
+                            Copy
+                          </>
+                        )}
+                      </button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
             </TableBody>
           </Table>
+        </div>
+      )}
+      
+      {editMode && (
+        <div className="bg-blue-50 p-3 rounded-md text-sm text-blue-700">
+          <div className="flex items-center">
+            <History className="h-4 w-4 mr-2" />
+            <p>When you edit a scheme, a new version will be created automatically upon saving.</p>
+          </div>
         </div>
       )}
     </div>
