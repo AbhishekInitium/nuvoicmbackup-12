@@ -26,13 +26,15 @@ export const useKpiMappings = () => {
   } = useQuery({
     queryKey: ['kpiMappings'],
     queryFn: getKpiFieldMappings,
-    onError: (error: Error) => {
-      console.error('Error in kpiMappings query:', error);
-      toast({
-        variant: "destructive",
-        title: "Failed to load KPI mappings",
-        description: error.message,
-      });
+    meta: {
+      onError: (error: Error) => {
+        console.error('Error in kpiMappings query:', error);
+        toast({
+          variant: "destructive",
+          title: "Failed to load KPI mappings",
+          description: error.message,
+        });
+      }
     }
   });
 
@@ -45,13 +47,15 @@ export const useKpiMappings = () => {
   } = useQuery({
     queryKey: ['availableKpis'],
     queryFn: getAvailableKpiFields,
-    onError: (error: Error) => {
-      console.error('Error in availableKpis query:', error);
-      toast({
-        variant: "destructive",
-        title: "Failed to load available KPIs",
-        description: error.message,
-      });
+    meta: {
+      onError: (error: Error) => {
+        console.error('Error in availableKpis query:', error);
+        toast({
+          variant: "destructive",
+          title: "Failed to load available KPIs",
+          description: error.message,
+        });
+      }
     }
   });
 
