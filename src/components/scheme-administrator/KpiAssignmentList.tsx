@@ -41,6 +41,14 @@ const KpiAssignmentList: React.FC<KpiAssignmentListProps> = ({
     onAssign(checkedKpis);
   };
 
+  // Group KPIs by section for better organization
+  const groupedKpis = availableKpis.reduce((acc, kpi) => {
+    const section = kpi.section || 'Other';
+    if (!acc[section]) acc[section] = [];
+    acc[section].push(kpi);
+    return acc;
+  }, {} as Record<string, KPIFieldMapping[]>);
+
   if (isLoading) {
     return <div className="text-center py-8">Loading available KPIs...</div>;
   }
@@ -55,34 +63,39 @@ const KpiAssignmentList: React.FC<KpiAssignmentListProps> = ({
   }
 
   return (
-    <div className="space-y-4">
-      <div className="border rounded-md">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-12">Select</TableHead>
-              <TableHead>KPI Name</TableHead>
-              <TableHead>Source</TableHead>
-              <TableHead>Data Type</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {availableKpis.map((kpi) => (
-              <TableRow key={kpi._id}>
-                <TableCell>
-                  <Checkbox
-                    checked={checkedKpis.includes(kpi.kpiName)}
-                    onCheckedChange={() => handleToggle(kpi.kpiName)}
-                  />
-                </TableCell>
-                <TableCell className="font-medium">{kpi.kpiName}</TableCell>
-                <TableCell>{kpi.sourceType}</TableCell>
-                <TableCell>{kpi.dataType}</TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
+    <div className="space-y-6">
+      {Object.entries(groupedKpis).map(([section, sectionKpis]) => (
+        <div key={section} className="space-y-2">
+          <h3 className="text-md font-medium">{section}</h3>
+          <div className="border rounded-md">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-12">Select</TableHead>
+                  <TableHead>KPI Name</TableHead>
+                  <TableHead>Description</TableHead>
+                  <TableHead>Source Type</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {sectionKpis.map((kpi) => (
+                  <TableRow key={kpi._id}>
+                    <TableCell>
+                      <Checkbox
+                        checked={checkedKpis.includes(kpi.kpiName)}
+                        onCheckedChange={() => handleToggle(kpi.kpiName)}
+                      />
+                    </TableCell>
+                    <TableCell className="font-medium">{kpi.kpiName}</TableCell>
+                    <TableCell>{kpi.description}</TableCell>
+                    <TableCell>{kpi.sourceType}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        </div>
+      ))}
 
       <div className="flex justify-end">
         <Button 

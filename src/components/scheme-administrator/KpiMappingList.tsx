@@ -9,16 +9,20 @@ import {
   TableRow 
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Trash2 } from 'lucide-react';
 import { KPIFieldMapping } from '@/services/database/kpiMappingService';
 
 interface KpiMappingListProps {
   mappings: KPIFieldMapping[];
   isLoading?: boolean;
+  onDelete?: (id: string) => void;
 }
 
 const KpiMappingList: React.FC<KpiMappingListProps> = ({
   mappings,
-  isLoading = false
+  isLoading = false,
+  onDelete
 }) => {
   // Ensure mappings is always an array
   const mappingsArray = Array.isArray(mappings) ? mappings : [];
@@ -37,41 +41,50 @@ const KpiMappingList: React.FC<KpiMappingListProps> = ({
   }
 
   return (
-    <div className="border rounded-md">
+    <div className="border rounded-md overflow-x-auto">
       <Table>
         <TableHeader>
           <TableRow>
+            <TableHead>Section</TableHead>
             <TableHead>KPI Name</TableHead>
+            <TableHead>Description</TableHead>
             <TableHead>Source</TableHead>
-            <TableHead>Field/Header</TableHead>
+            <TableHead>Source Field</TableHead>
             <TableHead>Data Type</TableHead>
-            <TableHead>Status</TableHead>
+            <TableHead>API</TableHead>
+            <TableHead className="text-right">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {mappingsArray.map((mapping) => (
             <TableRow key={mapping._id}>
-              <TableCell className="font-medium">{mapping.kpiName}</TableCell>
+              <TableCell className="font-medium">{mapping.section}</TableCell>
+              <TableCell>{mapping.kpiName}</TableCell>
+              <TableCell className="max-w-[200px] truncate">{mapping.description}</TableCell>
               <TableCell>
-                <Badge variant={mapping.sourceType === 'SAP' ? 'default' : 'outline'}>
+                <Badge variant={mapping.sourceType === 'SAP' ? 'default' : mapping.sourceType === 'External' ? 'secondary' : 'outline'}>
                   {mapping.sourceType}
                 </Badge>
               </TableCell>
               <TableCell>
-                {mapping.sourceType === 'SAP' 
-                  ? mapping.sourceField 
-                  : mapping.sourceFileHeader}
+                {mapping.sourceType === 'EXCEL' 
+                  ? mapping.sourceFileHeader 
+                  : mapping.sourceField}
               </TableCell>
               <TableCell>{mapping.dataType}</TableCell>
-              <TableCell>
-                {mapping.availableToDesigner ? (
-                  <Badge variant="default" className="bg-green-100 text-green-800 hover:bg-green-200">
-                    Active
-                  </Badge>
-                ) : (
-                  <Badge variant="secondary" className="bg-gray-100 text-gray-800">
-                    Inactive
-                  </Badge>
+              <TableCell className="max-w-[200px] truncate">
+                <span className="text-xs">{mapping.api || '-'}</span>
+              </TableCell>
+              <TableCell className="text-right">
+                {onDelete && mapping._id && (
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={() => onDelete(mapping._id || '')}
+                    className="h-8 w-8 p-0"
+                  >
+                    <Trash2 size={16} className="text-red-500" />
+                  </Button>
                 )}
               </TableCell>
             </TableRow>

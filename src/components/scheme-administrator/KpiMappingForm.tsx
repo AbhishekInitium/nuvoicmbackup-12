@@ -5,7 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { KPIFieldMapping } from '@/services/database/kpiMappingService';
+import { Textarea } from "@/components/ui/textarea";
+import { KPIFieldMapping, KPI_SECTIONS } from '@/services/database/kpiMappingService';
 
 interface KpiMappingFormProps {
   onSubmit: (kpiMapping: KPIFieldMapping) => void;
@@ -19,11 +20,14 @@ const KpiMappingForm: React.FC<KpiMappingFormProps> = ({
   isSaving = false
 }) => {
   const [kpiMapping, setKpiMapping] = useState<KPIFieldMapping>({
+    section: 'BASE_DATA',
     kpiName: '',
+    description: '',
     sourceType: 'SAP',
     sourceField: '',
     sourceFileHeader: '',
     dataType: 'string',
+    api: '',
     availableToDesigner: true
   });
 
@@ -32,11 +36,14 @@ const KpiMappingForm: React.FC<KpiMappingFormProps> = ({
     onSubmit(kpiMapping);
     // Reset form
     setKpiMapping({
+      section: 'BASE_DATA',
       kpiName: '',
+      description: '',
       sourceType: 'SAP',
       sourceField: '',
       sourceFileHeader: '',
       dataType: 'string',
+      api: '',
       availableToDesigner: true
     });
   };
@@ -52,6 +59,25 @@ const KpiMappingForm: React.FC<KpiMappingFormProps> = ({
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="space-y-4">
         <div>
+          <Label htmlFor="section">Section</Label>
+          <Select
+            value={kpiMapping.section}
+            onValueChange={(value) => handleChange('section', value)}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select section" />
+            </SelectTrigger>
+            <SelectContent>
+              {KPI_SECTIONS.map((section) => (
+                <SelectItem key={section} value={section}>
+                  {section}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div>
           <Label htmlFor="kpiName">KPI Name</Label>
           <Input
             id="kpiName"
@@ -66,10 +92,20 @@ const KpiMappingForm: React.FC<KpiMappingFormProps> = ({
         </div>
 
         <div>
+          <Label htmlFor="description">Description</Label>
+          <Textarea
+            id="description"
+            value={kpiMapping.description}
+            onChange={(e) => handleChange('description', e.target.value)}
+            placeholder="Enter KPI description"
+          />
+        </div>
+
+        <div>
           <Label htmlFor="sourceType">Source Type</Label>
           <Select
             value={kpiMapping.sourceType}
-            onValueChange={(value) => handleChange('sourceType', value)}
+            onValueChange={(value) => handleChange('sourceType', value as 'SAP' | 'EXCEL' | 'External')}
           >
             <SelectTrigger>
               <SelectValue placeholder="Select source type" />
@@ -77,25 +113,26 @@ const KpiMappingForm: React.FC<KpiMappingFormProps> = ({
             <SelectContent>
               <SelectItem value="SAP">SAP</SelectItem>
               <SelectItem value="EXCEL">Excel</SelectItem>
+              <SelectItem value="External">External</SelectItem>
             </SelectContent>
           </Select>
         </div>
 
-        {kpiMapping.sourceType === 'SAP' ? (
-          <div>
-            <Label htmlFor="sourceField">SAP Field Mapping</Label>
-            <Input
-              id="sourceField"
-              value={kpiMapping.sourceField}
-              onChange={(e) => handleChange('sourceField', e.target.value)}
-              placeholder="Enter SAP field name"
-              required={kpiMapping.sourceType === 'SAP'}
-            />
-            <p className="text-xs text-gray-500 mt-1">
-              e.g. SalesOrder.TotalAmount, Invoice.NetValue
-            </p>
-          </div>
-        ) : (
+        <div>
+          <Label htmlFor="sourceField">Source Field</Label>
+          <Input
+            id="sourceField"
+            value={kpiMapping.sourceField}
+            onChange={(e) => handleChange('sourceField', e.target.value)}
+            placeholder="Enter source field name (e.g. Amount, SalesRep)"
+            required
+          />
+          <p className="text-xs text-gray-500 mt-1">
+            e.g. Amount, SalesOrganization, SalesRep, VBRP-NETWR
+          </p>
+        </div>
+
+        {kpiMapping.sourceType === 'EXCEL' && (
           <div>
             <Label htmlFor="sourceFileHeader">Excel Column Header</Label>
             {fileHeaders.length > 0 ? (
@@ -117,10 +154,9 @@ const KpiMappingForm: React.FC<KpiMappingFormProps> = ({
             ) : (
               <Input
                 id="sourceFileHeader"
-                value={kpiMapping.sourceFileHeader}
+                value={kpiMapping.sourceFileHeader || ''}
                 onChange={(e) => handleChange('sourceFileHeader', e.target.value)}
                 placeholder="Enter Excel column header"
-                required={kpiMapping.sourceType === 'EXCEL'}
               />
             )}
           </div>
@@ -130,7 +166,7 @@ const KpiMappingForm: React.FC<KpiMappingFormProps> = ({
           <Label htmlFor="dataType">Data Type</Label>
           <Select
             value={kpiMapping.dataType}
-            onValueChange={(value) => handleChange('dataType', value as 'string' | 'number' | 'date' | 'boolean')}
+            onValueChange={(value) => handleChange('dataType', value as 'string' | 'number' | 'date' | 'boolean' | 'Char4' | '')}
           >
             <SelectTrigger>
               <SelectValue placeholder="Select data type" />
@@ -140,8 +176,19 @@ const KpiMappingForm: React.FC<KpiMappingFormProps> = ({
               <SelectItem value="number">Number</SelectItem>
               <SelectItem value="date">Date</SelectItem>
               <SelectItem value="boolean">Boolean</SelectItem>
+              <SelectItem value="Char4">Char4</SelectItem>
             </SelectContent>
           </Select>
+        </div>
+
+        <div>
+          <Label htmlFor="api">API Endpoint</Label>
+          <Input
+            id="api"
+            value={kpiMapping.api || ''}
+            onChange={(e) => handleChange('api', e.target.value)}
+            placeholder="Enter API endpoint (e.g. API_SALES_ORDER_SRV//A_SalesOrder)"
+          />
         </div>
 
         <div className="flex items-center space-x-2 pt-2">

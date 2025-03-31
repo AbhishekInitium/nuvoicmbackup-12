@@ -4,6 +4,7 @@ import NavBar from '@/components/layout/NavBar';
 import Container from '@/components/layout/Container';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from '@/components/ui/button';
 import { useKpiMappings } from '@/hooks/useKpiMappings';
 import KpiMappingForm from '@/components/scheme-administrator/KpiMappingForm';
 import ExcelUploader from '@/components/scheme-administrator/ExcelUploader';
@@ -13,11 +14,11 @@ import { generateTimestampId } from '@/utils/idGenerators';
 import KpiAssignmentList from '@/components/scheme-administrator/KpiAssignmentList';
 import { useS4HanaData } from '@/hooks/useS4HanaData';
 import { Link } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Plus } from 'lucide-react';
 
 const SchemeAdministrator: React.FC = () => {
   const [selectedSchemeId, setSelectedSchemeId] = useState<string>('');
+  const [showForm, setShowForm] = useState(false);
   
   const {
     kpiMappings,
@@ -30,6 +31,7 @@ const SchemeAdministrator: React.FC = () => {
     isUploadingExcel,
     assignKpisToScheme,
     isAssigningKpis,
+    deleteKpiMapping
   } = useKpiMappings();
 
   const { incentivePlans, loadingPlans } = useS4HanaData();
@@ -41,6 +43,7 @@ const SchemeAdministrator: React.FC = () => {
   const handleKpiSubmit = (kpiMapping: KPIFieldMapping) => {
     console.log('Submitting KPI mapping:', kpiMapping);
     createKpiMapping(kpiMapping);
+    setShowForm(false); // Hide form after submission
   };
 
   const handleExcelUpload = (file: File) => {
@@ -65,6 +68,12 @@ const SchemeAdministrator: React.FC = () => {
     return newSchemeId;
   };
 
+  const handleDeleteKpi = (id: string) => {
+    if (window.confirm('Are you sure you want to delete this KPI mapping?')) {
+      deleteKpiMapping(id);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-app-gray-50 to-white">
       <NavBar />
@@ -87,52 +96,45 @@ const SchemeAdministrator: React.FC = () => {
             </TabsList>
             
             <TabsContent value="kpi-mapping">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Create KPI Field Mapping</CardTitle>
+              <Card className="mb-6">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0">
+                  <div>
+                    <CardTitle>KPI Mapping Table</CardTitle>
                     <CardDescription>
                       Define KPI fields that will be available to scheme designers
                     </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-6">
-                      <div className="space-y-4">
-                        <h3 className="text-lg font-medium">Upload Excel Template</h3>
+                  </div>
+                  <Button onClick={() => setShowForm(!showForm)} className="flex items-center">
+                    <Plus size={16} className="mr-2" />
+                    Add New KPI
+                  </Button>
+                </CardHeader>
+                <CardContent>
+                  {showForm && (
+                    <div className="mb-8 p-4 border rounded-md bg-gray-50">
+                      <h3 className="text-lg font-medium mb-4">New KPI Mapping</h3>
+                      <div className="mb-4">
                         <ExcelUploader 
                           onUpload={handleExcelUpload} 
                           isUploading={isUploadingExcel}
                           fileHeaders={fileHeaders}
                         />
                       </div>
-                      
-                      <div className="pt-4 border-t">
-                        <h3 className="text-lg font-medium mb-4">KPI Mapping Details</h3>
-                        <KpiMappingForm 
-                          onSubmit={handleKpiSubmit}
-                          fileHeaders={fileHeaders}
-                          isSaving={false}
-                        />
-                      </div>
+                      <KpiMappingForm 
+                        onSubmit={handleKpiSubmit}
+                        fileHeaders={fileHeaders}
+                        isSaving={false}
+                      />
                     </div>
-                  </CardContent>
-                </Card>
-                
-                <Card>
-                  <CardHeader>
-                    <CardTitle>KPI Field Mappings</CardTitle>
-                    <CardDescription>
-                      View all defined KPI field mappings
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <KpiMappingList 
-                      mappings={kpiMappings}
-                      isLoading={isLoadingMappings}
-                    />
-                  </CardContent>
-                </Card>
-              </div>
+                  )}
+                  
+                  <KpiMappingList 
+                    mappings={kpiMappings}
+                    isLoading={isLoadingMappings}
+                    onDelete={handleDeleteKpi}
+                  />
+                </CardContent>
+              </Card>
             </TabsContent>
             
             <TabsContent value="scheme-setup">

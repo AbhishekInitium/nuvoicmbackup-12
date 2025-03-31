@@ -6,11 +6,14 @@ const API_BASE_URL = '/api';
 
 export interface KPIFieldMapping {
   _id?: string;
+  section: string; // Added section field (BASE_DATA, QUAL_CRI, etc.)
   kpiName: string;
-  sourceType: 'SAP' | 'EXCEL';
+  description: string; // Added description field
+  sourceType: 'SAP' | 'EXCEL' | 'External';
   sourceField: string;
-  sourceFileHeader: string;
-  dataType: 'string' | 'number' | 'date' | 'boolean';
+  sourceFileHeader?: string;
+  dataType: 'string' | 'number' | 'date' | 'boolean' | 'Char4' | '';
+  api?: string; // Added API endpoint information
   availableToDesigner: boolean;
   createdAt?: string;
 }
@@ -22,6 +25,16 @@ export interface SchemeMaster {
   createdAt?: string;
   updatedAt?: string;
 }
+
+// Predefined KPI section options
+export const KPI_SECTIONS = [
+  'BASE_DATA',
+  'QUAL_CRI',
+  'INCL_CRI',
+  'ADJ_CRI',
+  'EX_CRI',
+  'CUSTOM_RULES'
+];
 
 /**
  * Get all KPI field mappings
@@ -126,5 +139,19 @@ export const getSchemeMaster = async (schemeId: string): Promise<SchemeMaster | 
   } catch (error) {
     console.error('Error fetching scheme master:', error);
     return null;
+  }
+};
+
+/**
+ * Delete a KPI field mapping by ID
+ */
+export const deleteKpiFieldMapping = async (id: string): Promise<boolean> => {
+  try {
+    console.log('Deleting KPI field mapping:', id);
+    await axios.delete(`${API_BASE_URL}/kpi-fields/${id}`);
+    return true;
+  } catch (error) {
+    console.error('Error deleting KPI field mapping:', error);
+    return false;
   }
 };

@@ -9,7 +9,8 @@ import {
   saveKpiFieldMapping,
   uploadExcelFormat,
   assignKpiFieldsToScheme,
-  getSchemeMaster
+  getSchemeMaster,
+  deleteKpiFieldMapping
 } from '@/services/database/kpiMappingService';
 
 export const useKpiMappings = () => {
@@ -124,6 +125,36 @@ export const useKpiMappings = () => {
     }
   });
 
+  // Mutation for deleting a KPI field mapping
+  const deleteKpiMutation = useMutation({
+    mutationFn: deleteKpiFieldMapping,
+    onSuccess: (success) => {
+      if (success) {
+        console.log('KPI mapping deleted successfully');
+        toast({ 
+          title: "Success", 
+          description: "KPI field mapping deleted successfully" 
+        });
+        queryClient.invalidateQueries({ queryKey: ['kpiMappings'] });
+        queryClient.invalidateQueries({ queryKey: ['availableKpis'] });
+      } else {
+        toast({ 
+          title: "Error", 
+          description: "Failed to delete KPI mapping", 
+          variant: "destructive" 
+        });
+      }
+    },
+    onError: (error: Error) => {
+      console.error('Error in deleteKpiMutation:', error);
+      toast({ 
+        title: "Error", 
+        description: `Failed to delete KPI mapping: ${error.message}`, 
+        variant: "destructive" 
+      });
+    }
+  });
+
   // Function to create a new KPI mapping
   const createKpiMapping = (kpiMapping: KPIFieldMapping) => {
     console.log('Creating KPI mapping:', kpiMapping);
@@ -140,6 +171,12 @@ export const useKpiMappings = () => {
   const assignKpisToScheme = (schemeId: string, kpiFields: string[]) => {
     console.log('Assigning KPI fields to scheme:', schemeId, kpiFields);
     assignKpisToSchemeMutation.mutate({ schemeId, kpiFields });
+  };
+
+  // Function to delete a KPI field mapping
+  const deleteKpiMapping = (id: string) => {
+    console.log('Deleting KPI mapping:', id);
+    deleteKpiMutation.mutate(id);
   };
 
   // Query for fetching scheme master by schemeId
@@ -171,6 +208,9 @@ export const useKpiMappings = () => {
     
     assignKpisToScheme,
     isAssigningKpis: assignKpisToSchemeMutation.isPending,
+    
+    deleteKpiMapping,
+    isDeletingKpi: deleteKpiMutation.isPending,
     
     getSchemeMasterBySchemeId,
   };
