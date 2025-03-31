@@ -26,6 +26,14 @@ export const useKpiMappings = () => {
   } = useQuery({
     queryKey: ['kpiMappings'],
     queryFn: getKpiFieldMappings,
+    onError: (error: Error) => {
+      console.error('Error in kpiMappings query:', error);
+      toast({
+        variant: "destructive",
+        title: "Failed to load KPI mappings",
+        description: error.message,
+      });
+    }
   });
 
   // Query for fetching available KPI fields for designers
@@ -37,12 +45,21 @@ export const useKpiMappings = () => {
   } = useQuery({
     queryKey: ['availableKpis'],
     queryFn: getAvailableKpiFields,
+    onError: (error: Error) => {
+      console.error('Error in availableKpis query:', error);
+      toast({
+        variant: "destructive",
+        title: "Failed to load available KPIs",
+        description: error.message,
+      });
+    }
   });
 
   // Mutation for saving a new KPI mapping
   const createKpiMutation = useMutation({
     mutationFn: saveKpiFieldMapping,
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log('KPI mapping saved successfully:', data);
       toast({ 
         title: "Success", 
         description: "KPI field mapping saved successfully" 
@@ -51,6 +68,7 @@ export const useKpiMappings = () => {
       queryClient.invalidateQueries({ queryKey: ['availableKpis'] });
     },
     onError: (error: Error) => {
+      console.error('Error in createKpiMutation:', error);
       toast({ 
         title: "Error", 
         description: `Failed to save KPI mapping: ${error.message}`, 
@@ -63,6 +81,7 @@ export const useKpiMappings = () => {
   const uploadExcelMutation = useMutation({
     mutationFn: uploadExcelFormat,
     onSuccess: (headers) => {
+      console.log('Excel upload successful, headers:', headers);
       setFileHeaders(headers);
       toast({ 
         title: "Success", 
@@ -70,6 +89,7 @@ export const useKpiMappings = () => {
       });
     },
     onError: (error: Error) => {
+      console.error('Error in uploadExcelMutation:', error);
       toast({ 
         title: "Error", 
         description: `Failed to upload Excel format: ${error.message}`, 
@@ -82,13 +102,16 @@ export const useKpiMappings = () => {
   const assignKpisToSchemeMutation = useMutation({
     mutationFn: ({ schemeId, kpiFields }: { schemeId: string; kpiFields: string[] }) => 
       assignKpiFieldsToScheme(schemeId, kpiFields),
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log('KPI fields assigned to scheme:', data);
       toast({ 
         title: "Success", 
         description: "KPI fields assigned to scheme" 
       });
+      queryClient.invalidateQueries({ queryKey: ['schemeMaster'] });
     },
     onError: (error: Error) => {
+      console.error('Error in assignKpisToSchemeMutation:', error);
       toast({ 
         title: "Error", 
         description: `Failed to assign KPI fields: ${error.message}`, 
@@ -99,16 +122,19 @@ export const useKpiMappings = () => {
 
   // Function to create a new KPI mapping
   const createKpiMapping = (kpiMapping: KPIFieldMapping) => {
+    console.log('Creating KPI mapping:', kpiMapping);
     createKpiMutation.mutate(kpiMapping);
   };
 
   // Function to upload Excel file
   const uploadExcel = (file: File) => {
+    console.log('Uploading Excel file:', file.name, file.type, file.size);
     uploadExcelMutation.mutate(file);
   };
 
   // Function to assign KPI fields to a scheme
   const assignKpisToScheme = (schemeId: string, kpiFields: string[]) => {
+    console.log('Assigning KPI fields to scheme:', schemeId, kpiFields);
     assignKpisToSchemeMutation.mutate({ schemeId, kpiFields });
   };
 

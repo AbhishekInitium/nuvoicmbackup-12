@@ -1,8 +1,8 @@
 
 import axios from 'axios';
 
-// Base URL for API requests
-const API_BASE_URL = 'http://localhost:3001/api';
+// Base URL for API requests - Use a relative URL to make it work in all environments
+const API_BASE_URL = '/api';
 
 export interface KPIFieldMapping {
   _id?: string;
@@ -28,6 +28,7 @@ export interface SchemeMaster {
  */
 export const getKpiFieldMappings = async (): Promise<KPIFieldMapping[]> => {
   try {
+    console.log('Fetching KPI field mappings...');
     const response = await axios.get(`${API_BASE_URL}/kpi-fields`);
     return response.data;
   } catch (error) {
@@ -41,6 +42,7 @@ export const getKpiFieldMappings = async (): Promise<KPIFieldMapping[]> => {
  */
 export const getAvailableKpiFields = async (): Promise<KPIFieldMapping[]> => {
   try {
+    console.log('Fetching available KPI fields...');
     const response = await axios.get(`${API_BASE_URL}/kpi-fields/available`);
     return response.data;
   } catch (error) {
@@ -54,6 +56,7 @@ export const getAvailableKpiFields = async (): Promise<KPIFieldMapping[]> => {
  */
 export const saveKpiFieldMapping = async (kpiMapping: KPIFieldMapping): Promise<KPIFieldMapping> => {
   try {
+    console.log('Saving KPI field mapping:', kpiMapping);
     const response = await axios.post(`${API_BASE_URL}/kpi-fields`, kpiMapping);
     return response.data.kpi;
   } catch (error) {
@@ -67,6 +70,7 @@ export const saveKpiFieldMapping = async (kpiMapping: KPIFieldMapping): Promise<
  */
 export const uploadExcelFormat = async (file: File): Promise<string[]> => {
   try {
+    console.log('Uploading Excel file:', file.name);
     const formData = new FormData();
     formData.append('file', file);
     
@@ -76,6 +80,7 @@ export const uploadExcelFormat = async (file: File): Promise<string[]> => {
       },
     });
     
+    console.log('Excel upload response:', response.data);
     return response.data.headers;
   } catch (error) {
     console.error('Error uploading Excel format:', error);
@@ -88,6 +93,7 @@ export const uploadExcelFormat = async (file: File): Promise<string[]> => {
  */
 export const assignKpiFieldsToScheme = async (schemeId: string, kpiFields: string[]): Promise<SchemeMaster> => {
   try {
+    console.log('Assigning KPI fields to scheme:', schemeId, kpiFields);
     const response = await axios.post(`${API_BASE_URL}/schemes/${schemeId}/master`, { kpiFields });
     return response.data.scheme;
   } catch (error) {
@@ -101,6 +107,7 @@ export const assignKpiFieldsToScheme = async (schemeId: string, kpiFields: strin
  */
 export const getSchemeMaster = async (schemeId: string): Promise<SchemeMaster | null> => {
   try {
+    console.log('Fetching scheme master for schemeId:', schemeId);
     const response = await axios.get(`${API_BASE_URL}/schemes/${schemeId}/master`);
     return response.data.scheme;
   } catch (error) {
