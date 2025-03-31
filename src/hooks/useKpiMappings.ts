@@ -7,6 +7,7 @@ import {
   getKpiFieldMappings, 
   getAvailableKpiFields,
   saveKpiFieldMapping,
+  updateKpiFieldMapping,
   uploadExcelFormat,
   assignKpiFieldsToScheme,
   getSchemeMaster,
@@ -17,6 +18,7 @@ export const useKpiMappings = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [fileHeaders, setFileHeaders] = useState<string[]>([]);
+  const [editingKpi, setEditingKpi] = useState<KPIFieldMapping | null>(null);
 
   // Query for fetching all KPI mappings
   const { 
@@ -77,6 +79,30 @@ export const useKpiMappings = () => {
       toast({ 
         title: "Error", 
         description: `Failed to save KPI mapping: ${error.message}`, 
+        variant: "destructive" 
+      });
+    }
+  });
+
+  // Mutation for updating an existing KPI mapping
+  const updateKpiMutation = useMutation({
+    mutationFn: ({ id, kpiMapping }: { id: string; kpiMapping: KPIFieldMapping }) => 
+      updateKpiFieldMapping(id, kpiMapping),
+    onSuccess: (data) => {
+      console.log('KPI mapping updated successfully:', data);
+      toast({ 
+        title: "Success", 
+        description: "KPI field mapping updated successfully" 
+      });
+      setEditingKpi(null);
+      queryClient.invalidateQueries({ queryKey: ['kpiMappings'] });
+      queryClient.invalidateQueries({ queryKey: ['availableKpis'] });
+    },
+    onError: (error: Error) => {
+      console.error('Error in updateKpiMutation:', error);
+      toast({ 
+        title: "Error", 
+        description: `Failed to update KPI mapping: ${error.message}`, 
         variant: "destructive" 
       });
     }
@@ -161,6 +187,22 @@ export const useKpiMappings = () => {
     createKpiMutation.mutate(kpiMapping);
   };
 
+  // Function to update an existing KPI mapping
+  const updateKpiMapping = (id: string, kpiMapping: KPIFieldMapping) => {
+    console.log('Updating KPI mapping:', id, kpiMapping);
+    updateKpiMutation.mutate({ id, kpiMapping });
+  };
+
+  // Function to start editing a KPI mapping
+  const startEditingKpi = (kpi: KPIFieldMapping) => {
+    setEditingKpi({ ...kpi });
+  };
+
+  // Function to cancel editing
+  const cancelEditingKpi = () => {
+    setEditingKpi(null);
+  };
+
   // Function to upload Excel file
   const uploadExcel = (file: File) => {
     console.log('Uploading Excel file:', file.name, file.type, file.size);
@@ -203,6 +245,15 @@ export const useKpiMappings = () => {
     
     fileHeaders,
     createKpiMapping,
+    updateKpiMapping,
+    isCreatingKpi: createKpiMutation.isPending,
+    isUpdatingKpi: updateKpiMutation.isPending,
+    
+    // Editing state
+    editingKpi,
+    startEditingKpi,
+    cancelEditingKpi,
+    
     uploadExcel,
     isUploadingExcel: uploadExcelMutation.isPending,
     
@@ -215,3 +266,4 @@ export const useKpiMappings = () => {
     getSchemeMasterBySchemeId,
   };
 };
+

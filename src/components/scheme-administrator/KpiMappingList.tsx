@@ -10,19 +10,21 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Trash2 } from 'lucide-react';
+import { Trash2, Pen } from 'lucide-react';
 import { KPIFieldMapping } from '@/services/database/kpiMappingService';
 
 interface KpiMappingListProps {
   mappings: KPIFieldMapping[];
   isLoading?: boolean;
   onDelete?: (id: string) => void;
+  onEdit?: (kpi: KPIFieldMapping) => void;
 }
 
 const KpiMappingList: React.FC<KpiMappingListProps> = ({
   mappings,
   isLoading = false,
-  onDelete
+  onDelete,
+  onEdit
 }) => {
   // Ensure mappings is always an array
   const mappingsArray = Array.isArray(mappings) ? mappings : [];
@@ -72,16 +74,28 @@ const KpiMappingList: React.FC<KpiMappingListProps> = ({
                 <span className="text-xs">{mapping.api || '-'}</span>
               </TableCell>
               <TableCell className="text-right">
-                {onDelete && mapping._id && (
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    onClick={() => onDelete(mapping._id || '')}
-                    className="h-8 w-8 p-0"
-                  >
-                    <Trash2 size={16} className="text-red-500" />
-                  </Button>
-                )}
+                <div className="flex justify-end space-x-2">
+                  {onEdit && mapping._id && (
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={() => onEdit(mapping)}
+                      className="h-8 w-8 p-0"
+                    >
+                      <Pen size={16} className="text-blue-500" />
+                    </Button>
+                  )}
+                  {onDelete && mapping._id && (
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={() => onDelete(mapping._id || '')}
+                      className="h-8 w-8 p-0"
+                    >
+                      <Trash2 size={16} className="text-red-500" />
+                    </Button>
+                  )}
+                </div>
               </TableCell>
             </TableRow>
           ))}

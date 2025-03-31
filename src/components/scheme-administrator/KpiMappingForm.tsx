@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,40 +10,52 @@ import { KPIFieldMapping, KPI_SECTIONS } from '@/services/database/kpiMappingSer
 
 interface KpiMappingFormProps {
   onSubmit: (kpiMapping: KPIFieldMapping) => void;
+  initialData?: KPIFieldMapping | null;
   isSaving?: boolean;
+  onCancel?: () => void;
+  mode?: 'create' | 'edit';
 }
+
+const defaultKpiMapping: KPIFieldMapping = {
+  section: 'BASE_DATA',
+  kpiName: '',
+  description: '',
+  sourceType: 'System',
+  sourceField: '',
+  sourceFileHeader: '',
+  dataType: 'string',
+  api: '',
+  availableToDesigner: true
+};
 
 const KpiMappingForm: React.FC<KpiMappingFormProps> = ({
   onSubmit,
-  isSaving = false
+  initialData = null,
+  isSaving = false,
+  onCancel,
+  mode = 'create'
 }) => {
-  const [kpiMapping, setKpiMapping] = useState<KPIFieldMapping>({
-    section: 'BASE_DATA',
-    kpiName: '',
-    description: '',
-    sourceType: 'System',
-    sourceField: '',
-    sourceFileHeader: '',
-    dataType: 'string',
-    api: '',
-    availableToDesigner: true
-  });
+  const [kpiMapping, setKpiMapping] = useState<KPIFieldMapping>(
+    initialData ? { ...initialData } : { ...defaultKpiMapping }
+  );
+
+  useEffect(() => {
+    // Update form data when initialData changes (for edit mode)
+    if (initialData) {
+      setKpiMapping({ ...initialData });
+    } else {
+      setKpiMapping({ ...defaultKpiMapping });
+    }
+  }, [initialData]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSubmit(kpiMapping);
-    // Reset form
-    setKpiMapping({
-      section: 'BASE_DATA',
-      kpiName: '',
-      description: '',
-      sourceType: 'System',
-      sourceField: '',
-      sourceFileHeader: '',
-      dataType: 'string',
-      api: '',
-      availableToDesigner: true
-    });
+    
+    // Only reset the form in create mode
+    if (mode === 'create' && !initialData) {
+      setKpiMapping({ ...defaultKpiMapping });
+    }
   };
 
   const handleChange = (field: keyof KPIFieldMapping, value: any) => {
@@ -170,9 +182,17 @@ const KpiMappingForm: React.FC<KpiMappingFormProps> = ({
         </div>
       </div>
 
-      <Button type="submit" disabled={isSaving}>
-        {isSaving ? 'Saving...' : 'Save KPI Mapping'}
-      </Button>
+      <div className="flex space-x-2">
+        <Button type="submit" disabled={isSaving}>
+          {isSaving ? 'Saving...' : mode === 'create' ? 'Save KPI Mapping' : 'Update KPI Mapping'}
+        </Button>
+        
+        {onCancel && (
+          <Button type="button" variant="outline" onClick={onCancel}>
+            Cancel
+          </Button>
+        )}
+      </div>
     </form>
   );
 };

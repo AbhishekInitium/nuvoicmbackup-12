@@ -25,9 +25,15 @@ const SchemeAdministrator: React.FC = () => {
     availableKpis,
     isLoadingAvailableKpis,
     createKpiMapping,
+    updateKpiMapping,
     assignKpisToScheme,
     isAssigningKpis,
-    deleteKpiMapping
+    deleteKpiMapping,
+    editingKpi,
+    startEditingKpi,
+    cancelEditingKpi,
+    isCreatingKpi,
+    isUpdatingKpi
   } = useKpiMappings();
 
   const { incentivePlans, loadingPlans } = useS4HanaData();
@@ -37,8 +43,13 @@ const SchemeAdministrator: React.FC = () => {
   const assignedKpis = schemeMaster?.kpiFields || [];
 
   const handleKpiSubmit = (kpiMapping: KPIFieldMapping) => {
-    console.log('Submitting KPI mapping:', kpiMapping);
-    createKpiMapping(kpiMapping);
+    if (editingKpi && editingKpi._id) {
+      // Update existing KPI mapping
+      updateKpiMapping(editingKpi._id, kpiMapping);
+    } else {
+      // Create new KPI mapping
+      createKpiMapping(kpiMapping);
+    }
     setShowForm(false); // Hide form after submission
   };
 
@@ -62,7 +73,29 @@ const SchemeAdministrator: React.FC = () => {
   const handleDeleteKpi = (id: string) => {
     if (window.confirm('Are you sure you want to delete this KPI mapping?')) {
       deleteKpiMapping(id);
+      // If currently editing this KPI, cancel the edit
+      if (editingKpi && editingKpi._id === id) {
+        cancelEditingKpi();
+      }
     }
+  };
+
+  const handleEditKpi = (kpi: KPIFieldMapping) => {
+    startEditingKpi(kpi);
+    setShowForm(true);
+  };
+
+  const handleCancelEdit = () => {
+    cancelEditingKpi();
+    setShowForm(false);
+  };
+
+  // Toggle form visibility and reset editing state
+  const toggleForm = () => {
+    if (showForm && editingKpi) {
+      cancelEditingKpi();
+    }
+    setShowForm(!showForm);
   };
 
   return (
@@ -95,18 +128,23 @@ const SchemeAdministrator: React.FC = () => {
                       Define KPI fields that will be available to scheme designers
                     </CardDescription>
                   </div>
-                  <Button onClick={() => setShowForm(!showForm)} className="flex items-center">
+                  <Button onClick={toggleForm} className="flex items-center">
                     <Plus size={16} className="mr-2" />
-                    Add New KPI
+                    {editingKpi ? 'Cancel Edit' : 'Add New KPI'}
                   </Button>
                 </CardHeader>
                 <CardContent>
                   {showForm && (
                     <div className="mb-8 p-4 border rounded-md bg-gray-50">
-                      <h3 className="text-lg font-medium mb-4">New KPI Mapping</h3>
+                      <h3 className="text-lg font-medium mb-4">
+                        {editingKpi ? 'Edit KPI Mapping' : 'New KPI Mapping'}
+                      </h3>
                       <KpiMappingForm 
                         onSubmit={handleKpiSubmit}
-                        isSaving={false}
+                        initialData={editingKpi}
+                        isSaving={isCreatingKpi || isUpdatingKpi}
+                        onCancel={handleCancelEdit}
+                        mode={editingKpi ? 'edit' : 'create'}
                       />
                     </div>
                   )}
@@ -115,6 +153,7 @@ const SchemeAdministrator: React.FC = () => {
                     mappings={kpiMappings}
                     isLoading={isLoadingMappings}
                     onDelete={handleDeleteKpi}
+                    onEdit={handleEditKpi}
                   />
                 </CardContent>
               </Card>

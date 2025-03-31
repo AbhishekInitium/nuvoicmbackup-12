@@ -1,3 +1,4 @@
+
 import axios from 'axios';
 
 // Base URL for API requests - Use a relative URL to make it work in all environments
@@ -77,6 +78,20 @@ export const saveKpiFieldMapping = async (kpiMapping: KPIFieldMapping): Promise<
   } catch (error) {
     console.error('Error saving KPI field mapping:', error);
     throw new Error(`Failed to save KPI field mapping: ${error instanceof Error ? error.message : String(error)}`);
+  }
+};
+
+/**
+ * Update an existing KPI field mapping
+ */
+export const updateKpiFieldMapping = async (id: string, kpiMapping: KPIFieldMapping): Promise<KPIFieldMapping> => {
+  try {
+    console.log(`Updating KPI field mapping with ID: ${id}`, kpiMapping);
+    const response = await axios.put(`${API_BASE_URL}/kpi-fields/${id}`, kpiMapping);
+    return response.data.kpi;
+  } catch (error) {
+    console.error('Error updating KPI field mapping:', error);
+    throw new Error(`Failed to update KPI field mapping: ${error instanceof Error ? error.message : String(error)}`);
   }
 };
 
