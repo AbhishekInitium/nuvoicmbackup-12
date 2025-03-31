@@ -19,6 +19,7 @@ interface KpiMappingListProps {
   onDelete?: (id: string) => void;
   onEdit?: (kpi: KPIFieldMapping) => void;
   onView?: (kpi: KPIFieldMapping) => void;
+  isUsingInMemoryStorage?: boolean;
 }
 
 const KpiMappingList: React.FC<KpiMappingListProps> = ({
@@ -26,7 +27,8 @@ const KpiMappingList: React.FC<KpiMappingListProps> = ({
   isLoading = false,
   onDelete,
   onEdit,
-  onView
+  onView,
+  isUsingInMemoryStorage = false
 }) => {
   // Ensure mappings is always an array
   const mappingsArray = Array.isArray(mappings) ? mappings : [];
