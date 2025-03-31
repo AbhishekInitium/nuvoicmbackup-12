@@ -39,10 +39,12 @@ const SchemeAdministrator: React.FC = () => {
   const assignedKpis = schemeMaster?.kpiFields || [];
 
   const handleKpiSubmit = (kpiMapping: KPIFieldMapping) => {
+    console.log('Submitting KPI mapping:', kpiMapping);
     createKpiMapping(kpiMapping);
   };
 
   const handleExcelUpload = (file: File) => {
+    console.log('Handling Excel upload in SchemeAdministrator:', file.name);
     uploadExcel(file);
   };
 
@@ -100,6 +102,7 @@ const SchemeAdministrator: React.FC = () => {
                         <ExcelUploader 
                           onUpload={handleExcelUpload} 
                           isUploading={isUploadingExcel}
+                          fileHeaders={fileHeaders}
                         />
                       </div>
                       

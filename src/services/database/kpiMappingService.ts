@@ -1,3 +1,4 @@
+
 import axios from 'axios';
 
 // Base URL for API requests - Use a relative URL to make it work in all environments
@@ -77,6 +78,8 @@ export const uploadExcelFormat = async (file: File): Promise<string[]> => {
     const formData = new FormData();
     formData.append('file', file);
     
+    console.log('FormData created:', formData);
+    
     const response = await axios.post(`${API_BASE_URL}/upload-format`, formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
@@ -84,7 +87,14 @@ export const uploadExcelFormat = async (file: File): Promise<string[]> => {
     });
     
     console.log('Excel upload response:', response.data);
-    return response.data.headers;
+    
+    // Make sure we always return an array of strings
+    if (response.data && Array.isArray(response.data.headers)) {
+      return response.data.headers;
+    } else {
+      console.warn('Invalid headers format from server:', response.data);
+      return [];
+    }
   } catch (error) {
     console.error('Error uploading Excel format:', error);
     throw new Error(`Failed to upload Excel format: ${error instanceof Error ? error.message : String(error)}`);

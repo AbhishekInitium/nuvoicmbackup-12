@@ -45,9 +45,11 @@ const ExcelUploader: React.FC<ExcelUploaderProps> = ({
   const handleUpload = () => {
     if (selectedFile) {
       setError(null);
+      console.log('Uploading file:', selectedFile.name, selectedFile.type, selectedFile.size);
       try {
         onUpload(selectedFile);
       } catch (err) {
+        console.error('Upload error in component:', err);
         setError(`Upload failed: ${err instanceof Error ? err.message : String(err)}`);
         toast({
           variant: "destructive",
