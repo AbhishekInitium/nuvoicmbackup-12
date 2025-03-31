@@ -149,6 +149,7 @@ app.get('/api/kpi-fields/available', async (req, res) => {
 // POST create a new KPI field mapping
 app.post('/api/kpi-fields', async (req, res) => {
   try {
+    console.log('Received KPI mapping data:', req.body);
     const mappingData = {
       ...req.body,
       createdAt: new Date().toISOString()
@@ -157,6 +158,7 @@ app.post('/api/kpi-fields', async (req, res) => {
     if (isMongoConnected()) {
       const kpiField = new KPIFieldMapping(mappingData);
       const savedField = await kpiField.save();
+      console.log('KPI mapping saved to MongoDB:', savedField);
       res.status(201).json({ message: 'KPI mapping saved', kpi: savedField });
     } else {
       const newMapping = {
@@ -164,6 +166,7 @@ app.post('/api/kpi-fields', async (req, res) => {
         _id: String(nextInMemoryId++)
       };
       inMemoryKpiMappings.push(newMapping);
+      console.log('KPI mapping saved to memory:', newMapping);
       res.status(201).json({ message: 'KPI mapping saved', kpi: newMapping });
     }
   } catch (error) {
