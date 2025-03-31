@@ -6,7 +6,6 @@ import { DatePicker } from "@/components/ui/date-picker";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import GlassCard from '../ui-custom/GlassCard';
 import { IncentivePlan } from '@/types/incentiveTypes';
-import RevenueBaseSelector from './RevenueBaseSelector';
 import { Badge } from '../ui/badge';
 import { CURRENCIES } from '@/constants/incentiveConstants';
 
@@ -133,11 +132,6 @@ const BasicInformation: React.FC<BasicInformationProps> = ({
                 </SelectContent>
               </Select>
             </div>
-
-            <RevenueBaseSelector 
-              revenueBase={plan.revenueBase}
-              updateRevenueBase={(value) => updatePlan('revenueBase', value)}
-            />
           </div>
         </div>
       </GlassCard>

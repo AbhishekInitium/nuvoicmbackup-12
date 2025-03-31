@@ -2,9 +2,9 @@
 import React from 'react';
 import SectionPanel from '../ui-custom/SectionPanel';
 import { IncentivePlan } from '@/types/incentiveTypes';
-import ParticipantsSection from './ParticipantsSection';
 import MeasurementRules from './MeasurementRules';
 import CustomRules from './CustomRules';
+import RevenueBaseSelector from './RevenueBaseSelector';
 
 interface SchemeStructureSectionsProps {
   plan: IncentivePlan;
@@ -20,14 +20,14 @@ const SchemeStructureSections: React.FC<SchemeStructureSectionsProps> = ({
       <div className="space-y-8">
         {/* 2.1 Base Data */}
         <div className="border-b pb-6">
-          <h3 className="text-lg font-medium mb-4">2.1 Base Data (BASE_DATA)</h3>
+          <h3 className="text-lg font-medium mb-4">2.1 Base Data</h3>
           
-          {/* Commission Agent */}
-          <div>
-            <h4 className="text-md font-medium mb-2">Commission Agent</h4>
-            <ParticipantsSection 
-              participants={plan.participants} 
-              updatePlan={updatePlan} 
+          {/* Calculation Base (Revenue Base moved here) */}
+          <div className="mb-6">
+            <h4 className="text-md font-medium mb-2">Calculation Base</h4>
+            <RevenueBaseSelector 
+              revenueBase={plan.revenueBase}
+              updateRevenueBase={(value) => updatePlan('revenueBase', value)}
             />
           </div>
         </div>
@@ -47,7 +47,7 @@ const SchemeStructureSections: React.FC<SchemeStructureSectionsProps> = ({
         
         {/* 2.3 Custom Rules */}
         <div>
-          <h3 className="text-lg font-medium mb-4">2.3 Custom Rules (CUST_RULE)</h3>
+          <h3 className="text-lg font-medium mb-4">2.3 Custom Rules</h3>
           <CustomRules 
             customRules={plan.customRules}
             currency={plan.currency}
