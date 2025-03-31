@@ -7,7 +7,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from '@/components/ui/button';
 import { useKpiMappings } from '@/hooks/useKpiMappings';
 import KpiMappingForm from '@/components/scheme-administrator/KpiMappingForm';
-import ExcelUploader from '@/components/scheme-administrator/ExcelUploader';
 import KpiMappingList from '@/components/scheme-administrator/KpiMappingList';
 import { KPIFieldMapping } from '@/services/database/kpiMappingService';
 import { generateTimestampId } from '@/utils/idGenerators';
@@ -25,10 +24,7 @@ const SchemeAdministrator: React.FC = () => {
     isLoadingMappings,
     availableKpis,
     isLoadingAvailableKpis,
-    fileHeaders,
     createKpiMapping,
-    uploadExcel,
-    isUploadingExcel,
     assignKpisToScheme,
     isAssigningKpis,
     deleteKpiMapping
@@ -44,11 +40,6 @@ const SchemeAdministrator: React.FC = () => {
     console.log('Submitting KPI mapping:', kpiMapping);
     createKpiMapping(kpiMapping);
     setShowForm(false); // Hide form after submission
-  };
-
-  const handleExcelUpload = (file: File) => {
-    console.log('Handling Excel upload in SchemeAdministrator:', file.name);
-    uploadExcel(file);
   };
 
   const handleSchemeChange = (schemeId: string) => {
@@ -113,16 +104,8 @@ const SchemeAdministrator: React.FC = () => {
                   {showForm && (
                     <div className="mb-8 p-4 border rounded-md bg-gray-50">
                       <h3 className="text-lg font-medium mb-4">New KPI Mapping</h3>
-                      <div className="mb-4">
-                        <ExcelUploader 
-                          onUpload={handleExcelUpload} 
-                          isUploading={isUploadingExcel}
-                          fileHeaders={fileHeaders}
-                        />
-                      </div>
                       <KpiMappingForm 
                         onSubmit={handleKpiSubmit}
-                        fileHeaders={fileHeaders}
                         isSaving={false}
                       />
                     </div>

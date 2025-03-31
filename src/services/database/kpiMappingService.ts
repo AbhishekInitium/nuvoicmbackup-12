@@ -1,4 +1,3 @@
-
 import axios from 'axios';
 
 // Base URL for API requests - Use a relative URL to make it work in all environments
@@ -9,7 +8,7 @@ export interface KPIFieldMapping {
   section: string; // Added section field (BASE_DATA, QUAL_CRI, etc.)
   kpiName: string;
   description: string; // Added description field
-  sourceType: 'SAP' | 'EXCEL' | 'External';
+  sourceType: 'System' | 'External';
   sourceField: string;
   sourceFileHeader?: string;
   dataType: 'string' | 'number' | 'date' | 'boolean' | 'Char4' | '';
@@ -30,7 +29,6 @@ export interface SchemeMaster {
 export const KPI_SECTIONS = [
   'BASE_DATA',
   'QUAL_CRI',
-  'INCL_CRI',
   'ADJ_CRI',
   'EX_CRI',
   'CUSTOM_RULES'

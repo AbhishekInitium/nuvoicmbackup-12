@@ -2,7 +2,6 @@
 import React from 'react';
 import SectionPanel from '../ui-custom/SectionPanel';
 import { IncentivePlan } from '@/types/incentiveTypes';
-import RevenueBaseSelector from './RevenueBaseSelector';
 import ParticipantsSection from './ParticipantsSection';
 import MeasurementRules from './MeasurementRules';
 import CustomRules from './CustomRules';
@@ -22,15 +21,6 @@ const SchemeStructureSections: React.FC<SchemeStructureSectionsProps> = ({
         {/* 2.1 Base Data */}
         <div className="border-b pb-6">
           <h3 className="text-lg font-medium mb-4">2.1 Base Data (BASE_DATA)</h3>
-          
-          {/* Revenue Base */}
-          <div className="mb-6">
-            <h4 className="text-md font-medium mb-2">Calculation Base</h4>
-            <RevenueBaseSelector
-              revenueBase={plan.revenueBase}
-              updateRevenueBase={(value) => updatePlan('revenueBase', value)}
-            />
-          </div>
           
           {/* Commission Agent */}
           <div>

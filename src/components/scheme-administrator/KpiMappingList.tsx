@@ -62,15 +62,11 @@ const KpiMappingList: React.FC<KpiMappingListProps> = ({
               <TableCell>{mapping.kpiName}</TableCell>
               <TableCell className="max-w-[200px] truncate">{mapping.description}</TableCell>
               <TableCell>
-                <Badge variant={mapping.sourceType === 'SAP' ? 'default' : mapping.sourceType === 'External' ? 'secondary' : 'outline'}>
+                <Badge variant={mapping.sourceType === 'System' ? 'default' : 'secondary'}>
                   {mapping.sourceType}
                 </Badge>
               </TableCell>
-              <TableCell>
-                {mapping.sourceType === 'EXCEL' 
-                  ? mapping.sourceFileHeader 
-                  : mapping.sourceField}
-              </TableCell>
+              <TableCell>{mapping.sourceField}</TableCell>
               <TableCell>{mapping.dataType}</TableCell>
               <TableCell className="max-w-[200px] truncate">
                 <span className="text-xs">{mapping.api || '-'}</span>

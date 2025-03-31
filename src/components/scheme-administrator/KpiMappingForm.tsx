@@ -10,20 +10,18 @@ import { KPIFieldMapping, KPI_SECTIONS } from '@/services/database/kpiMappingSer
 
 interface KpiMappingFormProps {
   onSubmit: (kpiMapping: KPIFieldMapping) => void;
-  fileHeaders?: string[];
   isSaving?: boolean;
 }
 
 const KpiMappingForm: React.FC<KpiMappingFormProps> = ({
   onSubmit,
-  fileHeaders = [],
   isSaving = false
 }) => {
   const [kpiMapping, setKpiMapping] = useState<KPIFieldMapping>({
     section: 'BASE_DATA',
     kpiName: '',
     description: '',
-    sourceType: 'SAP',
+    sourceType: 'System',
     sourceField: '',
     sourceFileHeader: '',
     dataType: 'string',
@@ -39,7 +37,7 @@ const KpiMappingForm: React.FC<KpiMappingFormProps> = ({
       section: 'BASE_DATA',
       kpiName: '',
       description: '',
-      sourceType: 'SAP',
+      sourceType: 'System',
       sourceField: '',
       sourceFileHeader: '',
       dataType: 'string',
@@ -105,14 +103,13 @@ const KpiMappingForm: React.FC<KpiMappingFormProps> = ({
           <Label htmlFor="sourceType">Source Type</Label>
           <Select
             value={kpiMapping.sourceType}
-            onValueChange={(value) => handleChange('sourceType', value as 'SAP' | 'EXCEL' | 'External')}
+            onValueChange={(value) => handleChange('sourceType', value as 'System' | 'External')}
           >
             <SelectTrigger>
               <SelectValue placeholder="Select source type" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="SAP">SAP</SelectItem>
-              <SelectItem value="EXCEL">Excel</SelectItem>
+              <SelectItem value="System">System</SelectItem>
               <SelectItem value="External">External</SelectItem>
             </SelectContent>
           </Select>
@@ -131,36 +128,6 @@ const KpiMappingForm: React.FC<KpiMappingFormProps> = ({
             e.g. Amount, SalesOrganization, SalesRep, VBRP-NETWR
           </p>
         </div>
-
-        {kpiMapping.sourceType === 'EXCEL' && (
-          <div>
-            <Label htmlFor="sourceFileHeader">Excel Column Header</Label>
-            {fileHeaders.length > 0 ? (
-              <Select
-                value={kpiMapping.sourceFileHeader}
-                onValueChange={(value) => handleChange('sourceFileHeader', value)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select Excel column" />
-                </SelectTrigger>
-                <SelectContent>
-                  {fileHeaders.map((header, index) => (
-                    <SelectItem key={index} value={header}>
-                      {header}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            ) : (
-              <Input
-                id="sourceFileHeader"
-                value={kpiMapping.sourceFileHeader || ''}
-                onChange={(e) => handleChange('sourceFileHeader', e.target.value)}
-                placeholder="Enter Excel column header"
-              />
-            )}
-          </div>
-        )}
 
         <div>
           <Label htmlFor="dataType">Data Type</Label>
@@ -181,15 +148,17 @@ const KpiMappingForm: React.FC<KpiMappingFormProps> = ({
           </Select>
         </div>
 
-        <div>
-          <Label htmlFor="api">API Endpoint</Label>
-          <Input
-            id="api"
-            value={kpiMapping.api || ''}
-            onChange={(e) => handleChange('api', e.target.value)}
-            placeholder="Enter API endpoint (e.g. API_SALES_ORDER_SRV//A_SalesOrder)"
-          />
-        </div>
+        {kpiMapping.sourceType === 'System' && (
+          <div>
+            <Label htmlFor="api">API Endpoint</Label>
+            <Input
+              id="api"
+              value={kpiMapping.api || ''}
+              onChange={(e) => handleChange('api', e.target.value)}
+              placeholder="Enter API endpoint (e.g. API_SALES_ORDER_SRV//A_SalesOrder)"
+            />
+          </div>
+        )}
 
         <div className="flex items-center space-x-2 pt-2">
           <Switch
