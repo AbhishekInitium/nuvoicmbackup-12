@@ -26,11 +26,13 @@ export const useKpiMappings = () => {
   const { data: connectionStatus } = useQuery({
     queryKey: ['dbConnectionStatus'],
     queryFn: checkDatabaseConnection,
-    onSettled: (data) => {
-      if (data) {
-        setIsUsingInMemoryStorage(!data.connected);
-      } else {
-        setIsUsingInMemoryStorage(true);
+    meta: {
+      onSettled: (data) => {
+        if (data) {
+          setIsUsingInMemoryStorage(!data.connected);
+        } else {
+          setIsUsingInMemoryStorage(true);
+        }
       }
     },
     onError: () => {
