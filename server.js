@@ -1,3 +1,4 @@
+
 const express = require('express');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
@@ -35,6 +36,10 @@ const upload = multer({ storage: storage });
 
 // MongoDB Connection
 const MONGODB_URI = process.env.MONGODB_URI || "mongodb://localhost:27017/incentives";
+
+// In-memory storage as fallback when MongoDB is not available
+let inMemoryKpiMappings = [];
+let nextInMemoryId = 1;
 
 // Function to check if MongoDB is connected
 const isMongoConnected = () => mongoose.connection.readyState === 1;
@@ -170,20 +175,38 @@ app.get('/api/kpi-fields/available', async (req, res) => {
 
 // POST create a new KPI field mapping
 app.post('/api/kpi-fields', async (req, res) => {
-  try {
-    console.log('Received KPI mapping data:', req.body);
-    const mappingData = {
-      ...req.body,
-      createdAt: new Date().toISOString()
+  const data = req.body;
+  if (isMongoConnected()) {
+    try {
+      const kpi = new KPIFieldMapping({
+        section: data.section,
+        kpiName: data.kpiName,
+        description: data.description,
+        sourceType: data.sourceType,
+        sourceField: data.sourceField,
+        sourceFileHeader: data.sourceFileHeader,
+        dataType: data.dataType,
+        api: data.api,
+        availableToDesigner: data.availableToDesigner,
+        createdAt: new Date().toISOString()
+      });
+      await kpi.save();
+      console.log('KPI mapping saved to MongoDB:', kpi);
+      res.status(201).json({ message: 'KPI saved to MongoDB', kpi });
+    } catch (error) {
+      console.error('MongoDB KPI save error:', error);
+      res.status(500).json({ error: 'Failed to save KPI to database.' });
+    }
+  } else {
+    // Fallback only if required
+    const kpi = { 
+      ...data, 
+      _id: String(nextInMemoryId++), 
+      createdAt: new Date().toISOString() 
     };
-
-    const kpiField = new KPIFieldMapping(mappingData);
-    const savedField = await kpiField.save();
-    console.log('KPI mapping saved to MongoDB:', savedField);
-    res.status(201).json({ message: 'KPI mapping saved', kpi: savedField });
-  } catch (error) {
-    console.error('Error creating KPI field mapping:', error);
-    res.status(500).json({ error: `Failed to create KPI field mapping: ${error.message}` });
+    inMemoryKpiMappings.push(kpi);
+    console.log('KPI mapping saved to in-memory storage (MongoDB not available):', kpi);
+    res.status(201).json({ message: 'Saved to memory (MongoDB not available)', kpi });
   }
 });
 

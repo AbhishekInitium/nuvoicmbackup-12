@@ -41,10 +41,6 @@ export const KPI_SECTIONS = [
   'CUSTOM_RULES'
 ];
 
-// In-memory storage as fallback when API fails
-let inMemoryKpiMappings: KPIFieldMapping[] = [];
-let nextId = 1;
-
 /**
  * Check database connection status
  */
@@ -71,24 +67,10 @@ export const getKpiFieldMappings = async (): Promise<KPIFieldMapping[]> => {
     console.log('Fetching KPI field mappings...');
     const response = await axios.get(`${API_BASE_URL}/kpi-fields`);
     console.log('KPI mappings response:', response.data);
-    
-    // Update in-memory storage with API data
-    if (Array.isArray(response.data) && response.data.length > 0) {
-      inMemoryKpiMappings = response.data;
-      
-      // Update next ID based on existing mappings
-      const maxId = inMemoryKpiMappings
-        .map(kpi => kpi._id ? parseInt(kpi._id.replace(/\D/g, '')) : 0)
-        .reduce((max, current) => Math.max(max, current), 0);
-      nextId = maxId + 1;
-    }
-    
-    // Ensure we always return an array
-    return Array.isArray(response.data) ? response.data : inMemoryKpiMappings;
+    return Array.isArray(response.data) ? response.data : [];
   } catch (error) {
     console.error('Error fetching KPI field mappings:', error);
-    // Return in-memory data as fallback
-    return inMemoryKpiMappings;
+    return [];
   }
 };
 
@@ -99,13 +81,10 @@ export const getAvailableKpiFields = async (): Promise<KPIFieldMapping[]> => {
   try {
     console.log('Fetching available KPI fields...');
     const response = await axios.get(`${API_BASE_URL}/kpi-fields/available`);
-    // Ensure we always return an array
-    return Array.isArray(response.data) ? response.data : 
-           inMemoryKpiMappings.filter(kpi => kpi.availableToDesigner);
+    return Array.isArray(response.data) ? response.data : [];
   } catch (error) {
     console.error('Error fetching available KPI fields:', error);
-    // Return filtered in-memory data as fallback
-    return inMemoryKpiMappings.filter(kpi => kpi.availableToDesigner);
+    return [];
   }
 };
 
@@ -116,31 +95,14 @@ export const saveKpiFieldMapping = async (kpiMapping: KPIFieldMapping): Promise<
   try {
     console.log('Saving KPI field mapping:', kpiMapping);
     const response = await axios.post(`${API_BASE_URL}/kpi-fields`, kpiMapping);
+    console.log('Save KPI response:', response.data);
     
-    // Update in-memory storage with new KPI
+    // Return the KPI object from the response
     const savedKpi = response.data.kpi || response.data;
-    
-    // Add to in-memory storage
-    if (!savedKpi._id) {
-      savedKpi._id = `local-${nextId++}`;
-    }
-    inMemoryKpiMappings.push(savedKpi);
-    
     return savedKpi;
   } catch (error) {
     console.error('Error saving KPI field mapping:', error);
-    
-    // Create fallback local entry
-    const localKpi = {
-      ...kpiMapping,
-      _id: `local-${nextId++}`,
-      createdAt: new Date().toISOString()
-    };
-    
-    // Add to in-memory storage
-    inMemoryKpiMappings.push(localKpi);
-    
-    return localKpi;
+    throw new Error(`Failed to save KPI mapping: ${error instanceof Error ? error.message : String(error)}`);
   }
 };
 
@@ -152,27 +114,11 @@ export const updateKpiFieldMapping = async (id: string, kpiMapping: KPIFieldMapp
     console.log(`Updating KPI field mapping with ID: ${id}`, kpiMapping);
     const response = await axios.put(`${API_BASE_URL}/kpi-fields/${id}`, kpiMapping);
     
-    // Update in-memory storage
+    // Return the updated KPI object
     const updatedKpi = response.data.kpi || response.data;
-    const index = inMemoryKpiMappings.findIndex(kpi => kpi._id === id);
-    if (index !== -1) {
-      inMemoryKpiMappings[index] = { ...updatedKpi };
-    }
-    
     return updatedKpi;
   } catch (error) {
     console.error('Error updating KPI field mapping:', error);
-    
-    // Update in-memory storage as fallback
-    const index = inMemoryKpiMappings.findIndex(kpi => kpi._id === id);
-    if (index !== -1) {
-      inMemoryKpiMappings[index] = { 
-        ...kpiMapping, 
-        _id: id
-      };
-      return inMemoryKpiMappings[index];
-    }
-    
     throw new Error(`Failed to update KPI mapping: ${error instanceof Error ? error.message : String(error)}`);
   }
 };
@@ -244,19 +190,9 @@ export const deleteKpiFieldMapping = async (id: string): Promise<boolean> => {
   try {
     console.log('Deleting KPI field mapping:', id);
     await axios.delete(`${API_BASE_URL}/kpi-fields/${id}`);
-    
-    // Update in-memory storage
-    inMemoryKpiMappings = inMemoryKpiMappings.filter(kpi => kpi._id !== id);
-    
     return true;
   } catch (error) {
     console.error('Error deleting KPI field mapping:', error);
-    
-    // Remove from in-memory storage as fallback
-    const initialLength = inMemoryKpiMappings.length;
-    inMemoryKpiMappings = inMemoryKpiMappings.filter(kpi => kpi._id !== id);
-    
-    // Return true if we were able to remove it from memory
-    return inMemoryKpiMappings.length < initialLength;
+    throw new Error(`Failed to delete KPI mapping: ${error instanceof Error ? error.message : String(error)}`);
   }
 };
