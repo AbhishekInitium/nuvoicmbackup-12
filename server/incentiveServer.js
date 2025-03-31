@@ -90,22 +90,28 @@ const incentiveSchema = new mongoose.Schema({
 
 // KPI Field Mapping Schema
 const kpiFieldMappingSchema = new mongoose.Schema({
+  section: {
+    type: String,
+    required: true
+  },
   kpiName: {
     type: String,
     required: true
   },
+  description: String,
   sourceType: {
     type: String,
-    enum: ['SAP', 'EXCEL'],
+    enum: ['System', 'External'],
     required: true
   },
   sourceField: String,
   sourceFileHeader: String,
   dataType: {
     type: String,
-    enum: ['string', 'number', 'date', 'boolean'],
+    enum: ['string', 'number', 'date', 'boolean', 'Char4', ''],
     default: 'string'
   },
+  api: String,
   availableToDesigner: {
     type: Boolean,
     default: true
@@ -135,7 +141,7 @@ const schemeMasterSchema = new mongoose.Schema({
 });
 
 const Incentive = mongoose.model('incentivescheme', incentiveSchema);
-const KPIFieldMapping = mongoose.model('kpifieldmapping', kpiFieldMappingSchema);
+const KPIFieldMapping = mongoose.model('KPI_MAPPING', kpiFieldMappingSchema);
 const SchemeMaster = mongoose.model('schememaster', schemeMasterSchema);
 
 // In-memory fallback for when MongoDB is not available
