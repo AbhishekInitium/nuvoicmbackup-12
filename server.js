@@ -35,8 +35,6 @@ const storage = multer.diskStorage({
 const upload = multer({ storage: storage });
 
 // MongoDB Connection
-// Using a local MongoDB instance since we don't have the actual MongoDB Atlas credentials
-// This will use a locally running MongoDB instance or MongoDB memory server for testing
 const MONGODB_URI = process.env.MONGODB_URI || "mongodb://localhost:27017/incentives";
 
 mongoose.connect(MONGODB_URI, {
@@ -46,8 +44,7 @@ mongoose.connect(MONGODB_URI, {
 .then(() => console.log('Connected to MongoDB'))
 .catch(err => {
   console.error('MongoDB connection error:', err);
-  console.warn('Using in-memory data storage instead. Data will be lost when server restarts.');
-  // Continue execution even without a DB connection - we'll use in-memory storage
+  process.exit(1); // Exit the process if MongoDB connection fails
 });
 
 // KPI Field Mapping Schema
@@ -105,25 +102,14 @@ const schemeMasterSchema = new mongoose.Schema({
 const KPIFieldMapping = mongoose.model('KPI_MAPPING', kpiFieldMappingSchema);
 const SchemeMaster = mongoose.model('schememaster', schemeMasterSchema);
 
-// In-memory fallback for when MongoDB is not available
-let inMemoryKpiMappings = [];
-let inMemorySchemeMasters = [];
-let nextInMemoryId = 1;
-
-// Helper function to determine if MongoDB is connected
-const isMongoConnected = () => mongoose.connection.readyState === 1;
-
 // API Routes for KPI Field Mappings
 
 // GET all KPI field mappings
 app.get('/api/kpi-fields', async (req, res) => {
   try {
-    if (isMongoConnected()) {
-      const kpiFields = await KPIFieldMapping.find().sort({ createdAt: -1 });
-      res.json(kpiFields);
-    } else {
-      res.json(inMemoryKpiMappings);
-    }
+    const kpiFields = await KPIFieldMapping.find().sort({ createdAt: -1 });
+    console.log(`Fetched ${kpiFields.length} KPI mappings from MongoDB`);
+    res.json(kpiFields);
   } catch (error) {
     console.error('Error fetching KPI field mappings:', error);
     res.status(500).json({ error: 'Failed to fetch KPI field mappings' });
@@ -133,13 +119,9 @@ app.get('/api/kpi-fields', async (req, res) => {
 // GET available KPI fields for designers
 app.get('/api/kpi-fields/available', async (req, res) => {
   try {
-    if (isMongoConnected()) {
-      const kpiFields = await KPIFieldMapping.find({ availableToDesigner: true }).sort({ kpiName: 1 });
-      res.json(kpiFields);
-    } else {
-      const availableFields = inMemoryKpiMappings.filter(field => field.availableToDesigner);
-      res.json(availableFields);
-    }
+    const kpiFields = await KPIFieldMapping.find({ availableToDesigner: true }).sort({ kpiName: 1 });
+    console.log(`Fetched ${kpiFields.length} available KPI fields for designers from MongoDB`);
+    res.json(kpiFields);
   } catch (error) {
     console.error('Error fetching available KPI fields:', error);
     res.status(500).json({ error: 'Failed to fetch available KPI fields' });
@@ -155,23 +137,13 @@ app.post('/api/kpi-fields', async (req, res) => {
       createdAt: new Date().toISOString()
     };
 
-    if (isMongoConnected()) {
-      const kpiField = new KPIFieldMapping(mappingData);
-      const savedField = await kpiField.save();
-      console.log('KPI mapping saved to MongoDB:', savedField);
-      res.status(201).json({ message: 'KPI mapping saved', kpi: savedField });
-    } else {
-      const newMapping = {
-        ...mappingData,
-        _id: String(nextInMemoryId++)
-      };
-      inMemoryKpiMappings.push(newMapping);
-      console.log('KPI mapping saved to memory:', newMapping);
-      res.status(201).json({ message: 'KPI mapping saved', kpi: newMapping });
-    }
+    const kpiField = new KPIFieldMapping(mappingData);
+    const savedField = await kpiField.save();
+    console.log('KPI mapping saved to MongoDB:', savedField);
+    res.status(201).json({ message: 'KPI mapping saved', kpi: savedField });
   } catch (error) {
     console.error('Error creating KPI field mapping:', error);
-    res.status(500).json({ error: 'Failed to create KPI field mapping' });
+    res.status(500).json({ error: `Failed to create KPI field mapping: ${error.message}` });
   }
 });
 
@@ -182,62 +154,38 @@ app.put('/api/kpi-fields/:id', async (req, res) => {
       ...req.body,
     };
 
-    if (isMongoConnected()) {
-      const updatedField = await KPIFieldMapping.findByIdAndUpdate(
-        req.params.id,
-        updateData,
-        { new: true }
-      );
+    const updatedField = await KPIFieldMapping.findByIdAndUpdate(
+      req.params.id,
+      updateData,
+      { new: true }
+    );
 
-      if (!updatedField) {
-        return res.status(404).json({ error: 'KPI field mapping not found' });
-      }
-
-      res.json({ message: 'KPI mapping updated', kpi: updatedField });
-    } else {
-      const index = inMemoryKpiMappings.findIndex(field => field._id === req.params.id);
-      
-      if (index === -1) {
-        return res.status(404).json({ error: 'KPI field mapping not found' });
-      }
-
-      inMemoryKpiMappings[index] = {
-        ...inMemoryKpiMappings[index],
-        ...updateData
-      };
-
-      res.json({ message: 'KPI mapping updated', kpi: inMemoryKpiMappings[index] });
+    if (!updatedField) {
+      return res.status(404).json({ error: 'KPI field mapping not found' });
     }
+
+    console.log('KPI mapping updated in MongoDB:', updatedField);
+    res.json({ message: 'KPI mapping updated', kpi: updatedField });
   } catch (error) {
     console.error('Error updating KPI field mapping:', error);
-    res.status(500).json({ error: 'Failed to update KPI field mapping' });
+    res.status(500).json({ error: `Failed to update KPI field mapping: ${error.message}` });
   }
 });
 
 // DELETE a KPI field mapping
 app.delete('/api/kpi-fields/:id', async (req, res) => {
   try {
-    if (isMongoConnected()) {
-      const deletedField = await KPIFieldMapping.findByIdAndDelete(req.params.id);
-      
-      if (!deletedField) {
-        return res.status(404).json({ error: 'KPI field mapping not found' });
-      }
-
-      res.json({ message: 'KPI mapping deleted' });
-    } else {
-      const index = inMemoryKpiMappings.findIndex(field => field._id === req.params.id);
-      
-      if (index === -1) {
-        return res.status(404).json({ error: 'KPI field mapping not found' });
-      }
-
-      inMemoryKpiMappings.splice(index, 1);
-      res.json({ message: 'KPI mapping deleted' });
+    const deletedField = await KPIFieldMapping.findByIdAndDelete(req.params.id);
+    
+    if (!deletedField) {
+      return res.status(404).json({ error: 'KPI field mapping not found' });
     }
+
+    console.log('KPI mapping deleted from MongoDB:', deletedField._id);
+    res.json({ message: 'KPI mapping deleted' });
   } catch (error) {
     console.error('Error deleting KPI field mapping:', error);
-    res.status(500).json({ error: 'Failed to delete KPI field mapping' });
+    res.status(500).json({ error: `Failed to delete KPI field mapping: ${error.message}` });
   }
 });
 
@@ -270,23 +218,13 @@ app.post('/api/upload-format', upload.single('file'), (req, res) => {
 // GET scheme master by schemeId
 app.get('/api/schemes/:schemeId/master', async (req, res) => {
   try {
-    if (isMongoConnected()) {
-      const schemeMaster = await SchemeMaster.findOne({ schemeId: req.params.schemeId });
-      
-      if (!schemeMaster) {
-        return res.status(404).json({ error: 'Scheme master not found' });
-      }
-      
-      res.json({ scheme: schemeMaster });
-    } else {
-      const schemeMaster = inMemorySchemeMasters.find(master => master.schemeId === req.params.schemeId);
-      
-      if (!schemeMaster) {
-        return res.status(404).json({ error: 'Scheme master not found' });
-      }
-      
-      res.json({ scheme: schemeMaster });
+    const schemeMaster = await SchemeMaster.findOne({ schemeId: req.params.schemeId });
+    
+    if (!schemeMaster) {
+      return res.status(404).json({ error: 'Scheme master not found' });
     }
+    
+    res.json({ scheme: schemeMaster });
   } catch (error) {
     console.error('Error fetching scheme master:', error);
     res.status(500).json({ error: 'Failed to fetch scheme master' });
@@ -299,50 +237,30 @@ app.post('/api/schemes/:schemeId/master', async (req, res) => {
     const { kpiFields } = req.body;
     const { schemeId } = req.params;
     
-    if (isMongoConnected()) {
-      const existing = await SchemeMaster.findOne({ schemeId });
-      
-      if (existing) {
-        // Update existing
-        existing.kpiFields = kpiFields;
-        existing.updatedAt = new Date().toISOString();
-        const updated = await existing.save();
-        res.json({ message: 'Scheme master updated', scheme: updated });
-      } else {
-        // Create new
-        const schemeMaster = new SchemeMaster({
-          schemeId,
-          kpiFields,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString()
-        });
-        const saved = await schemeMaster.save();
-        res.status(201).json({ message: 'Scheme master created', scheme: saved });
-      }
+    const existing = await SchemeMaster.findOne({ schemeId });
+    
+    if (existing) {
+      // Update existing
+      existing.kpiFields = kpiFields;
+      existing.updatedAt = new Date().toISOString();
+      const updated = await existing.save();
+      console.log('Scheme master updated in MongoDB:', updated);
+      res.json({ message: 'Scheme master updated', scheme: updated });
     } else {
-      const existing = inMemorySchemeMasters.find(master => master.schemeId === schemeId);
-      
-      if (existing) {
-        // Update existing
-        existing.kpiFields = kpiFields;
-        existing.updatedAt = new Date().toISOString();
-        res.json({ message: 'Scheme master updated', scheme: existing });
-      } else {
-        // Create new
-        const schemeMaster = {
-          _id: String(nextInMemoryId++),
-          schemeId,
-          kpiFields,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString()
-        };
-        inMemorySchemeMasters.push(schemeMaster);
-        res.status(201).json({ message: 'Scheme master created', scheme: schemeMaster });
-      }
+      // Create new
+      const schemeMaster = new SchemeMaster({
+        schemeId,
+        kpiFields,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      });
+      const saved = await schemeMaster.save();
+      console.log('New scheme master created in MongoDB:', saved);
+      res.status(201).json({ message: 'Scheme master created', scheme: saved });
     }
   } catch (error) {
     console.error('Error saving scheme master:', error);
-    res.status(500).json({ error: 'Failed to save scheme master' });
+    res.status(500).json({ error: `Failed to save scheme master: ${error.message}` });
   }
 });
 

@@ -46,8 +46,7 @@ export const getKpiFieldMappings = async (): Promise<KPIFieldMapping[]> => {
     return Array.isArray(response.data) ? response.data : [];
   } catch (error) {
     console.error('Error fetching KPI field mappings:', error);
-    // Return empty array on error
-    return [];
+    throw new Error(`Failed to fetch KPI field mappings: ${error instanceof Error ? error.message : String(error)}`);
   }
 };
 
@@ -62,8 +61,7 @@ export const getAvailableKpiFields = async (): Promise<KPIFieldMapping[]> => {
     return Array.isArray(response.data) ? response.data : [];
   } catch (error) {
     console.error('Error fetching available KPI fields:', error);
-    // Return empty array on error
-    return [];
+    throw new Error(`Failed to fetch available KPI fields: ${error instanceof Error ? error.message : String(error)}`);
   }
 };
 
@@ -151,7 +149,7 @@ export const getSchemeMaster = async (schemeId: string): Promise<SchemeMaster | 
     return response.data.scheme;
   } catch (error) {
     console.error('Error fetching scheme master:', error);
-    return null;
+    throw new Error(`Failed to fetch scheme master: ${error instanceof Error ? error.message : String(error)}`);
   }
 };
 
@@ -165,6 +163,6 @@ export const deleteKpiFieldMapping = async (id: string): Promise<boolean> => {
     return true;
   } catch (error) {
     console.error('Error deleting KPI field mapping:', error);
-    return false;
+    throw new Error(`Failed to delete KPI mapping: ${error instanceof Error ? error.message : String(error)}`);
   }
 };
