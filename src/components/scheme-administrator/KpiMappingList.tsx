@@ -20,11 +20,14 @@ const KpiMappingList: React.FC<KpiMappingListProps> = ({
   mappings,
   isLoading = false
 }) => {
+  // Ensure mappings is always an array
+  const mappingsArray = Array.isArray(mappings) ? mappings : [];
+  
   if (isLoading) {
     return <div className="text-center py-8">Loading KPI mappings...</div>;
   }
 
-  if (mappings.length === 0) {
+  if (mappingsArray.length === 0) {
     return (
       <div className="text-center py-8 bg-gray-50 rounded-md">
         <p className="text-gray-500">No KPI mappings created yet.</p>
@@ -46,7 +49,7 @@ const KpiMappingList: React.FC<KpiMappingListProps> = ({
           </TableRow>
         </TableHeader>
         <TableBody>
-          {mappings.map((mapping) => (
+          {mappingsArray.map((mapping) => (
             <TableRow key={mapping._id}>
               <TableCell className="font-medium">{mapping.kpiName}</TableCell>
               <TableCell>

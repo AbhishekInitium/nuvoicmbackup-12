@@ -1,4 +1,3 @@
-
 import axios from 'axios';
 
 // Base URL for API requests - Use a relative URL to make it work in all environments
@@ -30,10 +29,12 @@ export const getKpiFieldMappings = async (): Promise<KPIFieldMapping[]> => {
   try {
     console.log('Fetching KPI field mappings...');
     const response = await axios.get(`${API_BASE_URL}/kpi-fields`);
-    return response.data;
+    // Ensure we always return an array
+    return Array.isArray(response.data) ? response.data : [];
   } catch (error) {
     console.error('Error fetching KPI field mappings:', error);
-    throw new Error(`Failed to fetch KPI field mappings: ${error instanceof Error ? error.message : String(error)}`);
+    // Return empty array on error
+    return [];
   }
 };
 
@@ -44,10 +45,12 @@ export const getAvailableKpiFields = async (): Promise<KPIFieldMapping[]> => {
   try {
     console.log('Fetching available KPI fields...');
     const response = await axios.get(`${API_BASE_URL}/kpi-fields/available`);
-    return response.data;
+    // Ensure we always return an array
+    return Array.isArray(response.data) ? response.data : [];
   } catch (error) {
     console.error('Error fetching available KPI fields:', error);
-    throw new Error(`Failed to fetch available KPI fields: ${error instanceof Error ? error.message : String(error)}`);
+    // Return empty array on error
+    return [];
   }
 };
 

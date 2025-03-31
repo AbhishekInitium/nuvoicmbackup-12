@@ -152,12 +152,14 @@ export const useKpiMappings = () => {
   };
 
   return {
-    kpiMappings: kpiMappings || [],
+    // Ensure kpiMappings is always an array
+    kpiMappings: Array.isArray(kpiMappings) ? kpiMappings : [],
     isLoadingMappings,
     mappingsError,
     refetchMappings,
     
-    availableKpis: availableKpis || [],
+    // Ensure availableKpis is always an array
+    availableKpis: Array.isArray(availableKpis) ? availableKpis : [],
     isLoadingAvailableKpis,
     availableKpisError,
     refetchAvailableKpis,
