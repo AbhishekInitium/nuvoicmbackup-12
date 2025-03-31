@@ -6,6 +6,7 @@ import { useKpiMappings } from '@/hooks/useKpiMappings';
 import SchemeAdministratorHeader from '@/components/scheme-administrator/SchemeAdministratorHeader';
 import KpiMappingCard from '@/components/scheme-administrator/KpiMappingCard';
 import { useToast } from "@/hooks/use-toast";
+import { Toaster } from "@/components/ui/toaster";
 
 const SchemeAdministrator: React.FC = () => {
   const { toast } = useToast();
@@ -50,6 +51,7 @@ const SchemeAdministrator: React.FC = () => {
           />
         </div>
       </Container>
+      <Toaster />
     </div>
   );
 };

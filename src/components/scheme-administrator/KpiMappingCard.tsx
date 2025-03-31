@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
@@ -6,6 +5,7 @@ import { Plus, X } from 'lucide-react';
 import { KPIFieldMapping } from '@/services/database/kpiMappingService';
 import KpiMappingForm from '@/components/scheme-administrator/KpiMappingForm';
 import KpiMappingList from '@/components/scheme-administrator/KpiMappingList';
+import { useToast } from "@/hooks/use-toast";
 
 interface KpiMappingCardProps {
   kpiMappings: KPIFieldMapping[];
@@ -33,21 +33,35 @@ const KpiMappingCard: React.FC<KpiMappingCardProps> = ({
   isUpdatingKpi
 }) => {
   const [showForm, setShowForm] = useState(false);
+  const { toast } = useToast();
 
   const handleKpiSubmit = (kpiMapping: KPIFieldMapping) => {
     if (editingKpi && editingKpi._id) {
       // Update existing KPI mapping
       updateKpiMapping(editingKpi._id, kpiMapping);
+      toast({
+        title: "Updating KPI mapping",
+        description: "Please wait while we update the KPI mapping...",
+      });
     } else {
       // Create new KPI mapping
       createKpiMapping(kpiMapping);
+      toast({
+        title: "Creating KPI mapping",
+        description: "Please wait while we create the new KPI mapping...",
+      });
     }
-    setShowForm(false); // Hide form after submission
+    // We'll keep the form open until we get confirmation of success/failure
   };
 
   const handleDeleteKpi = (id: string) => {
     if (window.confirm('Are you sure you want to delete this KPI mapping?')) {
       deleteKpiMapping(id);
+      toast({
+        title: "Deleting KPI mapping",
+        description: "Please wait while we delete the KPI mapping...",
+      });
+      
       // If currently editing this KPI, cancel the edit
       if (editingKpi && editingKpi._id === id) {
         cancelEditingKpi();
@@ -73,6 +87,14 @@ const KpiMappingCard: React.FC<KpiMappingCardProps> = ({
       cancelEditingKpi();
     }
   };
+
+  // Reset form on successful create or update
+  React.useEffect(() => {
+    if (!isCreatingKpi && !isUpdatingKpi) {
+      // Only close form if we were previously creating or updating
+      setShowForm(false);
+    }
+  }, [isCreatingKpi, isUpdatingKpi]);
 
   return (
     <Card className="mb-6 shadow-sm">
