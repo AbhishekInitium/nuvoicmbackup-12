@@ -12,7 +12,8 @@ import {
   assignKpiFieldsToScheme,
   getSchemeMaster,
   deleteKpiFieldMapping,
-  checkDatabaseConnection
+  checkDatabaseConnection,
+  DatabaseConnectionStatus
 } from '@/services/database/kpiMappingService';
 
 export const useKpiMappings = () => {
@@ -27,7 +28,7 @@ export const useKpiMappings = () => {
     queryKey: ['dbConnectionStatus'],
     queryFn: checkDatabaseConnection,
     meta: {
-      onSettled: (data) => {
+      onSettled: (data: DatabaseConnectionStatus | undefined) => {
         if (data) {
           setIsUsingInMemoryStorage(!data.connected);
         } else {
