@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useS4HanaData } from '@/hooks/useS4HanaData';
 import { IncentivePlan, PlanMetadata } from '@/types/incentiveTypes';
 import { useIncentivePlan } from '@/hooks/useIncentivePlan';
+import { IncentiveStatus } from '@/services/incentive/types/incentiveServiceTypes';
 
 // Import refactored components
 import IncentiveDesignerHeader from './incentive/IncentiveDesignerHeader';
@@ -96,10 +97,14 @@ const IncentivePlanDesigner: React.FC<IncentivePlanDesignerProps> = ({
     setSchemeId(selectedVersion.schemeId);
     setVersionNumber((selectedVersion.metadata?.version || 0) + 1);
     
+    // Set status from metadata or default to 'DRAFT'
+    const status = (selectedVersion.metadata?.status || 'DRAFT') as IncentiveStatus;
+    
     // Copy all data from the selected version
     copyExistingScheme({
       ...selectedVersion,
       name: selectedVersion.name, // Keep original name (no "Copy of" prefix)
+      status: status, // Add this top-level status property required by IncentivePlanWithStatus
       metadata: {
         createdAt: selectedVersion.metadata?.createdAt || new Date().toISOString(), // Ensure createdAt is not optional
         updatedAt: new Date().toISOString(),

@@ -1,8 +1,7 @@
-
 import { useState, useEffect } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { IncentivePlan, MeasurementRules, PrimaryMetric } from '@/types/incentiveTypes';
-import { IncentivePlanWithStatus } from '@/services/incentive/incentivePlanService';
+import { IncentivePlanWithStatus, IncentiveStatus } from '@/services/incentive/types/incentiveServiceTypes';
 import { DEFAULT_PLAN } from '@/constants/incentiveConstants';
 
 export const useIncentivePlan = (
@@ -76,7 +75,7 @@ export const useIncentivePlan = (
     });
   };
 
-  const copyExistingScheme = (scheme: IncentivePlanWithStatus) => {
+  const copyExistingScheme = (scheme: IncentivePlanWithStatus | IncentivePlan) => {
     const {
       name,
       description,
@@ -92,7 +91,10 @@ export const useIncentivePlan = (
       salesQuota = 0
     } = scheme;
     
-    // Ensure the measurementRules has correct primaryMetrics
+    const status = 'status' in scheme 
+      ? scheme.status 
+      : (scheme.metadata?.status || 'DRAFT') as IncentiveStatus;
+    
     const defaultField = revenueBase === 'salesOrders' ? 'TotalAmount' : 'InvoiceAmount';
     const defaultMetrics: PrimaryMetric[] = [{ 
       field: defaultField, 
@@ -101,10 +103,8 @@ export const useIncentivePlan = (
       description: 'Qualifying Revenue' 
     }];
     
-    // Safe access pattern for potentially undefined values
     const primaryMetrics = measurementRules?.primaryMetrics;
     
-    // Create fixed measurement rules with proper type safety
     const fixedMeasurementRules: MeasurementRules = {
       ...measurementRules,
       primaryMetrics: Array.isArray(primaryMetrics) && primaryMetrics.length > 0
