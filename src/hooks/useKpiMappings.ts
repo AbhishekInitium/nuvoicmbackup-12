@@ -33,10 +33,10 @@ export const useKpiMappings = () => {
         } else {
           setIsUsingInMemoryStorage(true);
         }
+      },
+      onError: () => {
+        setIsUsingInMemoryStorage(true);
       }
-    },
-    onError: () => {
-      setIsUsingInMemoryStorage(true);
     }
   });
 
