@@ -8,6 +8,7 @@ import { v4 as uuidv4 } from 'uuid';
 import KpiMappingCard from './KpiMappingCard';
 import JsonPreview from './JsonPreview';
 import { saveSchemeAdmin } from '@/services/database/mongoDBService';
+import { SchemeAdminConfig, KpiField } from '@/types/kpiTypes';
 
 interface KpiMappingFormProps {
   calculationBase: string;
@@ -36,14 +37,14 @@ const KpiMappingForm: React.FC<KpiMappingFormProps> = ({
   const [baseField, setBaseField] = useState<string>('');
   
   const [kpiData, setKpiData] = useState({
-    [KPI_SECTIONS.BASE_DATA]: [],
-    [KPI_SECTIONS.QUALIFICATION_CRITERIA]: [],
-    [KPI_SECTIONS.ADJUSTMENT_CRITERIA]: [],
-    [KPI_SECTIONS.EXCLUSION_CRITERIA]: [],
-    [KPI_SECTIONS.CUSTOM_RULES]: []
+    [KPI_SECTIONS.BASE_DATA]: [] as KpiField[],
+    [KPI_SECTIONS.QUALIFICATION_CRITERIA]: [] as KpiField[],
+    [KPI_SECTIONS.ADJUSTMENT_CRITERIA]: [] as KpiField[],
+    [KPI_SECTIONS.EXCLUSION_CRITERIA]: [] as KpiField[],
+    [KPI_SECTIONS.CUSTOM_RULES]: [] as KpiField[]
   });
 
-  const handleUpdateKpiSection = (section: string, data: any[]) => {
+  const handleUpdateKpiSection = (section: string, data: KpiField[]) => {
     setKpiData(prev => ({
       ...prev,
       [section]: data
@@ -70,13 +71,17 @@ const KpiMappingForm: React.FC<KpiMappingFormProps> = ({
     }
 
     try {
-      // Prepare data for saving
-      const adminConfig = {
+      // Prepare data for saving with all required fields
+      const adminConfig: SchemeAdminConfig = {
         adminId: uuidv4(),
         adminName: adminName.trim(),
         calculationBase,
         baseField: baseField.trim(),
-        ...kpiData,
+        baseData: kpiData[KPI_SECTIONS.BASE_DATA],
+        qualificationFields: kpiData[KPI_SECTIONS.QUALIFICATION_CRITERIA],
+        adjustmentFields: kpiData[KPI_SECTIONS.ADJUSTMENT_CRITERIA],
+        exclusionFields: kpiData[KPI_SECTIONS.EXCLUSION_CRITERIA],
+        customRules: kpiData[KPI_SECTIONS.CUSTOM_RULES],
         createdAt: new Date().toISOString()
       };
 
@@ -196,7 +201,11 @@ const KpiMappingForm: React.FC<KpiMappingFormProps> = ({
           adminName,
           calculationBase,
           baseField,
-          ...kpiData,
+          baseData: kpiData[KPI_SECTIONS.BASE_DATA],
+          qualificationFields: kpiData[KPI_SECTIONS.QUALIFICATION_CRITERIA],
+          adjustmentFields: kpiData[KPI_SECTIONS.ADJUSTMENT_CRITERIA],
+          exclusionFields: kpiData[KPI_SECTIONS.EXCLUSION_CRITERIA],
+          customRules: kpiData[KPI_SECTIONS.CUSTOM_RULES],
           createdAt: new Date().toISOString()
         }} 
       />
