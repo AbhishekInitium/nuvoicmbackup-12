@@ -47,17 +47,6 @@ const SchemeHeader: React.FC<SchemeHeaderProps> = ({ calculationBase, onChange }
               className="bg-white"
             />
           </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="baseField">Base Field</Label>
-            <Input
-              id="baseField"
-              value={calculationBase.baseField}
-              onChange={(e) => onChange({ baseField: e.target.value })}
-              placeholder="e.g., SoAmount"
-              className="bg-white"
-            />
-          </div>
         </div>
       </CardContent>
     </Card>

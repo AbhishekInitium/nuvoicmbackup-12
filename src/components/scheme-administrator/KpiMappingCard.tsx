@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
@@ -47,7 +46,6 @@ const KpiMappingCard: React.FC<KpiMappingCardProps> = ({
     adminId: "scheme-" + new Date().getTime(),
     adminName: "New Scheme Administrator",
     calculationBase: "Sales Orders",
-    baseField: kpiMappings.find(m => m.section === 'BASE_DATA')?.kpiName || "",
     createdAt: new Date().toISOString()
   });
 
@@ -114,7 +112,6 @@ const KpiMappingCard: React.FC<KpiMappingCardProps> = ({
     adminId: calculationBase.adminId,
     adminName: calculationBase.adminName,
     calculationBase: calculationBase.calculationBase,
-    baseField: calculationBase.baseField,
     createdAt: calculationBase.createdAt,
     baseData: kpiMappings
       .filter(m => m.section === 'BASE_DATA')

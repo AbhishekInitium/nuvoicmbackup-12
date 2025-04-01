@@ -1,4 +1,3 @@
-
 // Common types for KPI mapping service
 
 export interface KPIFieldMapping {
@@ -49,7 +48,6 @@ export interface CalculationBase {
   adminId: string;
   adminName: string;
   calculationBase: string;
-  baseField: string;
   createdAt: string;
 }
 
