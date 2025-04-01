@@ -68,8 +68,30 @@ const incentiveSchema = new mongoose.Schema({
 
 const Incentive = mongoose.model('incentivescheme', incentiveSchema);
 
+// Define Schema for Scheme Admin Configuration
+const schemeAdminSchema = new mongoose.Schema({
+  adminId: {
+    type: String,
+    required: true
+  },
+  adminName: String,
+  createdAt: String,
+  updatedAt: String,
+  calculationBase: String,
+  baseField: String,
+  baseData: Object,
+  qualificationFields: Array,
+  adjustmentFields: Array,
+  exclusionFields: Array,
+  customRules: Array,
+  mappings: Array
+}, { strict: false }); // Allow flexible structure
+
+const SchemeConfig = mongoose.model('schemeconfig', schemeAdminSchema);
+
 // In-memory fallback for when MongoDB is not available
 let inMemorySchemes = [];
+let inMemorySchemeConfigs = [];
 let nextInMemoryId = 1;
 
 // Helper function to determine if MongoDB is connected
@@ -347,6 +369,123 @@ app.delete('/api/incentives/:id', async (req, res) => {
   } catch (error) {
     console.error('Error deleting scheme:', error);
     res.status(500).json({ error: 'Failed to delete incentive scheme' });
+  }
+});
+
+// SchemeConfig API Routes
+
+// GET all scheme configurations
+app.get('/api/admin', async (req, res) => {
+  try {
+    if (isMongoConnected()) {
+      const configs = await SchemeConfig.find().sort({ createdAt: -1 });
+      res.json(configs);
+    } else {
+      // Fallback to in-memory data
+      res.json(inMemorySchemeConfigs);
+    }
+  } catch (error) {
+    console.error('Error fetching scheme configurations:', error);
+    res.status(500).json({ error: 'Failed to fetch scheme configurations' });
+  }
+});
+
+// GET a specific scheme configuration
+app.get('/api/admin/:id', async (req, res) => {
+  try {
+    if (isMongoConnected()) {
+      const config = await SchemeConfig.findById(req.params.id);
+      if (!config) {
+        return res.status(404).json({ error: 'Scheme configuration not found' });
+      }
+      res.json(config);
+    } else {
+      // Fallback to in-memory data
+      const config = inMemorySchemeConfigs.find(c => c._id === req.params.id);
+      if (!config) {
+        return res.status(404).json({ error: 'Scheme configuration not found' });
+      }
+      res.json(config);
+    }
+  } catch (error) {
+    console.error('Error fetching scheme configuration:', error);
+    res.status(500).json({ error: 'Failed to fetch scheme configuration' });
+  }
+});
+
+// POST - Create a new scheme configuration
+app.post('/api/admin', async (req, res) => {
+  try {
+    // Ensure timestamp fields are present
+    const configData = {
+      ...req.body,
+      createdAt: req.body.createdAt || new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+
+    if (isMongoConnected()) {
+      const newConfig = new SchemeConfig(configData);
+      const savedConfig = await newConfig.save();
+      console.log('Saved scheme configuration to MongoDB:', savedConfig._id);
+      res.status(201).json(savedConfig);
+    } else {
+      // Fallback to in-memory storage
+      const inMemoryConfig = {
+        ...configData,
+        _id: String(nextInMemoryId++)
+      };
+      
+      inMemorySchemeConfigs.push(inMemoryConfig);
+      console.log(`Saved in-memory scheme configuration with ID: ${inMemoryConfig._id}`);
+      res.status(201).json(inMemoryConfig);
+    }
+  } catch (error) {
+    console.error('Error creating scheme configuration:', error);
+    res.status(500).json({ error: `Failed to create scheme configuration: ${error.message}` });
+  }
+});
+
+// PUT - Update an existing scheme configuration
+app.put('/api/admin/:id', async (req, res) => {
+  try {
+    const config = await SchemeConfig.findById(req.params.id);
+    
+    if (!config) {
+      return res.status(404).json({ error: 'Scheme configuration not found' });
+    }
+    
+    // Update with new data
+    const updates = {
+      ...req.body,
+      updatedAt: new Date().toISOString()
+    };
+    
+    const updatedConfig = await SchemeConfig.findByIdAndUpdate(
+      req.params.id,
+      updates,
+      { new: true }
+    );
+    
+    res.json(updatedConfig);
+  } catch (error) {
+    console.error('Error updating scheme configuration:', error);
+    res.status(500).json({ error: 'Failed to update scheme configuration' });
+  }
+});
+
+// DELETE - Remove a scheme configuration
+app.delete('/api/admin/:id', async (req, res) => {
+  try {
+    const deletedConfig = await SchemeConfig.findByIdAndDelete(req.params.id);
+    
+    if (!deletedConfig) {
+      return res.status(404).json({ error: 'Scheme configuration not found' });
+    }
+    
+    res.json({ message: 'Scheme configuration deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting scheme configuration:', error);
+    res.status(500).json({ error: 'Failed to delete scheme configuration' });
   }
 });
 

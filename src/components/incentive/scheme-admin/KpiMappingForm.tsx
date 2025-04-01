@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -16,6 +17,7 @@ import { JsonPreview } from './JsonPreview';
 import { saveSchemeAdmin } from '@/services/database/mongoDBService';
 import { useForm } from 'react-hook-form';
 import { v4 as uuidv4 } from 'uuid';
+import { useToast } from "@/hooks/use-toast";
 
 interface KpiMappingFormProps {
   onSaveSuccess: (id: string) => void;
@@ -28,6 +30,8 @@ export const KpiMappingForm: React.FC<KpiMappingFormProps> = ({
   initialConfig = {},
   onConfigUpdate
 }) => {
+  const { toast } = useToast();
+  const [isSaving, setIsSaving] = useState(false);
   const [kpiData, setKpiData] = useState<{
     qualificationFields: KpiField[];
     adjustmentFields: KpiField[];
@@ -170,10 +174,27 @@ export const KpiMappingForm: React.FC<KpiMappingFormProps> = ({
     };
     
     try {
+      setIsSaving(true);
+      console.log("Saving admin config to MongoDB:", adminConfig);
       const id = await saveSchemeAdmin(adminConfig);
+      
+      toast({
+        title: "Configuration Saved",
+        description: `Scheme configuration "${formValues.adminName}" saved successfully`,
+        variant: "default"
+      });
+      
       onSaveSuccess(id);
     } catch (error) {
       console.error("Error saving admin config:", error);
+      
+      toast({
+        title: "Save Error",
+        description: error instanceof Error ? error.message : "Failed to save configuration",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -354,8 +375,8 @@ export const KpiMappingForm: React.FC<KpiMappingFormProps> = ({
           </div>
           
           <div className="flex justify-end pt-6 border-t">
-            <Button type="submit" className="w-40">
-              Save Configuration
+            <Button type="submit" className="w-40" disabled={isSaving}>
+              {isSaving ? "Saving..." : "Save Configuration"}
             </Button>
           </div>
         </form>
