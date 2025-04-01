@@ -38,13 +38,13 @@ export const KpiMappingCard: React.FC<KpiMappingCardProps> = ({ kpi, onUpdate, o
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label htmlFor={`name-${kpi.id}`} className="mb-2 block text-sm font-medium">
+              <Label htmlFor={`kpi-${kpi.id}`} className="mb-2 block text-sm font-medium">
                 KPI Name
               </Label>
               <Input
-                id={`name-${kpi.id}`}
-                value={localKpi.name}
-                onChange={(e) => handleChange('name', e.target.value)}
+                id={`kpi-${kpi.id}`}
+                value={localKpi.kpi}
+                onChange={(e) => handleChange('kpi', e.target.value)}
                 placeholder="KPI Name"
               />
             </div>
@@ -52,20 +52,12 @@ export const KpiMappingCard: React.FC<KpiMappingCardProps> = ({ kpi, onUpdate, o
               <Label htmlFor={`dataType-${kpi.id}`} className="mb-2 block text-sm font-medium">
                 Data Type
               </Label>
-              <Select
+              <Input
+                id={`dataType-${kpi.id}`}
                 value={localKpi.dataType}
-                onValueChange={(value) => handleChange('dataType', value)}
-              >
-                <SelectTrigger id={`dataType-${kpi.id}`}>
-                  <SelectValue placeholder="Data Type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="string">String</SelectItem>
-                  <SelectItem value="number">Number</SelectItem>
-                  <SelectItem value="date">Date</SelectItem>
-                  <SelectItem value="boolean">Boolean</SelectItem>
-                </SelectContent>
-              </Select>
+                onChange={(e) => handleChange('dataType', e.target.value)}
+                placeholder="e.g., Char4, Int8, Date"
+              />
             </div>
           </div>
 
@@ -82,15 +74,15 @@ export const KpiMappingCard: React.FC<KpiMappingCardProps> = ({ kpi, onUpdate, o
               />
             </div>
             <div>
-              <Label htmlFor={`sourceSystem-${kpi.id}`} className="mb-2 block text-sm font-medium">
-                Source System
+              <Label htmlFor={`sourceType-${kpi.id}`} className="mb-2 block text-sm font-medium">
+                Source Type
               </Label>
               <Select 
-                value={localKpi.sourceSystem}
-                onValueChange={(value: "SAP" | "Excel" | "Custom") => handleChange('sourceSystem', value)}
+                value={localKpi.sourceType}
+                onValueChange={(value: "SAP" | "Excel" | "Custom") => handleChange('sourceType', value)}
               >
-                <SelectTrigger id={`sourceSystem-${kpi.id}`}>
-                  <SelectValue placeholder="Source System" />
+                <SelectTrigger id={`sourceType-${kpi.id}`}>
+                  <SelectValue placeholder="Source Type" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="SAP">SAP</SelectItem>
@@ -112,6 +104,20 @@ export const KpiMappingCard: React.FC<KpiMappingCardProps> = ({ kpi, onUpdate, o
               placeholder="Description"
             />
           </div>
+
+          {localKpi.sourceType === "SAP" && (
+            <div>
+              <Label htmlFor={`api-${kpi.id}`} className="mb-2 block text-sm font-medium">
+                API Endpoint
+              </Label>
+              <Input
+                id={`api-${kpi.id}`}
+                value={localKpi.api || ''}
+                onChange={(e) => handleChange('api', e.target.value)}
+                placeholder="e.g., api_salesarea/srvd_a2x/sap/salesarea/0001"
+              />
+            </div>
+          )}
 
           <div className="flex justify-end space-x-2">
             <Button 
@@ -135,7 +141,7 @@ export const KpiMappingCard: React.FC<KpiMappingCardProps> = ({ kpi, onUpdate, o
         <div>
           <div className="flex justify-between items-start">
             <div>
-              <h4 className="text-base font-medium">{kpi.name || "Unnamed KPI"}</h4>
+              <h4 className="text-base font-medium">{kpi.kpi || "Unnamed KPI"}</h4>
               <p className="text-sm text-gray-500 mt-1">{kpi.description || "No description"}</p>
             </div>
             <div className="flex space-x-2">
@@ -164,16 +170,22 @@ export const KpiMappingCard: React.FC<KpiMappingCardProps> = ({ kpi, onUpdate, o
             </div>
             <div>
               <p className="text-xs font-medium text-gray-500">Data Type</p>
-              <p className="text-sm capitalize">{kpi.dataType}</p>
+              <p className="text-sm">{kpi.dataType}</p>
             </div>
             <div>
-              <p className="text-xs font-medium text-gray-500">Source System</p>
-              <p className="text-sm">{kpi.sourceSystem}</p>
+              <p className="text-xs font-medium text-gray-500">Source Type</p>
+              <p className="text-sm">{kpi.sourceType}</p>
             </div>
             <div>
               <p className="text-xs font-medium text-gray-500">Category</p>
               <p className="text-sm capitalize">{kpi.category}</p>
             </div>
+            {kpi.api && (
+              <div className="col-span-2">
+                <p className="text-xs font-medium text-gray-500">API</p>
+                <p className="text-sm break-all">{kpi.api}</p>
+              </div>
+            )}
           </div>
         </div>
       )}

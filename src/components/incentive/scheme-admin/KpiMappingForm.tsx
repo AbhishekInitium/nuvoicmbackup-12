@@ -69,11 +69,11 @@ export const KpiMappingForm: React.FC<KpiMappingFormProps> = ({
   const handleAddKpi = (category: 'qualification' | 'adjustment' | 'exclusion' | 'custom') => {
     const newKpi: KpiField = {
       id: uuidv4(),
-      name: "",
+      kpi: "",
       description: "",
-      dataType: "string",
+      dataType: "Char10",
       sourceField: "",
-      sourceSystem: "Excel",
+      sourceType: "Excel",
       category
     };
 

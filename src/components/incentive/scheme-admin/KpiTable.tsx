@@ -27,47 +27,49 @@ export const KpiTable: React.FC<KpiTableProps> = ({ kpis = [] }) => {
   const sampleKpis: KpiField[] = [
     {
       id: "1",
-      name: "Product Revenue",
-      description: "Revenue generated from product sales",
-      dataType: "number",
-      sourceField: "grossRevenue",
-      sourceSystem: "SAP",
+      kpi: "SalesOrg",
+      description: "Organization",
+      dataType: "Char4",
+      sourceField: "SalesOrganization",
+      sourceType: "SAP",
+      api: "api_salesarea/srvd_a2x/sap/salesarea/0001",
       category: "qualification"
     },
     {
       id: "2",
-      name: "Customer Type",
+      kpi: "CustomerType",
       description: "Type of customer (Enterprise, SMB, etc.)",
-      dataType: "string",
+      dataType: "Char2",
       sourceField: "customerSegment",
-      sourceSystem: "Excel",
+      sourceType: "Excel",
       category: "adjustment"
     },
     {
       id: "3",
-      name: "Return Rate",
+      kpi: "ReturnRate",
       description: "Percentage of products returned",
-      dataType: "number",
+      dataType: "Dec2.2",
       sourceField: "returnRate",
-      sourceSystem: "SAP",
+      sourceType: "SAP",
+      api: "api_sales/srvd_a2x/sap/returns/0001",
       category: "exclusion"
     },
     {
       id: "4",
-      name: "Sales Date",
+      kpi: "SalesDate",
       description: "Date when the sale occurred",
-      dataType: "date",
+      dataType: "Date",
       sourceField: "salesDate",
-      sourceSystem: "Excel",
+      sourceType: "Excel",
       category: "qualification"
     },
     {
       id: "5",
-      name: "Special Discount",
+      kpi: "SpecialDiscount",
       description: "Special discount applied to sales",
-      dataType: "number",
+      dataType: "Dec3.2",
       sourceField: "discount",
-      sourceSystem: "Custom",
+      sourceType: "Custom",
       category: "custom"
     }
   ];
@@ -78,7 +80,7 @@ export const KpiTable: React.FC<KpiTableProps> = ({ kpis = [] }) => {
   // Filter KPIs based on search query and category filter
   const filteredKpis = displayKpis.filter(kpi => {
     const matchesSearch = 
-      kpi.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      kpi.kpi.toLowerCase().includes(searchQuery.toLowerCase()) ||
       kpi.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
       kpi.sourceField.toLowerCase().includes(searchQuery.toLowerCase());
     
@@ -144,7 +146,7 @@ export const KpiTable: React.FC<KpiTableProps> = ({ kpis = [] }) => {
               <TableHead className="w-[250px]">KPI Name</TableHead>
               <TableHead>Source Field</TableHead>
               <TableHead>Data Type</TableHead>
-              <TableHead>Source System</TableHead>
+              <TableHead>Source Type</TableHead>
               <TableHead>Category</TableHead>
             </TableRow>
           </TableHeader>
@@ -160,7 +162,7 @@ export const KpiTable: React.FC<KpiTableProps> = ({ kpis = [] }) => {
                 <TableRow key={kpi.id}>
                   <TableCell>
                     <div>
-                      <div className="font-medium">{kpi.name}</div>
+                      <div className="font-medium">{kpi.kpi}</div>
                       <div className="text-xs text-gray-500">{kpi.description}</div>
                     </div>
                   </TableCell>
@@ -171,7 +173,7 @@ export const KpiTable: React.FC<KpiTableProps> = ({ kpis = [] }) => {
                     </div>
                   </TableCell>
                   <TableCell>{kpi.dataType}</TableCell>
-                  <TableCell>{kpi.sourceSystem}</TableCell>
+                  <TableCell>{kpi.sourceType}</TableCell>
                   <TableCell>
                     <Badge className={getCategoryColor(kpi.category)}>
                       {kpi.category.charAt(0).toUpperCase() + kpi.category.slice(1)}

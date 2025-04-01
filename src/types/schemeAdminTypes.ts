@@ -1,11 +1,12 @@
 
 export interface KpiField {
   id: string;
-  name: string;
+  kpi: string;
   description: string;
-  dataType: 'string' | 'number' | 'date' | 'boolean';
+  dataType: string;
   sourceField: string;
-  sourceSystem: 'SAP' | 'Excel' | 'Custom';
+  sourceType: 'SAP' | 'Excel' | 'Custom';
+  api?: string;
   category: 'qualification' | 'adjustment' | 'exclusion' | 'custom';
   formula?: string; // Optional formula for calculated fields
   validationRules?: string[];
