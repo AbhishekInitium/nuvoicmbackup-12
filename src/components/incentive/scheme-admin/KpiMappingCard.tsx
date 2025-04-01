@@ -170,20 +170,16 @@ export const KpiMappingCard: React.FC<KpiMappingCardProps> = ({ kpi, onUpdate, o
             </div>
             <div>
               <p className="text-xs font-medium text-gray-500">Data Type</p>
-              <p className="text-sm">{kpi.dataType}</p>
+              <p className="text-sm">{kpi.dataType || "Not specified"}</p>
             </div>
             <div>
               <p className="text-xs font-medium text-gray-500">Source Type</p>
-              <p className="text-sm">{kpi.sourceType}</p>
-            </div>
-            <div>
-              <p className="text-xs font-medium text-gray-500">Category</p>
-              <p className="text-sm capitalize">{kpi.category}</p>
+              <p className="text-sm">{kpi.sourceType || "Not specified"}</p>
             </div>
             {kpi.api && (
-              <div className="col-span-2">
+              <div>
                 <p className="text-xs font-medium text-gray-500">API</p>
-                <p className="text-sm break-all">{kpi.api}</p>
+                <p className="text-sm truncate" title={kpi.api}>{kpi.api}</p>
               </div>
             )}
           </div>
