@@ -1,44 +1,69 @@
+# Welcome to your Lovable project
 
-# KPI Mapping Application
+## Project info
 
-## Getting Started
+**URL**: https://lovable.dev/projects/356aac13-df38-4eff-b234-cb4663a2865b
 
-### Prerequisites
+## How can I edit this code?
 
-- Node.js (v14 or higher)
-- MongoDB (local or cloud instance)
+There are several ways of editing your application.
 
-### Installation
+**Use Lovable**
 
-1. Clone the repository
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
+Simply visit the [Lovable Project](https://lovable.dev/projects/356aac13-df38-4eff-b234-cb4663a2865b) and start prompting.
 
-3. Start the development server:
-   ```bash
-   npm run dev
-   ```
+Changes made via Lovable will be committed automatically to this repo.
 
-4. In a separate terminal, start the backend server:
-   ```bash
-   node server.js
-   ```
+**Use your preferred IDE**
 
-### Environment Variables
+If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
 
-Create a `.env` file in the root directory with the following variables:
+The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
 
+Follow these steps:
+
+```sh
+# Step 1: Clone the repository using the project's Git URL.
+git clone <YOUR_GIT_URL>
+
+# Step 2: Navigate to the project directory.
+cd <YOUR_PROJECT_NAME>
+
+# Step 3: Install the necessary dependencies.
+npm i
+
+# Step 4: Start the development server with auto-reloading and an instant preview.
+npm run dev
 ```
-MONGODB_URI=mongodb://localhost:27017/incentives
-PORT=5000
-```
 
-Replace the MongoDB URI with your own if you're using a cloud instance.
+**Edit a file directly in GitHub**
 
-## Features
+- Navigate to the desired file(s).
+- Click the "Edit" button (pencil icon) at the top right of the file view.
+- Make your changes and commit the changes.
 
-- KPI Mapping management
-- Schema Administration
-- Excel file upload for data extraction
+**Use GitHub Codespaces**
+
+- Navigate to the main page of your repository.
+- Click on the "Code" button (green button) near the top right.
+- Select the "Codespaces" tab.
+- Click on "New codespace" to launch a new Codespace environment.
+- Edit files directly within the Codespace and commit and push your changes once you're done.
+
+## What technologies are used for this project?
+
+This project is built with .
+
+- Vite
+- TypeScript
+- React
+- shadcn-ui
+- Tailwind CSS
+
+## How can I deploy this project?
+
+Simply open [Lovable](https://lovable.dev/projects/356aac13-df38-4eff-b234-cb4663a2865b) and click on Share -> Publish.
+
+## I want to use a custom domain - is that possible?
+
+We don't support custom domains (yet). If you want to deploy your project under your own domain then we recommend using Netlify. Visit our docs for more details: [Custom domains](https://docs.lovable.dev/tips-tricks/custom-domain/)

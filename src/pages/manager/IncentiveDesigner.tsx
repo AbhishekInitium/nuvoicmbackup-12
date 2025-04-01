@@ -1,6 +1,4 @@
-
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import NavBar from '@/components/layout/NavBar';
 import Container from '@/components/layout/Container';
 import IncentivePlanDesigner from '@/components/IncentivePlanDesigner';
@@ -12,14 +10,10 @@ import { IncentivePlan } from '@/types/incentiveTypes';
 import SchemeOptionsScreen from '@/components/incentive/SchemeOptionsScreen';
 import DesignerNavigation from '@/components/incentive/DesignerNavigation';
 import SchemeSelectionDialog from '@/components/incentive/SchemeSelectionDialog';
-import { Card, CardContent } from "@/components/ui/card";
-import { Clipboard, FileSpreadsheet } from 'lucide-react';
 
 const IncentiveDesigner = () => {
   const { toast } = useToast();
-  const navigate = useNavigate();
   const [showInitialOptions, setShowInitialOptions] = useState(true);
-  const [showRoleSelection, setShowRoleSelection] = useState(true);
   const [showExistingSchemes, setShowExistingSchemes] = useState(false);
   const [showEditSchemes, setShowEditSchemes] = useState(false);
   const [planTemplate, setPlanTemplate] = useState<IncentivePlan | null>(null);
@@ -64,7 +58,6 @@ const IncentiveDesigner = () => {
     });
     setIsEditMode(false);
     setShowInitialOptions(false);
-    setShowRoleSelection(false);
   };
 
   const handleCopyExistingScheme = (scheme: IncentivePlanWithStatus) => {
@@ -105,7 +98,6 @@ const IncentiveDesigner = () => {
     setShowExistingSchemes(false);
     setIsEditMode(false);
     setShowInitialOptions(false);
-    setShowRoleSelection(false);
     
     toast({
       title: "Plan Loaded",
@@ -130,7 +122,6 @@ const IncentiveDesigner = () => {
     setShowEditSchemes(false);
     setIsEditMode(true);
     setShowInitialOptions(false);
-    setShowRoleSelection(false);
     
     toast({
       title: "Plan Loaded for Editing",
@@ -139,68 +130,16 @@ const IncentiveDesigner = () => {
     });
   };
 
-  const navigateToSchemeAdmin = () => {
-    navigate('/manager/scheme-administrator');
-  };
-
-  // Role selection screen
-  const renderRoleSelectionScreen = () => {
-    return (
-      <div className="max-w-4xl mx-auto mt-10">
-        <h1 className="text-3xl font-bold text-gray-900 mb-8 text-center">
-          Select Your Role
-        </h1>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
-          <Card className="bg-white shadow-md hover:shadow-lg transition-shadow duration-300 cursor-pointer" onClick={navigateToSchemeAdmin}>
-            <CardContent className="pt-6 pb-6">
-              <div className="text-center mb-4">
-                <div className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-blue-100 mb-4">
-                  <FileSpreadsheet className="h-6 w-6 text-blue-600" />
-                </div>
-                <h3 className="text-lg font-medium text-gray-900 mb-2">Scheme Administrator</h3>
-                <p className="text-sm text-gray-500 mb-4">
-                  Set up KPIs and data mappings for scheme designers
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card 
-            className="bg-white shadow-md hover:shadow-lg transition-shadow duration-300 cursor-pointer"
-            onClick={() => setShowRoleSelection(false)}
-          >
-            <CardContent className="pt-6 pb-6">
-              <div className="text-center mb-4">
-                <div className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-green-100 mb-4">
-                  <Clipboard className="h-6 w-6 text-green-600" />
-                </div>
-                <h3 className="text-lg font-medium text-gray-900 mb-2">Scheme Creator</h3>
-                <p className="text-sm text-gray-500 mb-4">
-                  Create, copy, or edit incentive schemes
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    );
-  };
-
   return (
     <div className="min-h-screen bg-gradient-to-b from-app-gray-50 to-white">
       <NavBar />
       <Container maxWidth="full">
-        {showInitialOptions && !showRoleSelection && (
-          <DesignerNavigation 
-            onBack={() => setShowRoleSelection(true)}
-            showBackToDashboard={false}
-          />
-        )}
+        <DesignerNavigation 
+          onBack={!showInitialOptions ? () => setShowInitialOptions(true) : undefined}
+          showBackToDashboard={showInitialOptions}
+        />
         
-        {showRoleSelection ? (
-          renderRoleSelectionScreen()
-        ) : showInitialOptions ? (
+        {showInitialOptions ? (
           <SchemeOptionsScreen 
             onCreateNewScheme={handleCreateNewScheme}
             onOpenExistingSchemes={() => setShowExistingSchemes(true)}
