@@ -21,6 +21,8 @@ export const useSchemeMasterOperations = () => {
         description: "KPI fields assigned to scheme" 
       });
       queryClient.invalidateQueries({ queryKey: ['schemeMaster'] });
+      // Also invalidate KPI mappings to ensure all data is fresh
+      queryClient.invalidateQueries({ queryKey: ['kpiMappings'] });
     },
     onError: (error: Error) => {
       console.error('Error in assignKpisToSchemeMutation:', error);
@@ -44,6 +46,9 @@ export const useSchemeMasterOperations = () => {
       queryKey: ['schemeMaster', schemeId],
       queryFn: () => getSchemeMaster(schemeId),
       enabled: !!schemeId, // Only run query if schemeId is provided
+      refetchOnWindowFocus: true,
+      staleTime: 10000, // Consider data stale after 10 seconds
+      retry: 2, // Retry failed requests up to 2 times
     });
   };
 

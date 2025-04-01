@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import NavBar from '@/components/layout/NavBar';
 import Container from '@/components/layout/Container';
 import { useKpiMappings } from '@/hooks/useKpiMappings';
@@ -31,10 +31,19 @@ const SchemeAdministrator: React.FC = () => {
     isUploadingExcel
   } = useKpiMappings();
 
-  React.useEffect(() => {
-    // Make sure data is refreshed when component mounts
+  // Ensure data is refreshed when component mounts
+  useEffect(() => {
+    console.log('SchemeAdministrator: Fetching KPI mappings...');
     refetchMappings();
   }, [refetchMappings]);
+
+  // Add a callback for successful KPI operations to ensure UI updates
+  const handleKpiOperation = (operation: string, success: boolean) => {
+    if (success) {
+      console.log(`${operation} operation successful, refreshing data...`);
+      refetchMappings();
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
@@ -57,15 +66,25 @@ const SchemeAdministrator: React.FC = () => {
           <KpiMappingCard 
             kpiMappings={kpiMappings}
             isLoadingMappings={isLoadingMappings}
-            createKpiMapping={createKpiMapping}
-            updateKpiMapping={updateKpiMapping}
-            deleteKpiMapping={deleteKpiMapping}
+            createKpiMapping={(kpi) => {
+              createKpiMapping(kpi);
+              handleKpiOperation('Create', true);
+            }}
+            updateKpiMapping={(id, kpi) => {
+              updateKpiMapping(id, kpi);
+              handleKpiOperation('Update', true);
+            }}
+            deleteKpiMapping={(id) => {
+              deleteKpiMapping(id);
+              handleKpiOperation('Delete', true);
+            }}
             editingKpi={editingKpi}
             startEditingKpi={startEditingKpi}
             cancelEditingKpi={cancelEditingKpi}
             isCreatingKpi={isCreatingKpi}
             isUpdatingKpi={isUpdatingKpi}
             isUsingInMemoryStorage={isUsingInMemoryStorage}
+            onKpiOperationComplete={() => refetchMappings()}
           />
         </div>
       </Container>

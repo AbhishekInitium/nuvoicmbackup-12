@@ -25,6 +25,8 @@ export const useKpiMappingOperations = () => {
   } = useQuery({
     queryKey: ['kpiMappings'],
     queryFn: getKpiFieldMappings,
+    refetchOnWindowFocus: true,
+    staleTime: 10000, // Consider data stale after 10 seconds
     meta: {
       onError: (error: Error) => {
         console.error('Error in kpiMappings query:', error);
@@ -46,6 +48,8 @@ export const useKpiMappingOperations = () => {
   } = useQuery({
     queryKey: ['availableKpis'],
     queryFn: getAvailableKpiFields,
+    refetchOnWindowFocus: true,
+    staleTime: 10000, // Consider data stale after 10 seconds
     meta: {
       onError: (error: Error) => {
         console.error('Error in availableKpis query:', error);
@@ -69,6 +73,8 @@ export const useKpiMappingOperations = () => {
       });
       queryClient.invalidateQueries({ queryKey: ['kpiMappings'] });
       queryClient.invalidateQueries({ queryKey: ['availableKpis'] });
+      // Immediate refetch to ensure UI is updated
+      setTimeout(() => refetchMappings(), 300);
     },
     onError: (error: Error) => {
       console.error('Error in createKpiMutation:', error);
@@ -93,6 +99,8 @@ export const useKpiMappingOperations = () => {
       setEditingKpi(null);
       queryClient.invalidateQueries({ queryKey: ['kpiMappings'] });
       queryClient.invalidateQueries({ queryKey: ['availableKpis'] });
+      // Immediate refetch to ensure UI is updated
+      setTimeout(() => refetchMappings(), 300);
     },
     onError: (error: Error) => {
       console.error('Error in updateKpiMutation:', error);
@@ -116,6 +124,8 @@ export const useKpiMappingOperations = () => {
         });
         queryClient.invalidateQueries({ queryKey: ['kpiMappings'] });
         queryClient.invalidateQueries({ queryKey: ['availableKpis'] });
+        // Immediate refetch to ensure UI is updated
+        setTimeout(() => refetchMappings(), 300);
       } else {
         toast({ 
           title: "Error", 

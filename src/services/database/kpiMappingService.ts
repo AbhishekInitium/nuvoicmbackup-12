@@ -45,7 +45,13 @@ export const getKpiFieldMappings = async (): Promise<KPIFieldMapping[]> => {
     return Array.isArray(response.data) ? response.data : [];
   } catch (error) {
     console.error('Error fetching KPI field mappings:', error);
-    return [];
+    // Fallback to in-memory service if API fails
+    try {
+      return await inMemoryService.getKpiFields();
+    } catch (innerError) {
+      console.error('In-memory fallback also failed:', innerError);
+      return [];
+    }
   }
 };
 
@@ -59,7 +65,13 @@ export const getAvailableKpiFields = async (): Promise<KPIFieldMapping[]> => {
     return Array.isArray(response.data) ? response.data : [];
   } catch (error) {
     console.error('Error fetching available KPI fields:', error);
-    return [];
+    // Fallback to in-memory service if API fails
+    try {
+      return await inMemoryService.getAvailableKpiFields();
+    } catch (innerError) {
+      console.error('In-memory fallback also failed:', innerError);
+      return [];
+    }
   }
 };
 
@@ -151,10 +163,11 @@ export const getSchemeMaster = async (schemeId: string): Promise<SchemeMaster | 
   try {
     console.log('Fetching scheme master for schemeId:', schemeId);
     const response = await axios.get(`${API_BASE_URL}/schemes/${schemeId}/master`);
-    return response.data.scheme;
+    return response.data.scheme || null;
   } catch (error) {
     console.error('Error fetching scheme master:', error);
-    throw new Error(`Failed to fetch scheme master: ${error instanceof Error ? error.message : String(error)}`);
+    // Return null instead of throwing to handle missing schemes gracefully
+    return null;
   }
 };
 

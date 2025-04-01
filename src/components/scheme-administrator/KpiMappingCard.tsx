@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
-import { Plus, X, Database, Download } from 'lucide-react';
+import { Plus, X, Database, Download, RefreshCw } from 'lucide-react';
 import { KPIFieldMapping } from '@/services/database/types/kpiTypes';
 import KpiMappingForm from '@/components/scheme-administrator/KpiMappingForm';
 import KpiMappingList from '@/components/scheme-administrator/KpiMappingList';
@@ -22,6 +23,7 @@ interface KpiMappingCardProps {
   isCreatingKpi: boolean;
   isUpdatingKpi: boolean;
   isUsingInMemoryStorage?: boolean;
+  onKpiOperationComplete?: () => void;
 }
 
 const KpiMappingCard: React.FC<KpiMappingCardProps> = ({
@@ -35,7 +37,8 @@ const KpiMappingCard: React.FC<KpiMappingCardProps> = ({
   cancelEditingKpi,
   isCreatingKpi,
   isUpdatingKpi,
-  isUsingInMemoryStorage = false
+  isUsingInMemoryStorage = false,
+  onKpiOperationComplete
 }) => {
   const [showForm, setShowForm] = useState(false);
   const [view, setView] = useState<'list' | 'json'>('list');
@@ -47,6 +50,11 @@ const KpiMappingCard: React.FC<KpiMappingCardProps> = ({
     calculationBase: "Sales Orders",
     createdAt: new Date().toISOString()
   });
+
+  // Log the current KPI mappings for debugging
+  useEffect(() => {
+    console.log("Current KPI mappings in card:", kpiMappings);
+  }, [kpiMappings]);
 
   const handleKpiSubmit = (kpiMapping: KPIFieldMapping) => {
     if (editingKpi && editingKpi._id) {
@@ -152,7 +160,7 @@ const KpiMappingCard: React.FC<KpiMappingCardProps> = ({
     const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(groupedJson, null, 2));
     const downloadAnchorNode = document.createElement('a');
     downloadAnchorNode.setAttribute("href", dataStr);
-    downloadAnchorNode.setAttribute("download", "scheme_configuration.json");
+    downloadAnchorNode.setAttribute("download", `scheme_configuration_${calculationBase.adminId}.json`);
     document.body.appendChild(downloadAnchorNode);
     downloadAnchorNode.click();
     downloadAnchorNode.remove();
@@ -163,7 +171,17 @@ const KpiMappingCard: React.FC<KpiMappingCardProps> = ({
     });
   };
 
-  React.useEffect(() => {
+  const handleRefresh = () => {
+    if (onKpiOperationComplete) {
+      onKpiOperationComplete();
+      toast({
+        title: "Refreshing Data",
+        description: "Fetching the latest KPI mappings...",
+      });
+    }
+  };
+
+  useEffect(() => {
     if (!isCreatingKpi && !isUpdatingKpi) {
       setShowForm(false);
     }
@@ -186,6 +204,15 @@ const KpiMappingCard: React.FC<KpiMappingCardProps> = ({
           )}
         </div>
         <div className="flex space-x-2">
+          <Button 
+            variant="outline"
+            size="sm"
+            onClick={handleRefresh}
+            className="flex items-center"
+          >
+            <RefreshCw size={16} className="mr-2" />
+            Refresh
+          </Button>
           <Button 
             variant="outline"
             size="sm"
