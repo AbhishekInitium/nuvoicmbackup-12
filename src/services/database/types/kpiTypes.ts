@@ -45,6 +45,14 @@ export interface SchemeMaster {
   updatedAt?: string;
 }
 
+export interface CalculationBase {
+  adminId: string;
+  adminName: string;
+  calculationBase: string;
+  baseField: string;
+  createdAt: string;
+}
+
 export interface DatabaseConnectionStatus {
   connected: boolean;
   message: string;

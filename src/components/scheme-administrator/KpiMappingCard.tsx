@@ -9,6 +9,7 @@ import KpiMappingList from '@/components/scheme-administrator/KpiMappingList';
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import SchemeHeader from '@/components/scheme-administrator/SchemeHeader';
 
 interface KpiMappingCardProps {
   kpiMappings: KPIFieldMapping[];
@@ -40,6 +41,15 @@ const KpiMappingCard: React.FC<KpiMappingCardProps> = ({
   const [showForm, setShowForm] = useState(false);
   const [view, setView] = useState<'list' | 'json'>('list');
   const { toast } = useToast();
+  
+  // Calculation base state
+  const [calculationBase, setCalculationBase] = useState({
+    adminId: "scheme-" + new Date().getTime(),
+    adminName: "New Scheme Administrator",
+    calculationBase: "Sales Orders",
+    baseField: kpiMappings.find(m => m.section === 'BASE_DATA')?.kpiName || "",
+    createdAt: new Date().toISOString()
+  });
 
   const handleKpiSubmit = (kpiMapping: KPIFieldMapping) => {
     if (editingKpi && editingKpi._id) {
@@ -94,53 +104,69 @@ const KpiMappingCard: React.FC<KpiMappingCardProps> = ({
     }
   };
 
+  // Handle calculation base changes
+  const handleCalcBaseChange = (newValues: Partial<typeof calculationBase>) => {
+    setCalculationBase(prev => ({ ...prev, ...newValues }));
+  };
+
   // Group mappings by section for JSON preview
-  const groupedJson = kpiMappings.reduce((acc, mapping) => {
-    // Convert from internal format to the desired export format
-    const kpiField = {
-      kpi: mapping.kpiName,
-      description: mapping.description,
-      sourceType: mapping.sourceType,
-      sourceField: mapping.sourceField,
-      dataType: mapping.dataType,
-      api: mapping.api || ""
-    };
-    
-    switch(mapping.section) {
-      case 'BASE_DATA':
-        if (!acc.baseData) acc.baseData = [];
-        acc.baseData.push(kpiField);
-        break;
-      case 'QUAL_CRI':
-        if (!acc.qualificationFields) acc.qualificationFields = [];
-        acc.qualificationFields.push(kpiField);
-        break;
-      case 'ADJ_CRI':
-        if (!acc.adjustmentFields) acc.adjustmentFields = [];
-        acc.adjustmentFields.push(kpiField);
-        break;
-      case 'EX_CRI':
-        if (!acc.exclusionFields) acc.exclusionFields = [];
-        acc.exclusionFields.push(kpiField);
-        break;
-      case 'CUSTOM_RULES':
-        if (!acc.customRules) acc.customRules = [];
-        acc.customRules.push(kpiField);
-        break;
-    }
-    return acc;
-  }, {
-    adminId: "example-uuid",
-    adminName: "Scheme Administrator",
-    calculationBase: "Sales Orders",
-    baseField: kpiMappings.find(m => m.section === 'BASE_DATA')?.kpiName || "",
-    createdAt: new Date().toISOString(),
-    baseData: [],
-    qualificationFields: [],
-    adjustmentFields: [],
-    exclusionFields: [],
-    customRules: []
-  });
+  const groupedJson = {
+    adminId: calculationBase.adminId,
+    adminName: calculationBase.adminName,
+    calculationBase: calculationBase.calculationBase,
+    baseField: calculationBase.baseField,
+    createdAt: calculationBase.createdAt,
+    baseData: kpiMappings
+      .filter(m => m.section === 'BASE_DATA')
+      .map(mapping => ({
+        kpi: mapping.kpiName,
+        description: mapping.description,
+        sourceType: mapping.sourceType,
+        sourceField: mapping.sourceField,
+        dataType: mapping.dataType,
+        api: mapping.api || ""
+      })),
+    qualificationFields: kpiMappings
+      .filter(m => m.section === 'QUAL_CRI')
+      .map(mapping => ({
+        kpi: mapping.kpiName,
+        description: mapping.description,
+        sourceType: mapping.sourceType,
+        sourceField: mapping.sourceField,
+        dataType: mapping.dataType,
+        api: mapping.api || ""
+      })),
+    adjustmentFields: kpiMappings
+      .filter(m => m.section === 'ADJ_CRI')
+      .map(mapping => ({
+        kpi: mapping.kpiName,
+        description: mapping.description,
+        sourceType: mapping.sourceType,
+        sourceField: mapping.sourceField,
+        dataType: mapping.dataType,
+        api: mapping.api || ""
+      })),
+    exclusionFields: kpiMappings
+      .filter(m => m.section === 'EX_CRI')
+      .map(mapping => ({
+        kpi: mapping.kpiName,
+        description: mapping.description,
+        sourceType: mapping.sourceType,
+        sourceField: mapping.sourceField,
+        dataType: mapping.dataType,
+        api: mapping.api || ""
+      })),
+    customRules: kpiMappings
+      .filter(m => m.section === 'CUSTOM_RULES')
+      .map(mapping => ({
+        kpi: mapping.kpiName,
+        description: mapping.description,
+        sourceType: mapping.sourceType,
+        sourceField: mapping.sourceField,
+        dataType: mapping.dataType,
+        api: mapping.api || ""
+      }))
+  };
 
   // Function to download JSON
   const downloadJson = () => {
@@ -164,7 +190,18 @@ const KpiMappingCard: React.FC<KpiMappingCardProps> = ({
       // Only close form if we were previously creating or updating
       setShowForm(false);
     }
-  }, [isCreatingKpi, isUpdatingKpi]);
+    
+    // Update base field when KPI mappings change
+    if (kpiMappings && kpiMappings.length > 0) {
+      const baseDataKpi = kpiMappings.find(m => m.section === 'BASE_DATA');
+      if (baseDataKpi && !calculationBase.baseField) {
+        setCalculationBase(prev => ({
+          ...prev,
+          baseField: baseDataKpi.kpiName
+        }));
+      }
+    }
+  }, [isCreatingKpi, isUpdatingKpi, kpiMappings]);
 
   return (
     <Card className="mb-6 shadow-sm">
@@ -212,8 +249,13 @@ const KpiMappingCard: React.FC<KpiMappingCardProps> = ({
         </div>
       </CardHeader>
       <CardContent>
+        <SchemeHeader 
+          calculationBase={calculationBase}
+          onChange={handleCalcBaseChange}
+        />
+        
         {showForm && (
-          <div className="mb-8">
+          <div className="mb-8 mt-6">
             <h3 className="text-lg font-medium mb-4">
               {editingKpi ? `Edit KPI: ${editingKpi.kpiName}` : 'New KPI Mapping'}
             </h3>
@@ -227,7 +269,7 @@ const KpiMappingCard: React.FC<KpiMappingCardProps> = ({
           </div>
         )}
         
-        <Tabs defaultValue="list" value={view} onValueChange={(v) => setView(v as 'list' | 'json')}>
+        <Tabs defaultValue="list" value={view} onValueChange={(v) => setView(v as 'list' | 'json')} className="mt-6">
           <TabsList className="mb-4">
             <TabsTrigger value="list">List View</TabsTrigger>
             <TabsTrigger value="json">JSON Preview</TabsTrigger>
