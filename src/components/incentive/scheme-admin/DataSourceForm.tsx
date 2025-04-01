@@ -15,8 +15,21 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { FileUploader } from './FileUploader';
 
+// Define proper props interface for FileUploader
+interface FileUploaderProps {
+  onFileUpload: (file: any) => void;
+  acceptedFileTypes?: string;
+}
+
+type FormValues = {
+  sourceSystem: "SAP" | "Excel" | "Custom";
+  connectionString: string;
+  fileFormat: "CSV" | "XLSX" | "XLS";
+  customDetails?: string;
+};
+
 export const DataSourceForm: React.FC = () => {
-  const form = useForm({
+  const form = useForm<FormValues>({
     defaultValues: {
       sourceSystem: "Excel",
       connectionString: "",
@@ -24,7 +37,7 @@ export const DataSourceForm: React.FC = () => {
     }
   });
 
-  const onSubmit = (data: any) => {
+  const onSubmit = (data: FormValues) => {
     console.log("Data source configuration:", data);
   };
 
@@ -115,7 +128,7 @@ export const DataSourceForm: React.FC = () => {
                   <div>
                     <FormLabel>Upload Template</FormLabel>
                     <FileUploader 
-                      accept=".csv,.xlsx,.xls" 
+                      acceptedFileTypes=".csv,.xlsx,.xls" 
                       onFileUpload={(file) => console.log("File uploaded:", file)}
                     />
                     <p className="text-sm text-gray-500 mt-2">

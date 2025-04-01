@@ -11,7 +11,6 @@ import {
   FormLabel
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { KpiField, SchemeAdminConfig } from '@/types/schemeAdminTypes';
 import { KpiMappingCard } from './KpiMappingCard';
 import { JsonPreview } from './JsonPreview';
@@ -35,28 +34,18 @@ export const KpiMappingForm: React.FC<KpiMappingFormProps> = ({
     adjustmentFields: KpiField[];
     exclusionFields: KpiField[];
     customRules: KpiField[];
-    calculationBase: string;
-    baseField: string;
-    source: "SAP" | "Excel" | "Custom";
-    connectionDetails: string;
   }>({
     qualificationFields: [],
     adjustmentFields: [],
     exclusionFields: [],
-    customRules: [],
-    calculationBase: '',
-    baseField: '',
-    source: "Excel",
-    connectionDetails: ''
+    customRules: []
   });
   
   const form = useForm({
     defaultValues: {
-      adminId: "admin-" + uuidv4().substring(0, 8),
-      adminName: "System Administrator",
-      calculationBase: initialConfig.calculationBase || "Revenue",
-      baseField: initialConfig.baseField || "grossRevenue",
-      sourceSystem: initialConfig.baseData?.source || "Excel"
+      adminId: initialConfig.adminId || uuidv4(),
+      adminName: initialConfig.adminName || "NorthAmerica_Orders_2024",
+      calculationBase: initialConfig.calculationBase || "Sales Orders"
     }
   });
 
@@ -66,15 +55,11 @@ export const KpiMappingForm: React.FC<KpiMappingFormProps> = ({
         adminId: form.getValues().adminId,
         adminName: form.getValues().adminName,
         calculationBase: form.getValues().calculationBase,
-        baseField: form.getValues().baseField,
-        baseData: {
-          source: form.getValues().sourceSystem as "SAP" | "Excel" | "Custom",
-          connectionDetails: kpiData.connectionDetails
-        },
         qualificationFields: kpiData.qualificationFields,
         adjustmentFields: kpiData.adjustmentFields,
         exclusionFields: kpiData.exclusionFields,
-        customRules: kpiData.customRules
+        customRules: kpiData.customRules,
+        createdAt: new Date().toISOString()
       };
       
       onConfigUpdate(updatedConfig);
@@ -168,19 +153,16 @@ export const KpiMappingForm: React.FC<KpiMappingFormProps> = ({
     });
   };
 
-  const handleSaveConfig = async () => {
-    const formValues = form.getValues();
-    
+  const handleSaveConfig = async (formValues: any) => {
     // Create the complete config object with all required fields
     const adminConfig: SchemeAdminConfig = {
       adminId: formValues.adminId,
       adminName: formValues.adminName,
       createdAt: new Date().toISOString(),
       calculationBase: formValues.calculationBase,
-      baseField: formValues.baseField,
+      baseField: "",
       baseData: {
-        source: formValues.sourceSystem as "SAP" | "Excel" | "Custom",
-        connectionDetails: kpiData.connectionDetails
+        source: "Excel" 
       },
       qualificationFields: kpiData.qualificationFields,
       adjustmentFields: kpiData.adjustmentFields,
@@ -202,73 +184,45 @@ export const KpiMappingForm: React.FC<KpiMappingFormProps> = ({
       
       <Form {...form}>
         <form onSubmit={form.handleSubmit(handleSaveConfig)} className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Card className="p-4">
-              <h3 className="text-lg font-medium mb-4">Base Configuration</h3>
-              
-              <div className="space-y-4">
-                <FormField
-                  control={form.control}
-                  name="calculationBase"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Calculation Base</FormLabel>
-                      <FormControl>
-                        <Input {...field} placeholder="e.g., Revenue" />
-                      </FormControl>
-                      <FormDescription>
-                        The primary metric used for calculations
-                      </FormDescription>
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="baseField"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Source Field</FormLabel>
-                      <FormControl>
-                        <Input {...field} placeholder="e.g., grossRevenue" />
-                      </FormControl>
-                      <FormDescription>
-                        Field name in the source system
-                      </FormDescription>
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="sourceSystem"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Source System</FormLabel>
-                      <Select 
-                        onValueChange={field.onChange} 
-                        defaultValue={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select a source system" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="SAP">SAP</SelectItem>
-                          <SelectItem value="Excel">Excel</SelectItem>
-                          <SelectItem value="Custom">Custom</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormDescription>
-                        System providing the data
-                      </FormDescription>
-                    </FormItem>
-                  )}
-                />
-              </div>
-            </Card>
+          <Card className="p-4">
+            <h3 className="text-lg font-medium mb-4">Scheme Configuration</h3>
             
+            <div className="space-y-4">
+              <FormField
+                control={form.control}
+                name="adminName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Configuration Name</FormLabel>
+                    <FormControl>
+                      <Input {...field} placeholder="e.g., NorthAmerica_Orders_2024" />
+                    </FormControl>
+                    <FormDescription>
+                      A descriptive name for this scheme configuration
+                    </FormDescription>
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="calculationBase"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Calculation Base</FormLabel>
+                    <FormControl>
+                      <Input {...field} placeholder="e.g., Sales Orders" />
+                    </FormControl>
+                    <FormDescription>
+                      The primary metric used for calculations
+                    </FormDescription>
+                  </FormItem>
+                )}
+              />
+            </div>
+          </Card>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <JsonPreview data={kpiData} title="KPI Configuration Preview" height="300px" />
             </div>
