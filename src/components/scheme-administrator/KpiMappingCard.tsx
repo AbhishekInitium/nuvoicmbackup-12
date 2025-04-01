@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
@@ -45,6 +44,7 @@ const KpiMappingCard: React.FC<KpiMappingCardProps> = ({
   const [view, setView] = useState<'list' | 'json'>('list');
   const { toast } = useToast();
   const [isSavingConfig, setIsSavingConfig] = useState(false);
+  const [localKpiMappings, setLocalKpiMappings] = useState<KPIFieldMapping[]>([]);
   
   const [calculationBase, setCalculationBase] = useState({
     adminId: "scheme-" + new Date().getTime(),
@@ -53,25 +53,32 @@ const KpiMappingCard: React.FC<KpiMappingCardProps> = ({
     createdAt: new Date().toISOString()
   });
 
-  // Log the current KPI mappings for debugging
   useEffect(() => {
-    console.log("Current KPI mappings in card:", kpiMappings);
+    console.log("Received KPI mappings update:", kpiMappings);
+    if (Array.isArray(kpiMappings)) {
+      setLocalKpiMappings([...kpiMappings]);
+    }
   }, [kpiMappings]);
 
-  const handleKpiSubmit = (kpiMapping: KPIFieldMapping) => {
+  const handleKpiSubmit = async (kpiMapping: KPIFieldMapping) => {
     if (editingKpi && editingKpi._id) {
-      updateKpiMapping(editingKpi._id, kpiMapping);
+      await updateKpiMapping(editingKpi._id, kpiMapping);
       toast({
-        title: "Updating KPI mapping",
-        description: "Please wait while we update the KPI mapping...",
+        title: "KPI mapping updated",
+        description: "The KPI mapping has been updated successfully",
       });
     } else {
-      createKpiMapping(kpiMapping);
+      await createKpiMapping(kpiMapping);
       toast({
-        title: "Creating KPI mapping",
-        description: "Please wait while we create the new KPI mapping...",
+        title: "KPI mapping created",
+        description: "The new KPI mapping has been created successfully",
       });
     }
+    
+    if (onKpiOperationComplete) {
+      onKpiOperationComplete();
+    }
+    
     setShowForm(false);
   };
 
@@ -111,13 +118,12 @@ const KpiMappingCard: React.FC<KpiMappingCardProps> = ({
     setCalculationBase(prev => ({ ...prev, ...newValues }));
   };
 
-  // Group mappings by section for the JSON view
   const groupedJson = {
     adminId: calculationBase.adminId,
     adminName: calculationBase.adminName,
     calculationBase: calculationBase.calculationBase,
     createdAt: calculationBase.createdAt,
-    qualificationFields: kpiMappings
+    qualificationFields: localKpiMappings
       .filter(m => m.section === 'QUAL_CRI')
       .map(mapping => ({
         kpi: mapping.kpiName,
@@ -127,7 +133,7 @@ const KpiMappingCard: React.FC<KpiMappingCardProps> = ({
         dataType: mapping.dataType,
         api: mapping.api || ""
       })),
-    adjustmentFields: kpiMappings
+    adjustmentFields: localKpiMappings
       .filter(m => m.section === 'ADJ_CRI')
       .map(mapping => ({
         kpi: mapping.kpiName,
@@ -137,7 +143,7 @@ const KpiMappingCard: React.FC<KpiMappingCardProps> = ({
         dataType: mapping.dataType,
         api: mapping.api || ""
       })),
-    exclusionFields: kpiMappings
+    exclusionFields: localKpiMappings
       .filter(m => m.section === 'EX_CRI')
       .map(mapping => ({
         kpi: mapping.kpiName,
@@ -147,7 +153,7 @@ const KpiMappingCard: React.FC<KpiMappingCardProps> = ({
         dataType: mapping.dataType,
         api: mapping.api || ""
       })),
-    customRules: kpiMappings
+    customRules: localKpiMappings
       .filter(m => m.section === 'CUSTOM_RULES')
       .map(mapping => ({
         kpi: mapping.kpiName,
@@ -184,7 +190,6 @@ const KpiMappingCard: React.FC<KpiMappingCardProps> = ({
     }
   };
 
-  // New function to save the scheme configuration to MongoDB
   const handleSaveToDatabase = async () => {
     try {
       setIsSavingConfig(true);
@@ -224,8 +229,9 @@ const KpiMappingCard: React.FC<KpiMappingCardProps> = ({
   useEffect(() => {
     if (!isCreatingKpi && !isUpdatingKpi) {
       setShowForm(false);
+      handleRefresh();
     }
-  }, [isCreatingKpi, isUpdatingKpi, kpiMappings]);
+  }, [isCreatingKpi, isUpdatingKpi]);
 
   return (
     <Card className="mb-6 shadow-sm">

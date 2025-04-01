@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useToast } from "@/hooks/use-toast";
@@ -25,8 +24,8 @@ export const useKpiMappingOperations = () => {
   } = useQuery({
     queryKey: ['kpiMappings'],
     queryFn: getKpiFieldMappings,
-    refetchOnWindowFocus: true,
-    staleTime: 10000, // Consider data stale after 10 seconds
+    refetchOnWindowFocus: false,
+    staleTime: 1000, // Consider data stale after 1 second to force refetching on operations
     meta: {
       onError: (error: Error) => {
         console.error('Error in kpiMappings query:', error);
@@ -71,10 +70,13 @@ export const useKpiMappingOperations = () => {
         title: "Success", 
         description: "KPI field mapping saved successfully" 
       });
+      // Invalidate both queries to force refetch
       queryClient.invalidateQueries({ queryKey: ['kpiMappings'] });
       queryClient.invalidateQueries({ queryKey: ['availableKpis'] });
       // Immediate refetch to ensure UI is updated
-      setTimeout(() => refetchMappings(), 300);
+      setTimeout(() => {
+        refetchMappings();
+      }, 100);
     },
     onError: (error: Error) => {
       console.error('Error in createKpiMutation:', error);
@@ -97,10 +99,13 @@ export const useKpiMappingOperations = () => {
         description: "KPI field mapping updated successfully" 
       });
       setEditingKpi(null);
+      // Invalidate both queries to force refetch
       queryClient.invalidateQueries({ queryKey: ['kpiMappings'] });
       queryClient.invalidateQueries({ queryKey: ['availableKpis'] });
       // Immediate refetch to ensure UI is updated
-      setTimeout(() => refetchMappings(), 300);
+      setTimeout(() => {
+        refetchMappings();
+      }, 100);
     },
     onError: (error: Error) => {
       console.error('Error in updateKpiMutation:', error);
@@ -122,10 +127,13 @@ export const useKpiMappingOperations = () => {
           title: "Success", 
           description: "KPI field mapping deleted successfully" 
         });
+        // Invalidate both queries to force refetch
         queryClient.invalidateQueries({ queryKey: ['kpiMappings'] });
         queryClient.invalidateQueries({ queryKey: ['availableKpis'] });
         // Immediate refetch to ensure UI is updated
-        setTimeout(() => refetchMappings(), 300);
+        setTimeout(() => {
+          refetchMappings();
+        }, 100);
       } else {
         toast({ 
           title: "Error", 
@@ -145,15 +153,27 @@ export const useKpiMappingOperations = () => {
   });
 
   // Function to create a new KPI mapping
-  const createKpiMapping = (kpiMapping: KPIFieldMapping) => {
+  const createKpiMapping = async (kpiMapping: KPIFieldMapping): Promise<boolean> => {
     console.log('Creating KPI mapping:', kpiMapping);
-    createKpiMutation.mutate(kpiMapping);
+    try {
+      await createKpiMutation.mutateAsync(kpiMapping);
+      return true;
+    } catch (error) {
+      console.error('Error creating KPI mapping:', error);
+      return false;
+    }
   };
 
   // Function to update an existing KPI mapping
-  const updateKpiMapping = (id: string, kpiMapping: KPIFieldMapping) => {
+  const updateKpiMapping = async (id: string, kpiMapping: KPIFieldMapping): Promise<boolean> => {
     console.log('Updating KPI mapping:', id, kpiMapping);
-    updateKpiMutation.mutate({ id, kpiMapping });
+    try {
+      await updateKpiMutation.mutateAsync({ id, kpiMapping });
+      return true;
+    } catch (error) {
+      console.error('Error updating KPI mapping:', error);
+      return false;
+    }
   };
 
   // Function to start editing a KPI mapping
@@ -167,9 +187,15 @@ export const useKpiMappingOperations = () => {
   };
 
   // Function to delete a KPI field mapping
-  const deleteKpiMapping = (id: string) => {
+  const deleteKpiMapping = async (id: string): Promise<boolean> => {
     console.log('Deleting KPI mapping:', id);
-    deleteKpiMutation.mutate(id);
+    try {
+      await deleteKpiMutation.mutateAsync(id);
+      return true;
+    } catch (error) {
+      console.error('Error deleting KPI mapping:', error);
+      return false;
+    }
   };
 
   return {
@@ -180,10 +206,10 @@ export const useKpiMappingOperations = () => {
     refetchMappings,
     
     // Ensure availableKpis is always an array
-    availableKpis: Array.isArray(availableKpis) ? availableKpis : [],
-    isLoadingAvailableKpis,
-    availableKpisError,
-    refetchAvailableKpis,
+    availableKpis: Array.isArray(kpiMappings) ? kpiMappings.filter(k => k.availableToDesigner) : [],
+    isLoadingAvailableKpis: isLoadingMappings,
+    availableKpisError: mappingsError,
+    refetchAvailableKpis: refetchMappings,
     
     createKpiMapping,
     updateKpiMapping,

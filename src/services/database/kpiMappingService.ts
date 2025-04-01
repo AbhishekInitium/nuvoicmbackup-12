@@ -43,7 +43,14 @@ export const getKpiFieldMappings = async (): Promise<KPIFieldMapping[]> => {
     console.log('Fetching KPI field mappings...');
     const response = await axios.get(`${API_BASE_URL}/kpi-fields`);
     console.log('KPI mappings response:', response.data);
-    return Array.isArray(response.data) ? response.data : [];
+    
+    if (!Array.isArray(response.data)) {
+      console.warn('API returned non-array response:', response.data);
+      // Fallback to in-memory service
+      return await inMemoryService.getInMemoryKpiMappings();
+    }
+    
+    return response.data;
   } catch (error) {
     console.error('Error fetching KPI field mappings:', error);
     // Fallback to in-memory service if API fails
@@ -63,7 +70,14 @@ export const getAvailableKpiFields = async (): Promise<KPIFieldMapping[]> => {
   try {
     console.log('Fetching available KPI fields...');
     const response = await axios.get(`${API_BASE_URL}/kpi-fields/available`);
-    return Array.isArray(response.data) ? response.data : [];
+    
+    if (!Array.isArray(response.data)) {
+      console.warn('API returned non-array response for available KPI fields:', response.data);
+      // Fallback to in-memory service
+      return await inMemoryService.getInMemoryAvailableKpiFields();
+    }
+    
+    return response.data;
   } catch (error) {
     console.error('Error fetching available KPI fields:', error);
     // Fallback to in-memory service if API fails
@@ -87,6 +101,10 @@ export const saveKpiFieldMapping = async (kpiMapping: KPIFieldMapping): Promise<
     
     // Return the KPI object from the response
     const savedKpi = response.data.kpi || response.data;
+    
+    // Add small delay to ensure consistency
+    await new Promise(resolve => setTimeout(resolve, 100));
+    
     return savedKpi;
   } catch (error) {
     console.error('Error saving KPI field mapping:', error);
