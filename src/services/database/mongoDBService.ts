@@ -1,12 +1,9 @@
-
 import { IncentivePlan } from '@/types/incentiveTypes';
 import { IncentivePlanWithStatus } from '@/services/incentive/types/incentiveServiceTypes';
-import { SchemeAdminConfig } from '@/types/kpiTypes';
 import axios from 'axios';
 
 // Base URL for API requests
 const API_BASE_URL = 'http://localhost:3001/api/incentives';
-const ADMIN_API_URL = 'http://localhost:3001/api/admin';
 
 /**
  * Get all incentive schemes from the MongoDB database
@@ -107,43 +104,5 @@ export const updateIncentiveScheme = async (schemeId: string, updates: Partial<I
   } catch (error) {
     console.error(`Error creating new version of scheme ${schemeId}:`, error);
     throw new Error(`Failed to update scheme: ${error instanceof Error ? error.message : String(error)}`);
-  }
-};
-
-/**
- * Save a new scheme administrator configuration to MongoDB
- */
-export const saveSchemeAdmin = async (config: SchemeAdminConfig): Promise<string> => {
-  try {
-    console.log('Saving scheme administrator configuration to MongoDB...');
-    console.log('Config data:', JSON.stringify(config, null, 2));
-    
-    const response = await axios.post(`${ADMIN_API_URL}/configurations`, config);
-    
-    if (response.status === 201 && response.data._id) {
-      console.log(`Successfully saved admin config with MongoDB ID: ${response.data._id}`);
-      return response.data._id;
-    } else {
-      console.error("Unexpected response when saving admin config:", response.status, response.data);
-      throw new Error('Unexpected response from server');
-    }
-  } catch (error) {
-    console.error('Error saving scheme admin configuration:', error);
-    throw new Error(`Failed to save admin configuration: ${error instanceof Error ? error.message : String(error)}`);
-  }
-};
-
-/**
- * Get all scheme administrator configurations
- */
-export const getSchemeAdminConfigs = async (): Promise<SchemeAdminConfig[]> => {
-  try {
-    console.log('Fetching scheme administrator configurations from MongoDB...');
-    const response = await axios.get(`${ADMIN_API_URL}/configurations`);
-    console.log(`Fetched ${response.data.length} admin configurations`);
-    return response.data;
-  } catch (error) {
-    console.error('Error fetching admin configurations:', error);
-    throw new Error(`Failed to fetch admin configurations: ${error instanceof Error ? error.message : String(error)}`);
   }
 };
