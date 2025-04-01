@@ -1,19 +1,12 @@
 
-import React from 'react';
+import React, { useState } from 'react';
+import { Trash2, Edit2, Check, X } from 'lucide-react';
 import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Button } from '@/components/ui/button';
-import { Trash2 } from 'lucide-react';
 import { KpiField } from '@/types/schemeAdminTypes';
-import {
-  FormField,
-  FormItem,
-  FormLabel,
-  FormControl,
-  FormDescription,
-} from "@/components/ui/form";
-import { useForm } from 'react-hook-form';
+import { Label } from '@/components/ui/label';
 
 interface KpiMappingCardProps {
   kpi: KpiField;
@@ -21,182 +14,169 @@ interface KpiMappingCardProps {
   onRemove: (id: string, category: 'qualification' | 'adjustment' | 'exclusion' | 'custom') => void;
 }
 
-export const KpiMappingCard: React.FC<KpiMappingCardProps> = ({ 
-  kpi, 
-  onUpdate, 
-  onRemove 
-}) => {
-  const form = useForm({
-    defaultValues: {
-      name: kpi.name,
-      description: kpi.description,
-      dataType: kpi.dataType,
-      sourceField: kpi.sourceField,
-      sourceSystem: kpi.sourceSystem,
-      formula: kpi.formula || "",
-    }
-  });
+export const KpiMappingCard: React.FC<KpiMappingCardProps> = ({ kpi, onUpdate, onRemove }) => {
+  const [isEditing, setIsEditing] = useState(false);
+  const [localKpi, setLocalKpi] = useState<KpiField>({ ...kpi });
 
-  const handleUpdateField = (field: keyof KpiField, value: any) => {
-    const updatedKpi = { ...kpi, [field]: value };
-    onUpdate(updatedKpi);
+  const handleChange = (field: keyof KpiField, value: string) => {
+    setLocalKpi(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleFormChange = () => {
-    const values = form.getValues();
-    const updatedKpi = {
-      ...kpi,
-      name: values.name,
-      description: values.description,
-      dataType: values.dataType as 'string' | 'number' | 'date' | 'boolean',
-      sourceField: values.sourceField,
-      sourceSystem: values.sourceSystem as 'SAP' | 'Excel' | 'Custom',
-      formula: values.formula || undefined,
-    };
-    onUpdate(updatedKpi);
+  const handleSave = () => {
+    onUpdate(localKpi);
+    setIsEditing(false);
+  };
+
+  const handleCancel = () => {
+    setLocalKpi({ ...kpi });
+    setIsEditing(false);
   };
 
   return (
-    <Card className="p-4 relative">
-      <div className="absolute top-2 right-2">
-        <Button 
-          variant="ghost" 
-          size="sm"
-          onClick={() => onRemove(kpi.id, kpi.category)}
-          className="text-red-500 hover:text-red-700 hover:bg-red-50 p-1 h-auto"
-        >
-          <Trash2 size={16} />
-        </Button>
-      </div>
-      
-      <form onChange={handleFormChange} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <Card className="p-4">
+      {isEditing ? (
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor={`name-${kpi.id}`} className="mb-2 block text-sm font-medium">
+                KPI Name
+              </Label>
+              <Input
+                id={`name-${kpi.id}`}
+                value={localKpi.name}
+                onChange={(e) => handleChange('name', e.target.value)}
+                placeholder="KPI Name"
+              />
+            </div>
+            <div>
+              <Label htmlFor={`dataType-${kpi.id}`} className="mb-2 block text-sm font-medium">
+                Data Type
+              </Label>
+              <Select
+                value={localKpi.dataType}
+                onValueChange={(value) => handleChange('dataType', value)}
+              >
+                <SelectTrigger id={`dataType-${kpi.id}`}>
+                  <SelectValue placeholder="Data Type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="string">String</SelectItem>
+                  <SelectItem value="number">Number</SelectItem>
+                  <SelectItem value="date">Date</SelectItem>
+                  <SelectItem value="boolean">Boolean</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor={`sourceField-${kpi.id}`} className="mb-2 block text-sm font-medium">
+                Source Field
+              </Label>
+              <Input
+                id={`sourceField-${kpi.id}`}
+                value={localKpi.sourceField}
+                onChange={(e) => handleChange('sourceField', e.target.value)}
+                placeholder="Source Field"
+              />
+            </div>
+            <div>
+              <Label htmlFor={`sourceSystem-${kpi.id}`} className="mb-2 block text-sm font-medium">
+                Source System
+              </Label>
+              <Select 
+                value={localKpi.sourceSystem}
+                onValueChange={(value: "SAP" | "Excel" | "Custom") => handleChange('sourceSystem', value)}
+              >
+                <SelectTrigger id={`sourceSystem-${kpi.id}`}>
+                  <SelectValue placeholder="Source System" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="SAP">SAP</SelectItem>
+                  <SelectItem value="Excel">Excel</SelectItem>
+                  <SelectItem value="Custom">Custom</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div>
+            <Label htmlFor={`description-${kpi.id}`} className="mb-2 block text-sm font-medium">
+              Description
+            </Label>
+            <Input
+              id={`description-${kpi.id}`}
+              value={localKpi.description}
+              onChange={(e) => handleChange('description', e.target.value)}
+              placeholder="Description"
+            />
+          </div>
+
+          <div className="flex justify-end space-x-2">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleCancel}
+              type="button"
+            >
+              <X size={16} className="mr-1" /> Cancel
+            </Button>
+            <Button 
+              size="sm" 
+              onClick={handleSave}
+              type="button"
+            >
+              <Check size={16} className="mr-1" /> Save
+            </Button>
+          </div>
+        </div>
+      ) : (
         <div>
-          <FormField
-            control={form.control}
-            name="name"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>KPI Name</FormLabel>
-                <FormControl>
-                  <Input {...field} placeholder="e.g., Product Revenue" />
-                </FormControl>
-              </FormItem>
-            )}
-          />
+          <div className="flex justify-between items-start">
+            <div>
+              <h4 className="text-base font-medium">{kpi.name || "Unnamed KPI"}</h4>
+              <p className="text-sm text-gray-500 mt-1">{kpi.description || "No description"}</p>
+            </div>
+            <div className="flex space-x-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setIsEditing(true)}
+              >
+                <Edit2 size={16} />
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-red-500 hover:text-red-700"
+                onClick={() => onRemove(kpi.id, kpi.category)}
+              >
+                <Trash2 size={16} />
+              </Button>
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-2 gap-4 mt-4">
+            <div>
+              <p className="text-xs font-medium text-gray-500">Source Field</p>
+              <p className="text-sm">{kpi.sourceField || "Not specified"}</p>
+            </div>
+            <div>
+              <p className="text-xs font-medium text-gray-500">Data Type</p>
+              <p className="text-sm capitalize">{kpi.dataType}</p>
+            </div>
+            <div>
+              <p className="text-xs font-medium text-gray-500">Source System</p>
+              <p className="text-sm">{kpi.sourceSystem}</p>
+            </div>
+            <div>
+              <p className="text-xs font-medium text-gray-500">Category</p>
+              <p className="text-sm capitalize">{kpi.category}</p>
+            </div>
+          </div>
         </div>
-        
-        <div>
-          <FormField
-            control={form.control}
-            name="dataType"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Data Type</FormLabel>
-                <Select 
-                  onValueChange={(value) => {
-                    field.onChange(value);
-                    handleUpdateField('dataType', value);
-                  }}
-                  defaultValue={field.value}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select data type" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="string">String</SelectItem>
-                    <SelectItem value="number">Number</SelectItem>
-                    <SelectItem value="date">Date</SelectItem>
-                    <SelectItem value="boolean">Boolean</SelectItem>
-                  </SelectContent>
-                </Select>
-              </FormItem>
-            )}
-          />
-        </div>
-        
-        <div className="md:col-span-2">
-          <FormField
-            control={form.control}
-            name="description"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Description</FormLabel>
-                <FormControl>
-                  <Input {...field} placeholder="Description of this KPI" />
-                </FormControl>
-              </FormItem>
-            )}
-          />
-        </div>
-        
-        <div>
-          <FormField
-            control={form.control}
-            name="sourceSystem"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Source System</FormLabel>
-                <Select 
-                  onValueChange={(value) => {
-                    field.onChange(value);
-                    handleUpdateField('sourceSystem', value);
-                  }}
-                  defaultValue={field.value}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select source system" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="SAP">SAP</SelectItem>
-                    <SelectItem value="Excel">Excel</SelectItem>
-                    <SelectItem value="Custom">Custom</SelectItem>
-                  </SelectContent>
-                </Select>
-              </FormItem>
-            )}
-          />
-        </div>
-        
-        <div>
-          <FormField
-            control={form.control}
-            name="sourceField"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Source Field</FormLabel>
-                <FormControl>
-                  <Input {...field} placeholder="e.g., grossRevenue" />
-                </FormControl>
-                <FormDescription className="text-xs">
-                  Field name in source system or spreadsheet column
-                </FormDescription>
-              </FormItem>
-            )}
-          />
-        </div>
-        
-        <div className="md:col-span-2">
-          <FormField
-            control={form.control}
-            name="formula"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Formula (Optional)</FormLabel>
-                <FormControl>
-                  <Input {...field} placeholder="e.g., [grossRevenue] * 0.9" />
-                </FormControl>
-                <FormDescription className="text-xs">
-                  Optional formula for calculated fields. Use [fieldName] for variable references.
-                </FormDescription>
-              </FormItem>
-            )}
-          />
-        </div>
-      </form>
+      )}
     </Card>
   );
 };
