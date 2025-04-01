@@ -4,7 +4,8 @@ import { CURRENCIES } from "../constants/incentiveConstants";
 // Find currency symbol for the selected currency
 export const getCurrencySymbol = (currencyCode: string): string => {
   const currency = CURRENCIES.find(c => c.code === currencyCode);
-  return currency ? currency.symbol : '$';
+  // Access the symbol property, if it exists, otherwise use a default
+  return currency && 'symbol' in currency ? currency.symbol : '$';
 };
 
 // Format currency with 2 decimal places - ensure max 15 digits total including decimals

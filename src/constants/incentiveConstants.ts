@@ -1,10 +1,11 @@
+
 export const CURRENCIES = [
-  { code: 'USD', label: 'US Dollar' },
-  { code: 'EUR', label: 'Euro' },
-  { code: 'GBP', label: 'British Pound' },
-  { code: 'JPY', label: 'Japanese Yen' },
-  { code: 'CAD', label: 'Canadian Dollar' },
-  { code: 'AUD', label: 'Australian Dollar' }
+  { code: 'USD', label: 'US Dollar', symbol: '$' },
+  { code: 'EUR', label: 'Euro', symbol: '€' },
+  { code: 'GBP', label: 'British Pound', symbol: '£' },
+  { code: 'JPY', label: 'Japanese Yen', symbol: '¥' },
+  { code: 'CAD', label: 'Canadian Dollar', symbol: 'CA$' },
+  { code: 'AUD', label: 'Australian Dollar', symbol: 'A$' }
 ];
 
 export const OPERATORS = [
@@ -75,4 +76,20 @@ export const REVENUE_BASES = [
   'Invoices',
   'Collections',
   'Contracts'
+];
+
+// Add the missing MOCK_SCHEMES constant
+export const MOCK_SCHEMES = [
+  {
+    name: 'Sales Representatives Plan',
+    description: 'Standard commission plan for sales representatives',
+  },
+  {
+    name: 'Account Executives Plan',
+    description: 'Enhanced commission plan for account executives',
+  },
+  {
+    name: 'Sales Managers Plan',
+    description: 'Management-level incentive plan',
+  }
 ];
