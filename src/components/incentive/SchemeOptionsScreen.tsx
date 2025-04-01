@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { PlusCircle, Copy, Edit } from 'lucide-react';
+import { PlusCircle, Copy, Edit, Settings, FileSpreadsheet } from 'lucide-react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
@@ -8,13 +8,71 @@ interface SchemeOptionsScreenProps {
   onCreateNewScheme: () => void;
   onOpenExistingSchemes: () => void;
   onEditExistingScheme?: () => void;
+  onAdminOption?: () => void;
+  onDesignerOption?: () => void;
+  showMainOptions?: boolean;
 }
 
 const SchemeOptionsScreen: React.FC<SchemeOptionsScreenProps> = ({
   onCreateNewScheme,
   onOpenExistingSchemes,
-  onEditExistingScheme
+  onEditExistingScheme,
+  onAdminOption,
+  onDesignerOption,
+  showMainOptions = false
 }) => {
+  if (showMainOptions) {
+    return (
+      <div className="max-w-4xl mx-auto mt-10">
+        <h1 className="text-3xl font-bold text-gray-900 mb-8 text-center">
+          Incentive Scheme Management
+        </h1>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-8">
+          <Card className="bg-white shadow-md hover:shadow-lg transition-shadow duration-300">
+            <CardContent className="pt-6">
+              <div className="text-center mb-4">
+                <div className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-purple-100 mb-4">
+                  <Settings className="h-6 w-6 text-purple-600" />
+                </div>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">Scheme Administrator</h3>
+                <p className="text-sm text-gray-500 mb-4">
+                  Configure technical elements and define KPIs for incentive schemes
+                </p>
+                <Button 
+                  className="w-full bg-purple-600 hover:bg-purple-700"
+                  onClick={onAdminOption}
+                >
+                  Configure KPIs
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card className="bg-white shadow-md hover:shadow-lg transition-shadow duration-300">
+            <CardContent className="pt-6">
+              <div className="text-center mb-4">
+                <div className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-blue-100 mb-4">
+                  <FileSpreadsheet className="h-6 w-6 text-blue-600" />
+                </div>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">Scheme Designer</h3>
+                <p className="text-sm text-gray-500 mb-4">
+                  Create and manage incentive schemes using configured KPIs
+                </p>
+                <Button 
+                  className="w-full bg-blue-600 hover:bg-blue-700"
+                  onClick={onDesignerOption}
+                >
+                  Design Schemes
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-4xl mx-auto mt-10">
       <h1 className="text-3xl font-bold text-gray-900 mb-8 text-center">

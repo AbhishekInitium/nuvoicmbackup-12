@@ -3,17 +3,19 @@ import NavBar from '@/components/layout/NavBar';
 import Container from '@/components/layout/Container';
 import IncentivePlanDesigner from '@/components/IncentivePlanDesigner';
 import { useToast } from "@/hooks/use-toast";
-import { IncentivePlanWithStatus } from '@/services/incentive/incentivePlanService';
+import { IncentivePlanWithStatus } from '@/services/incentive/types/incentiveServiceTypes';
 import { DEFAULT_PLAN } from '@/constants/incentiveConstants';
 import { IncentivePlan } from '@/types/incentiveTypes';
 
 import SchemeOptionsScreen from '@/components/incentive/SchemeOptionsScreen';
+import SchemeAdministratorScreen from '@/components/incentive/scheme-admin/SchemeAdministratorScreen';
 import DesignerNavigation from '@/components/incentive/DesignerNavigation';
 import SchemeSelectionDialog from '@/components/incentive/SchemeSelectionDialog';
 
 const IncentiveDesigner = () => {
   const { toast } = useToast();
   const [showInitialOptions, setShowInitialOptions] = useState(true);
+  const [showAdministratorScreen, setShowAdministratorScreen] = useState(false);
   const [showExistingSchemes, setShowExistingSchemes] = useState(false);
   const [showEditSchemes, setShowEditSchemes] = useState(false);
   const [planTemplate, setPlanTemplate] = useState<IncentivePlan | null>(null);
@@ -130,13 +132,35 @@ const IncentiveDesigner = () => {
     });
   };
 
+  const handleAdminOption = () => {
+    setShowInitialOptions(false);
+    setShowAdministratorScreen(true);
+  };
+
+  const handleDesignerOption = () => {
+    // Keep the initial options screen, but navigate to designer options
+    // This is just a placeholder to handle the designer option button click
+    // We'll keep showing the initial options screen
+  };
+
+  const handleBackFromAdminScreen = () => {
+    setShowAdministratorScreen(false);
+    setShowInitialOptions(true);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-app-gray-50 to-white">
       <NavBar />
       <Container maxWidth="full">
         <DesignerNavigation 
-          onBack={!showInitialOptions ? () => setShowInitialOptions(true) : undefined}
-          showBackToDashboard={showInitialOptions}
+          onBack={
+            showAdministratorScreen 
+              ? handleBackFromAdminScreen
+              : !showInitialOptions 
+                ? () => setShowInitialOptions(true) 
+                : undefined
+          }
+          showBackToDashboard={showInitialOptions && !showAdministratorScreen}
         />
         
         {showInitialOptions ? (
@@ -144,7 +168,12 @@ const IncentiveDesigner = () => {
             onCreateNewScheme={handleCreateNewScheme}
             onOpenExistingSchemes={() => setShowExistingSchemes(true)}
             onEditExistingScheme={() => setShowEditSchemes(true)}
+            onAdminOption={handleAdminOption}
+            onDesignerOption={handleDesignerOption}
+            showMainOptions={true}
           />
+        ) : showAdministratorScreen ? (
+          <SchemeAdministratorScreen onBack={handleBackFromAdminScreen} />
         ) : (
           <IncentivePlanDesigner 
             initialPlan={planTemplate} 
