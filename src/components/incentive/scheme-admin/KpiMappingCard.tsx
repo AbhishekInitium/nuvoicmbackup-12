@@ -79,7 +79,7 @@ export const KpiMappingCard: React.FC<KpiMappingCardProps> = ({ kpi, onUpdate, o
               </Label>
               <Select 
                 value={localKpi.sourceType}
-                onValueChange={(value: "SAP" | "Excel" | "Custom") => handleChange('sourceType', value)}
+                onValueChange={(value: "SAP" | "Excel" | "API" | "Custom") => handleChange('sourceType', value)}
               >
                 <SelectTrigger id={`sourceType-${kpi.id}`}>
                   <SelectValue placeholder="Source Type" />
@@ -87,6 +87,7 @@ export const KpiMappingCard: React.FC<KpiMappingCardProps> = ({ kpi, onUpdate, o
                 <SelectContent>
                   <SelectItem value="SAP">SAP</SelectItem>
                   <SelectItem value="Excel">Excel</SelectItem>
+                  <SelectItem value="API">API</SelectItem>
                   <SelectItem value="Custom">Custom</SelectItem>
                 </SelectContent>
               </Select>
@@ -105,7 +106,7 @@ export const KpiMappingCard: React.FC<KpiMappingCardProps> = ({ kpi, onUpdate, o
             />
           </div>
 
-          {localKpi.sourceType === "SAP" && (
+          {(localKpi.sourceType === "SAP" || localKpi.sourceType === "API") && (
             <div>
               <Label htmlFor={`api-${kpi.id}`} className="mb-2 block text-sm font-medium">
                 API Endpoint

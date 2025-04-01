@@ -1,18 +1,17 @@
-
 export interface KpiField {
   id: string;
   kpi: string;
   description: string;
   dataType: string;
   sourceField: string;
-  sourceType: 'SAP' | 'Excel' | 'Custom';
+  sourceType: 'SAP' | 'Excel' | 'API' | 'Custom';
   api?: string;
   category: 'qualification' | 'adjustment' | 'exclusion' | 'custom';
   formula?: string; // Optional formula for calculated fields
   validationRules?: string[];
 }
 
-export type DataSourceType = 'SAP' | 'Excel' | 'Custom';
+export type DataSourceType = 'SAP' | 'Excel' | 'API' | 'Custom';
 
 export interface DataSourceMapping {
   sourceType: DataSourceType;
