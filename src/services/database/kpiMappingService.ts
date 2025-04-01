@@ -1,4 +1,3 @@
-
 import axios from 'axios';
 import {
   KPIFieldMapping, 
@@ -47,7 +46,7 @@ export const getKpiFieldMappings = async (): Promise<KPIFieldMapping[]> => {
     console.error('Error fetching KPI field mappings:', error);
     // Fallback to in-memory service if API fails
     try {
-      return await inMemoryService.getKpiFields();
+      return await inMemoryService.getInMemoryKpiMappings();
     } catch (innerError) {
       console.error('In-memory fallback also failed:', innerError);
       return [];
@@ -67,7 +66,7 @@ export const getAvailableKpiFields = async (): Promise<KPIFieldMapping[]> => {
     console.error('Error fetching available KPI fields:', error);
     // Fallback to in-memory service if API fails
     try {
-      return await inMemoryService.getAvailableKpiFields();
+      return await inMemoryService.getInMemoryAvailableKpiFields();
     } catch (innerError) {
       console.error('In-memory fallback also failed:', innerError);
       return [];
