@@ -1,16 +1,18 @@
+
 import axios from 'axios';
 import {
   KPIFieldMapping, 
   SchemeMaster, 
   DatabaseConnectionStatus,
-  KPI_SECTIONS
+  KPI_SECTIONS,
+  SchemeAdminConfig
 } from './types/kpiTypes';
 
 import * as inMemoryService from './inMemoryKpiService';
 
 // Re-export KPI sections for convenience
 export { KPI_SECTIONS };
-export type { KPIFieldMapping, SchemeMaster, DatabaseConnectionStatus };
+export type { KPIFieldMapping, SchemeMaster, DatabaseConnectionStatus, SchemeAdminConfig };
 
 // Base URL for API requests - Use a relative URL to make it work in all environments
 const API_BASE_URL = '/api';
@@ -181,5 +183,24 @@ export const deleteKpiFieldMapping = async (id: string): Promise<boolean> => {
   } catch (error) {
     console.error('Error deleting KPI field mapping:', error);
     throw new Error(`Failed to delete KPI mapping: ${error instanceof Error ? error.message : String(error)}`);
+  }
+};
+
+/**
+ * Save complete scheme administrator configuration to MongoDB
+ */
+export const saveSchemeAdminConfig = async (config: SchemeAdminConfig): Promise<{ id: string, success: boolean }> => {
+  try {
+    console.log('Saving scheme administrator configuration:', config);
+    const response = await axios.post(`${API_BASE_URL}/scheme-admin-config`, config);
+    console.log('Save scheme admin config response:', response.data);
+    
+    return {
+      id: response.data.id || '',
+      success: true
+    };
+  } catch (error) {
+    console.error('Error saving scheme admin config:', error);
+    throw new Error(`Failed to save scheme configuration: ${error instanceof Error ? error.message : String(error)}`);
   }
 };

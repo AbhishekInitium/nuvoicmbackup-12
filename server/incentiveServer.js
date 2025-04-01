@@ -140,14 +140,42 @@ const schemeMasterSchema = new mongoose.Schema({
   }
 });
 
+// Scheme Admin Configuration Schema
+const schemeAdminConfigSchema = new mongoose.Schema({
+  adminId: {
+    type: String,
+    required: true,
+    unique: true
+  },
+  adminName: {
+    type: String,
+    required: true
+  },
+  calculationBase: String,
+  createdAt: {
+    type: String,
+    default: () => new Date().toISOString()
+  },
+  updatedAt: {
+    type: String,
+    default: () => new Date().toISOString()
+  },
+  qualificationFields: Array,
+  adjustmentFields: Array,
+  exclusionFields: Array,
+  customRules: Array
+}, { strict: false });
+
 const Incentive = mongoose.model('incentivescheme', incentiveSchema);
 const KPIFieldMapping = mongoose.model('KPI_MAPPING', kpiFieldMappingSchema);
 const SchemeMaster = mongoose.model('schememaster', schemeMasterSchema);
+const SchemeAdminConfig = mongoose.model('schemeadminconfig', schemeAdminConfigSchema);
 
 // In-memory fallback for when MongoDB is not available
 let inMemorySchemes = [];
 let inMemoryKpiMappings = [];
 let inMemorySchemeMasters = [];
+let inMemorySchemeAdminConfigs = [];
 let nextInMemoryId = 1;
 
 // Helper function to determine if MongoDB is connected
@@ -655,6 +683,102 @@ app.post('/api/schemes/:schemeId/master', async (req, res) => {
   } catch (error) {
     console.error('Error saving scheme master:', error);
     res.status(500).json({ error: 'Failed to save scheme master' });
+  }
+});
+
+// API Routes for Scheme Admin Config
+
+// POST save scheme admin configuration
+app.post('/api/scheme-admin-config', async (req, res) => {
+  try {
+    const configData = {
+      ...req.body,
+      updatedAt: new Date().toISOString()
+    };
+
+    if (isMongoConnected()) {
+      // Check if a config with this adminId already exists
+      const existingConfig = await SchemeAdminConfig.findOne({ adminId: configData.adminId });
+      
+      if (existingConfig) {
+        // Update the existing config
+        const updatedConfig = await SchemeAdminConfig.findOneAndUpdate(
+          { adminId: configData.adminId },
+          configData,
+          { new: true }
+        );
+        res.json({ id: updatedConfig._id, message: 'Scheme admin config updated' });
+      } else {
+        // Create new config
+        const newConfig = new SchemeAdminConfig(configData);
+        const savedConfig = await newConfig.save();
+        res.status(201).json({ id: savedConfig._id, message: 'Scheme admin config saved' });
+      }
+    } else {
+      // In-memory fallback
+      const index = inMemorySchemeAdminConfigs.findIndex(c => c.adminId === configData.adminId);
+      
+      if (index !== -1) {
+        // Update existing
+        inMemorySchemeAdminConfigs[index] = {
+          ...inMemorySchemeAdminConfigs[index],
+          ...configData
+        };
+        res.json({ id: inMemorySchemeAdminConfigs[index]._id, message: 'Scheme admin config updated' });
+      } else {
+        // Create new
+        const newConfig = {
+          _id: String(nextInMemoryId++),
+          ...configData
+        };
+        inMemorySchemeAdminConfigs.push(newConfig);
+        res.status(201).json({ id: newConfig._id, message: 'Scheme admin config saved' });
+      }
+    }
+  } catch (error) {
+    console.error('Error saving scheme admin config:', error);
+    res.status(500).json({ error: 'Failed to save scheme admin config' });
+  }
+});
+
+// GET scheme admin configuration by adminId
+app.get('/api/scheme-admin-config/:adminId', async (req, res) => {
+  try {
+    if (isMongoConnected()) {
+      const config = await SchemeAdminConfig.findOne({ adminId: req.params.adminId });
+      
+      if (!config) {
+        return res.status(404).json({ error: 'Scheme admin config not found' });
+      }
+      
+      res.json(config);
+    } else {
+      const config = inMemorySchemeAdminConfigs.find(c => c.adminId === req.params.adminId);
+      
+      if (!config) {
+        return res.status(404).json({ error: 'Scheme admin config not found' });
+      }
+      
+      res.json(config);
+    }
+  } catch (error) {
+    console.error('Error fetching scheme admin config:', error);
+    res.status(500).json({ error: 'Failed to fetch scheme admin config' });
+  }
+});
+
+// GET all scheme admin configurations
+app.get('/api/scheme-admin-config', async (req, res) => {
+  try {
+    if (isMongoConnected()) {
+      const configs = await SchemeAdminConfig.find().sort({ updatedAt: -1 });
+      res.json(configs);
+    } else {
+      res.json(inMemorySchemeAdminConfigs);
+    }
+  } catch (error) {
+    console.error('Error fetching scheme admin configs:', error);
+    res.status(500).json({ error: 'Failed to fetch scheme admin configs' });
   }
 });
 

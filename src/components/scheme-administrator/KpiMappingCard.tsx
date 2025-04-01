@@ -2,14 +2,15 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
-import { Plus, X, Database, Download, RefreshCw } from 'lucide-react';
-import { KPIFieldMapping } from '@/services/database/types/kpiTypes';
+import { Plus, X, Database, Download, RefreshCw, Save } from 'lucide-react';
+import { KPIFieldMapping, SchemeAdminConfig } from '@/services/database/types/kpiTypes';
 import KpiMappingForm from '@/components/scheme-administrator/KpiMappingForm';
 import KpiMappingList from '@/components/scheme-administrator/KpiMappingList';
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import SchemeHeader from '@/components/scheme-administrator/SchemeHeader';
+import { saveSchemeAdminConfig } from '@/services/database/kpiMappingService';
 
 interface KpiMappingCardProps {
   kpiMappings: KPIFieldMapping[];
@@ -43,6 +44,7 @@ const KpiMappingCard: React.FC<KpiMappingCardProps> = ({
   const [showForm, setShowForm] = useState(false);
   const [view, setView] = useState<'list' | 'json'>('list');
   const { toast } = useToast();
+  const [isSavingConfig, setIsSavingConfig] = useState(false);
   
   const [calculationBase, setCalculationBase] = useState({
     adminId: "scheme-" + new Date().getTime(),
@@ -109,6 +111,7 @@ const KpiMappingCard: React.FC<KpiMappingCardProps> = ({
     setCalculationBase(prev => ({ ...prev, ...newValues }));
   };
 
+  // Group mappings by section for the JSON view
   const groupedJson = {
     adminId: calculationBase.adminId,
     adminName: calculationBase.adminName,
@@ -181,6 +184,43 @@ const KpiMappingCard: React.FC<KpiMappingCardProps> = ({
     }
   };
 
+  // New function to save the scheme configuration to MongoDB
+  const handleSaveToDatabase = async () => {
+    try {
+      setIsSavingConfig(true);
+      
+      const config: SchemeAdminConfig = {
+        adminId: calculationBase.adminId,
+        adminName: calculationBase.adminName,
+        calculationBase: calculationBase.calculationBase,
+        createdAt: calculationBase.createdAt,
+        updatedAt: new Date().toISOString(),
+        qualificationFields: groupedJson.qualificationFields,
+        adjustmentFields: groupedJson.adjustmentFields,
+        exclusionFields: groupedJson.exclusionFields,
+        customRules: groupedJson.customRules
+      };
+      
+      const result = await saveSchemeAdminConfig(config);
+      
+      if (result.success) {
+        toast({
+          title: "Success",
+          description: `Scheme configuration saved to database with ID: ${result.id}`,
+        });
+      }
+    } catch (error) {
+      console.error('Error saving scheme configuration to database:', error);
+      toast({
+        title: "Error",
+        description: `Failed to save scheme configuration: ${error instanceof Error ? error.message : String(error)}`,
+        variant: "destructive"
+      });
+    } finally {
+      setIsSavingConfig(false);
+    }
+  };
+
   useEffect(() => {
     if (!isCreatingKpi && !isUpdatingKpi) {
       setShowForm(false);
@@ -221,6 +261,16 @@ const KpiMappingCard: React.FC<KpiMappingCardProps> = ({
           >
             <Download size={16} className="mr-2" />
             Export JSON
+          </Button>
+          <Button 
+            variant="secondary"
+            size="sm"
+            onClick={handleSaveToDatabase}
+            disabled={isSavingConfig}
+            className="flex items-center"
+          >
+            <Save size={16} className="mr-2" />
+            {isSavingConfig ? "Saving..." : "Save to Database"}
           </Button>
           <Button 
             onClick={toggleForm} 

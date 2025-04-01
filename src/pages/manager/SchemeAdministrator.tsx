@@ -41,7 +41,10 @@ const SchemeAdministrator: React.FC = () => {
   const handleKpiOperation = (operation: string, success: boolean) => {
     if (success) {
       console.log(`${operation} operation successful, refreshing data...`);
-      refetchMappings();
+      // Add a small delay to allow the database operation to complete
+      setTimeout(() => {
+        refetchMappings();
+      }, 500);
     }
   };
 
