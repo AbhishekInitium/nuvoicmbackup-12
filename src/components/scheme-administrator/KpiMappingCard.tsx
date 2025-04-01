@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
@@ -51,10 +50,10 @@ const KpiMappingCard: React.FC<KpiMappingCardProps> = ({
     adminId: "scheme-" + new Date().getTime(),
     adminName: "New Scheme Administrator",
     calculationBase: "Sales Orders",
+    baseField: "SoAmount",
     createdAt: new Date().toISOString()
   });
 
-  // Update local state whenever kpiMappings changes
   useEffect(() => {
     console.log("KpiMappingCard: Received KPI mappings update:", kpiMappings);
     if (Array.isArray(kpiMappings)) {
@@ -142,12 +141,22 @@ const KpiMappingCard: React.FC<KpiMappingCardProps> = ({
     setCalculationBase(prev => ({ ...prev, ...newValues }));
   };
 
-  // Computed property to generate JSON view based on current mappings
   const groupedJson = {
     adminId: calculationBase.adminId,
     adminName: calculationBase.adminName,
     calculationBase: calculationBase.calculationBase,
+    baseField: calculationBase.baseField,
     createdAt: calculationBase.createdAt,
+    baseData: localKpiMappings
+      .filter(m => m.section === 'BASE_DATA')
+      .map(mapping => ({
+        kpi: mapping.kpiName,
+        description: mapping.description,
+        sourceType: mapping.sourceType,
+        sourceField: mapping.sourceField,
+        dataType: mapping.dataType,
+        api: mapping.api || ""
+      })),
     qualificationFields: localKpiMappings
       .filter(m => m.section === 'QUAL_CRI')
       .map(mapping => ({
@@ -224,8 +233,10 @@ const KpiMappingCard: React.FC<KpiMappingCardProps> = ({
         adminId: calculationBase.adminId,
         adminName: calculationBase.adminName,
         calculationBase: calculationBase.calculationBase,
+        baseField: calculationBase.baseField,
         createdAt: calculationBase.createdAt,
         updatedAt: new Date().toISOString(),
+        baseData: groupedJson.baseData,
         qualificationFields: groupedJson.qualificationFields,
         adjustmentFields: groupedJson.adjustmentFields,
         exclusionFields: groupedJson.exclusionFields,
@@ -252,7 +263,6 @@ const KpiMappingCard: React.FC<KpiMappingCardProps> = ({
     }
   };
 
-  // Auto-close form when operations complete
   useEffect(() => {
     if (!isCreatingKpi && !isUpdatingKpi && (showForm && !editingKpi)) {
       console.log("KpiMappingCard: Operation completed, auto-refreshing");

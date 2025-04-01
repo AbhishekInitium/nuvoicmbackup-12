@@ -23,7 +23,7 @@ interface KpiMappingFormProps {
 }
 
 const defaultKpiMapping: KPIFieldMapping = {
-  section: 'QUAL_CRI',
+  section: 'BASE_DATA',
   kpiName: '',
   description: '',
   sourceType: 'System',
