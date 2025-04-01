@@ -201,206 +201,212 @@ export const KpiMappingForm: React.FC<KpiMappingFormProps> = ({
       <h2 className="text-xl font-semibold">Configure KPI Mappings</h2>
       
       <Form {...form}>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <Card className="p-4">
-            <h3 className="text-lg font-medium mb-4">Base Configuration</h3>
-            
-            <div className="space-y-4">
-              <FormField
-                control={form.control}
-                name="calculationBase"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Calculation Base</FormLabel>
-                    <FormControl>
-                      <Input {...field} placeholder="e.g., Revenue" />
-                    </FormControl>
-                    <FormDescription>
-                      The primary metric used for calculations
-                    </FormDescription>
-                  </FormItem>
-                )}
-              />
+        <form onSubmit={form.handleSubmit(handleSaveConfig)} className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Card className="p-4">
+              <h3 className="text-lg font-medium mb-4">Base Configuration</h3>
               
-              <FormField
-                control={form.control}
-                name="baseField"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Source Field</FormLabel>
-                    <FormControl>
-                      <Input {...field} placeholder="e.g., grossRevenue" />
-                    </FormControl>
-                    <FormDescription>
-                      Field name in the source system
-                    </FormDescription>
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="sourceSystem"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Source System</FormLabel>
-                    <Select 
-                      onValueChange={field.onChange} 
-                      defaultValue={field.value}
-                    >
+              <div className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="calculationBase"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Calculation Base</FormLabel>
                       <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select a source system" />
-                        </SelectTrigger>
+                        <Input {...field} placeholder="e.g., Revenue" />
                       </FormControl>
-                      <SelectContent>
-                        <SelectItem value="SAP">SAP</SelectItem>
-                        <SelectItem value="Excel">Excel</SelectItem>
-                        <SelectItem value="Custom">Custom</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormDescription>
-                      System providing the data
-                    </FormDescription>
-                  </FormItem>
-                )}
-              />
+                      <FormDescription>
+                        The primary metric used for calculations
+                      </FormDescription>
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="baseField"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Source Field</FormLabel>
+                      <FormControl>
+                        <Input {...field} placeholder="e.g., grossRevenue" />
+                      </FormControl>
+                      <FormDescription>
+                        Field name in the source system
+                      </FormDescription>
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="sourceSystem"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Source System</FormLabel>
+                      <Select 
+                        onValueChange={field.onChange} 
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select a source system" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="SAP">SAP</SelectItem>
+                          <SelectItem value="Excel">Excel</SelectItem>
+                          <SelectItem value="Custom">Custom</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormDescription>
+                        System providing the data
+                      </FormDescription>
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </Card>
+            
+            <div>
+              <JsonPreview data={kpiData} title="KPI Configuration Preview" height="300px" />
             </div>
-          </Card>
-          
-          <div>
-            <JsonPreview data={kpiData} title="KPI Configuration Preview" height="300px" />
           </div>
-        </div>
+          
+          <div className="space-y-6">
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-medium">Qualification KPIs</h3>
+                <Button 
+                  type="button"
+                  onClick={() => handleAddKpi('qualification')}
+                  size="sm"
+                  variant="outline"
+                >
+                  Add Qualification KPI
+                </Button>
+              </div>
+              
+              <div className="space-y-4">
+                {kpiData.qualificationFields.length === 0 ? (
+                  <p className="text-gray-500 italic text-sm">
+                    No qualification KPIs defined yet. Click the button above to add one.
+                  </p>
+                ) : (
+                  kpiData.qualificationFields.map(kpi => (
+                    <KpiMappingCard 
+                      key={kpi.id} 
+                      kpi={kpi} 
+                      onUpdate={handleUpdateKpi} 
+                      onRemove={handleRemoveKpi} 
+                    />
+                  ))
+                )}
+              </div>
+            </div>
+            
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-medium">Adjustment KPIs</h3>
+                <Button 
+                  type="button"
+                  onClick={() => handleAddKpi('adjustment')}
+                  size="sm"
+                  variant="outline"
+                >
+                  Add Adjustment KPI
+                </Button>
+              </div>
+              
+              <div className="space-y-4">
+                {kpiData.adjustmentFields.length === 0 ? (
+                  <p className="text-gray-500 italic text-sm">
+                    No adjustment KPIs defined yet. Click the button above to add one.
+                  </p>
+                ) : (
+                  kpiData.adjustmentFields.map(kpi => (
+                    <KpiMappingCard 
+                      key={kpi.id} 
+                      kpi={kpi} 
+                      onUpdate={handleUpdateKpi} 
+                      onRemove={handleRemoveKpi} 
+                    />
+                  ))
+                )}
+              </div>
+            </div>
+            
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-medium">Exclusion KPIs</h3>
+                <Button 
+                  type="button"
+                  onClick={() => handleAddKpi('exclusion')}
+                  size="sm"
+                  variant="outline"
+                >
+                  Add Exclusion KPI
+                </Button>
+              </div>
+              
+              <div className="space-y-4">
+                {kpiData.exclusionFields.length === 0 ? (
+                  <p className="text-gray-500 italic text-sm">
+                    No exclusion KPIs defined yet. Click the button above to add one.
+                  </p>
+                ) : (
+                  kpiData.exclusionFields.map(kpi => (
+                    <KpiMappingCard 
+                      key={kpi.id} 
+                      kpi={kpi} 
+                      onUpdate={handleUpdateKpi} 
+                      onRemove={handleRemoveKpi} 
+                    />
+                  ))
+                )}
+              </div>
+            </div>
+            
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-medium">Custom Rule KPIs</h3>
+                <Button 
+                  type="button"
+                  onClick={() => handleAddKpi('custom')}
+                  size="sm"
+                  variant="outline"
+                >
+                  Add Custom KPI
+                </Button>
+              </div>
+              
+              <div className="space-y-4">
+                {kpiData.customRules.length === 0 ? (
+                  <p className="text-gray-500 italic text-sm">
+                    No custom KPIs defined yet. Click the button above to add one.
+                  </p>
+                ) : (
+                  kpiData.customRules.map(kpi => (
+                    <KpiMappingCard 
+                      key={kpi.id} 
+                      kpi={kpi} 
+                      onUpdate={handleUpdateKpi} 
+                      onRemove={handleRemoveKpi} 
+                    />
+                  ))
+                )}
+              </div>
+            </div>
+          </div>
+          
+          <div className="flex justify-end pt-6 border-t">
+            <Button type="submit" className="w-40">
+              Save Configuration
+            </Button>
+          </div>
+        </form>
       </Form>
-      
-      <div className="space-y-6">
-        <div>
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-medium">Qualification KPIs</h3>
-            <Button 
-              onClick={() => handleAddKpi('qualification')}
-              size="sm"
-              variant="outline"
-            >
-              Add Qualification KPI
-            </Button>
-          </div>
-          
-          <div className="space-y-4">
-            {kpiData.qualificationFields.length === 0 ? (
-              <p className="text-gray-500 italic text-sm">
-                No qualification KPIs defined yet. Click the button above to add one.
-              </p>
-            ) : (
-              kpiData.qualificationFields.map(kpi => (
-                <KpiMappingCard 
-                  key={kpi.id} 
-                  kpi={kpi} 
-                  onUpdate={handleUpdateKpi} 
-                  onRemove={handleRemoveKpi} 
-                />
-              ))
-            )}
-          </div>
-        </div>
-        
-        <div>
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-medium">Adjustment KPIs</h3>
-            <Button 
-              onClick={() => handleAddKpi('adjustment')}
-              size="sm"
-              variant="outline"
-            >
-              Add Adjustment KPI
-            </Button>
-          </div>
-          
-          <div className="space-y-4">
-            {kpiData.adjustmentFields.length === 0 ? (
-              <p className="text-gray-500 italic text-sm">
-                No adjustment KPIs defined yet. Click the button above to add one.
-              </p>
-            ) : (
-              kpiData.adjustmentFields.map(kpi => (
-                <KpiMappingCard 
-                  key={kpi.id} 
-                  kpi={kpi} 
-                  onUpdate={handleUpdateKpi} 
-                  onRemove={handleRemoveKpi} 
-                />
-              ))
-            )}
-          </div>
-        </div>
-        
-        <div>
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-medium">Exclusion KPIs</h3>
-            <Button 
-              onClick={() => handleAddKpi('exclusion')}
-              size="sm"
-              variant="outline"
-            >
-              Add Exclusion KPI
-            </Button>
-          </div>
-          
-          <div className="space-y-4">
-            {kpiData.exclusionFields.length === 0 ? (
-              <p className="text-gray-500 italic text-sm">
-                No exclusion KPIs defined yet. Click the button above to add one.
-              </p>
-            ) : (
-              kpiData.exclusionFields.map(kpi => (
-                <KpiMappingCard 
-                  key={kpi.id} 
-                  kpi={kpi} 
-                  onUpdate={handleUpdateKpi} 
-                  onRemove={handleRemoveKpi} 
-                />
-              ))
-            )}
-          </div>
-        </div>
-        
-        <div>
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-medium">Custom Rule KPIs</h3>
-            <Button 
-              onClick={() => handleAddKpi('custom')}
-              size="sm"
-              variant="outline"
-            >
-              Add Custom KPI
-            </Button>
-          </div>
-          
-          <div className="space-y-4">
-            {kpiData.customRules.length === 0 ? (
-              <p className="text-gray-500 italic text-sm">
-                No custom KPIs defined yet. Click the button above to add one.
-              </p>
-            ) : (
-              kpiData.customRules.map(kpi => (
-                <KpiMappingCard 
-                  key={kpi.id} 
-                  kpi={kpi} 
-                  onUpdate={handleUpdateKpi} 
-                  onRemove={handleRemoveKpi} 
-                />
-              ))
-            )}
-          </div>
-        </div>
-      </div>
-      
-      <div className="flex justify-end pt-6 border-t">
-        <Button onClick={handleSaveConfig} className="w-40">
-          Save Configuration
-        </Button>
-      </div>
     </div>
   );
 };
