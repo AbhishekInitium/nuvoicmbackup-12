@@ -57,7 +57,7 @@ const PrimaryMetricSelector: React.FC<PrimaryMetricSelectorProps> = ({
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Operator" />
               </SelectTrigger>
-              <SelectContent className="bg-white">
+              <SelectContent>
                 {OPERATORS.map(op => (
                   <SelectItem key={op.value} value={op.value}>{op.label}</SelectItem>
                 ))}

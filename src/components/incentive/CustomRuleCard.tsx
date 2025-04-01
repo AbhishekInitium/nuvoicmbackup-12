@@ -12,6 +12,7 @@ interface CustomRuleCardProps {
   rule: CustomRule;
   ruleIndex: number;
   currencySymbol: string;
+  availableFields?: string[];
   onUpdateRule: (field: keyof CustomRule, value: string | boolean) => void;
   onUpdateCondition: (conditionIndex: number, field: keyof RuleCondition, value: string | number) => void;
   onAddCondition: () => void;
@@ -23,6 +24,7 @@ const CustomRuleCard: React.FC<CustomRuleCardProps> = ({
   rule,
   ruleIndex,
   currencySymbol,
+  availableFields = [],
   onUpdateRule,
   onUpdateCondition,
   onAddCondition,
@@ -81,6 +83,7 @@ const CustomRuleCard: React.FC<CustomRuleCardProps> = ({
               key={condIndex}
               condition={condition}
               currencySymbol={currencySymbol}
+              availableFields={availableFields}
               onUpdate={(field, value) => onUpdateCondition(condIndex, field, value)}
               onRemove={() => onRemoveCondition(condIndex)}
             />

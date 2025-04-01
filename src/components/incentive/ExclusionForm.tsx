@@ -25,8 +25,8 @@ const ExclusionForm: React.FC<ExclusionFormProps> = ({
   return (
     <GlassCard key={index} variant="outlined" className="p-4">
       <div className="flex justify-between items-start">
-        <div className="flex-1 grid grid-cols-1 sm:grid-cols-12 gap-4">
-          <div className="sm:col-span-4">
+        <div className="flex-1 grid grid-cols-1 sm:grid-cols-4 gap-4">
+          <div>
             <label className="block text-sm font-medium text-app-gray-700 mb-2">Field</label>
             <Select 
               value={exclusion.field}
@@ -43,7 +43,7 @@ const ExclusionForm: React.FC<ExclusionFormProps> = ({
             </Select>
           </div>
           
-          <div className="sm:col-span-3">
+          <div>
             <label className="block text-sm font-medium text-app-gray-700 mb-2">Operator</label>
             <Select 
               value={exclusion.operator}
@@ -60,17 +60,21 @@ const ExclusionForm: React.FC<ExclusionFormProps> = ({
             </Select>
           </div>
           
-          <div className="sm:col-span-2">
+          <div>
             <label className="block text-sm font-medium text-app-gray-700 mb-2">Value</label>
             <Input 
-              type="number" 
-              value={exclusion.value}
-              onChange={(e) => onUpdate(index, 'value', parseFloat(e.target.value))}
-              step="0.01"
+              type="text" 
+              value={exclusion.value || ''}
+              onChange={(e) => {
+                const value = e.target.value;
+                // Try to parse as number if possible
+                const numValue = parseFloat(value);
+                onUpdate(index, 'value', isNaN(numValue) ? value : numValue);
+              }}
             />
           </div>
           
-          <div className="sm:col-span-3">
+          <div>
             <label className="block text-sm font-medium text-app-gray-700 mb-2">Description</label>
             <Input 
               type="text" 
