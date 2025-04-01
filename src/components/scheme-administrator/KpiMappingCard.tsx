@@ -41,7 +41,6 @@ const KpiMappingCard: React.FC<KpiMappingCardProps> = ({
   const [view, setView] = useState<'list' | 'json'>('list');
   const { toast } = useToast();
   
-  // Calculation base state
   const [calculationBase, setCalculationBase] = useState({
     adminId: "scheme-" + new Date().getTime(),
     adminName: "New Scheme Administrator",
@@ -51,21 +50,19 @@ const KpiMappingCard: React.FC<KpiMappingCardProps> = ({
 
   const handleKpiSubmit = (kpiMapping: KPIFieldMapping) => {
     if (editingKpi && editingKpi._id) {
-      // Update existing KPI mapping
       updateKpiMapping(editingKpi._id, kpiMapping);
       toast({
         title: "Updating KPI mapping",
         description: "Please wait while we update the KPI mapping...",
       });
     } else {
-      // Create new KPI mapping
       createKpiMapping(kpiMapping);
       toast({
         title: "Creating KPI mapping",
         description: "Please wait while we create the new KPI mapping...",
       });
     }
-    // We'll keep the form open until we get confirmation of success/failure
+    setShowForm(false);
   };
 
   const handleDeleteKpi = (id: string) => {
@@ -76,7 +73,6 @@ const KpiMappingCard: React.FC<KpiMappingCardProps> = ({
         description: "Please wait while we delete the KPI mapping...",
       });
       
-      // If currently editing this KPI, cancel the edit
       if (editingKpi && editingKpi._id === id) {
         cancelEditingKpi();
         setShowForm(false);
@@ -94,7 +90,6 @@ const KpiMappingCard: React.FC<KpiMappingCardProps> = ({
     setShowForm(false);
   };
 
-  // Toggle form visibility and reset editing state
   const toggleForm = () => {
     setShowForm(!showForm);
     if (showForm) {
@@ -102,12 +97,10 @@ const KpiMappingCard: React.FC<KpiMappingCardProps> = ({
     }
   };
 
-  // Handle calculation base changes
   const handleCalcBaseChange = (newValues: Partial<typeof calculationBase>) => {
     setCalculationBase(prev => ({ ...prev, ...newValues }));
   };
 
-  // Group mappings by section for JSON preview
   const groupedJson = {
     adminId: calculationBase.adminId,
     adminName: calculationBase.adminName,
@@ -165,13 +158,12 @@ const KpiMappingCard: React.FC<KpiMappingCardProps> = ({
       }))
   };
 
-  // Function to download JSON
   const downloadJson = () => {
     const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(groupedJson, null, 2));
     const downloadAnchorNode = document.createElement('a');
     downloadAnchorNode.setAttribute("href", dataStr);
     downloadAnchorNode.setAttribute("download", "scheme_configuration.json");
-    document.body.appendChild(downloadAnchorNode); // required for Firefox
+    document.body.appendChild(downloadAnchorNode);
     downloadAnchorNode.click();
     downloadAnchorNode.remove();
     
@@ -181,22 +173,9 @@ const KpiMappingCard: React.FC<KpiMappingCardProps> = ({
     });
   };
 
-  // Reset form on successful create or update
   React.useEffect(() => {
     if (!isCreatingKpi && !isUpdatingKpi) {
-      // Only close form if we were previously creating or updating
       setShowForm(false);
-    }
-    
-    // Update base field when KPI mappings change
-    if (kpiMappings && kpiMappings.length > 0) {
-      const baseDataKpi = kpiMappings.find(m => m.section === 'BASE_DATA');
-      if (baseDataKpi && !calculationBase.baseField) {
-        setCalculationBase(prev => ({
-          ...prev,
-          baseField: baseDataKpi.kpiName
-        }));
-      }
     }
   }, [isCreatingKpi, isUpdatingKpi, kpiMappings]);
 
