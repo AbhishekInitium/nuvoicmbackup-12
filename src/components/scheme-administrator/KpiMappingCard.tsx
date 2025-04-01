@@ -2,12 +2,13 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
-import { Plus, X, Database } from 'lucide-react';
-import { KPIFieldMapping } from '@/services/database/kpiMappingService';
+import { Plus, X, Database, Download } from 'lucide-react';
+import { KPIFieldMapping } from '@/services/database/types/kpiTypes';
 import KpiMappingForm from '@/components/scheme-administrator/KpiMappingForm';
 import KpiMappingList from '@/components/scheme-administrator/KpiMappingList';
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface KpiMappingCardProps {
   kpiMappings: KPIFieldMapping[];
@@ -37,6 +38,7 @@ const KpiMappingCard: React.FC<KpiMappingCardProps> = ({
   isUsingInMemoryStorage = false
 }) => {
   const [showForm, setShowForm] = useState(false);
+  const [view, setView] = useState<'list' | 'json'>('list');
   const { toast } = useToast();
 
   const handleKpiSubmit = (kpiMapping: KPIFieldMapping) => {
@@ -92,6 +94,70 @@ const KpiMappingCard: React.FC<KpiMappingCardProps> = ({
     }
   };
 
+  // Group mappings by section for JSON preview
+  const groupedJson = kpiMappings.reduce((acc, mapping) => {
+    // Convert from internal format to the desired export format
+    const kpiField = {
+      kpi: mapping.kpiName,
+      description: mapping.description,
+      sourceType: mapping.sourceType,
+      sourceField: mapping.sourceField,
+      dataType: mapping.dataType,
+      api: mapping.api || ""
+    };
+    
+    switch(mapping.section) {
+      case 'BASE_DATA':
+        if (!acc.baseData) acc.baseData = [];
+        acc.baseData.push(kpiField);
+        break;
+      case 'QUAL_CRI':
+        if (!acc.qualificationFields) acc.qualificationFields = [];
+        acc.qualificationFields.push(kpiField);
+        break;
+      case 'ADJ_CRI':
+        if (!acc.adjustmentFields) acc.adjustmentFields = [];
+        acc.adjustmentFields.push(kpiField);
+        break;
+      case 'EX_CRI':
+        if (!acc.exclusionFields) acc.exclusionFields = [];
+        acc.exclusionFields.push(kpiField);
+        break;
+      case 'CUSTOM_RULES':
+        if (!acc.customRules) acc.customRules = [];
+        acc.customRules.push(kpiField);
+        break;
+    }
+    return acc;
+  }, {
+    adminId: "example-uuid",
+    adminName: "Scheme Administrator",
+    calculationBase: "Sales Orders",
+    baseField: kpiMappings.find(m => m.section === 'BASE_DATA')?.kpiName || "",
+    createdAt: new Date().toISOString(),
+    baseData: [],
+    qualificationFields: [],
+    adjustmentFields: [],
+    exclusionFields: [],
+    customRules: []
+  });
+
+  // Function to download JSON
+  const downloadJson = () => {
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(groupedJson, null, 2));
+    const downloadAnchorNode = document.createElement('a');
+    downloadAnchorNode.setAttribute("href", dataStr);
+    downloadAnchorNode.setAttribute("download", "scheme_configuration.json");
+    document.body.appendChild(downloadAnchorNode); // required for Firefox
+    downloadAnchorNode.click();
+    downloadAnchorNode.remove();
+    
+    toast({
+      title: "JSON Downloaded",
+      description: "Scheme configuration has been downloaded as JSON",
+    });
+  };
+
   // Reset form on successful create or update
   React.useEffect(() => {
     if (!isCreatingKpi && !isUpdatingKpi) {
@@ -105,7 +171,7 @@ const KpiMappingCard: React.FC<KpiMappingCardProps> = ({
       <CardHeader className="flex flex-row items-center justify-between space-y-0">
         <div className="flex items-center space-x-2">
           <div>
-            <CardTitle>KPI Mapping Table</CardTitle>
+            <CardTitle>KPI Mapping Configuration</CardTitle>
             <CardDescription>
               Define KPI fields that will be available to scheme designers
             </CardDescription>
@@ -116,27 +182,38 @@ const KpiMappingCard: React.FC<KpiMappingCardProps> = ({
             </Badge>
           )}
         </div>
-        <Button 
-          onClick={toggleForm} 
-          className="flex items-center"
-          variant={showForm ? "secondary" : "default"}
-        >
-          {showForm ? (
-            <>
-              <X size={16} className="mr-2" />
-              Cancel
-            </>
-          ) : (
-            <>
-              <Plus size={16} className="mr-2" />
-              Add New KPI
-            </>
-          )}
-        </Button>
+        <div className="flex space-x-2">
+          <Button 
+            variant="outline"
+            size="sm"
+            onClick={downloadJson}
+            className="flex items-center"
+          >
+            <Download size={16} className="mr-2" />
+            Export JSON
+          </Button>
+          <Button 
+            onClick={toggleForm} 
+            className="flex items-center"
+            variant={showForm ? "secondary" : "default"}
+          >
+            {showForm ? (
+              <>
+                <X size={16} className="mr-2" />
+                Cancel
+              </>
+            ) : (
+              <>
+                <Plus size={16} className="mr-2" />
+                Add New KPI
+              </>
+            )}
+          </Button>
+        </div>
       </CardHeader>
       <CardContent>
         {showForm && (
-          <div className="mb-8 p-4 border rounded-md bg-gray-50">
+          <div className="mb-8">
             <h3 className="text-lg font-medium mb-4">
               {editingKpi ? `Edit KPI: ${editingKpi.kpiName}` : 'New KPI Mapping'}
             </h3>
@@ -150,13 +227,30 @@ const KpiMappingCard: React.FC<KpiMappingCardProps> = ({
           </div>
         )}
         
-        <KpiMappingList 
-          mappings={kpiMappings}
-          isLoading={isLoadingMappings}
-          onDelete={handleDeleteKpi}
-          onEdit={handleEditKpi}
-          isUsingInMemoryStorage={isUsingInMemoryStorage}
-        />
+        <Tabs defaultValue="list" value={view} onValueChange={(v) => setView(v as 'list' | 'json')}>
+          <TabsList className="mb-4">
+            <TabsTrigger value="list">List View</TabsTrigger>
+            <TabsTrigger value="json">JSON Preview</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="list">
+            <KpiMappingList 
+              mappings={kpiMappings}
+              isLoading={isLoadingMappings}
+              onDelete={handleDeleteKpi}
+              onEdit={handleEditKpi}
+              isUsingInMemoryStorage={isUsingInMemoryStorage}
+            />
+          </TabsContent>
+          
+          <TabsContent value="json">
+            <div className="border rounded bg-gray-50 p-4 overflow-auto max-h-[600px]">
+              <pre className="text-xs">
+                {JSON.stringify(groupedJson, null, 2)}
+              </pre>
+            </div>
+          </TabsContent>
+        </Tabs>
       </CardContent>
     </Card>
   );

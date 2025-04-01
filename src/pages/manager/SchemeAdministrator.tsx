@@ -25,7 +25,10 @@ const SchemeAdministrator: React.FC = () => {
     isCreatingKpi,
     isUpdatingKpi,
     refetchMappings,
-    isUsingInMemoryStorage
+    isUsingInMemoryStorage,
+    fileHeaders,
+    uploadExcel,
+    isUploadingExcel
   } = useKpiMappings();
 
   React.useEffect(() => {
@@ -34,7 +37,7 @@ const SchemeAdministrator: React.FC = () => {
   }, [refetchMappings]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-app-gray-50 to-white">
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
       <NavBar />
       <Container maxWidth="full">
         <SchemeAdministratorHeader />
