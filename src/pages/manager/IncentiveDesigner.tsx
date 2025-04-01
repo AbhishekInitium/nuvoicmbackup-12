@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import NavBar from '@/components/layout/NavBar';
 import Container from '@/components/layout/Container';
@@ -138,9 +139,9 @@ const IncentiveDesigner = () => {
   };
 
   const handleDesignerOption = () => {
-    // Keep the initial options screen, but navigate to designer options
-    // This is just a placeholder to handle the designer option button click
-    // We'll keep showing the initial options screen
+    // Show designer options instead of staying on the main options screen
+    setShowAdministratorScreen(false);
+    setShowInitialOptions(false);
   };
 
   const handleBackFromAdminScreen = () => {
