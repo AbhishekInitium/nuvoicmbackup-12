@@ -18,7 +18,7 @@ interface KpiMappingFormProps {
 }
 
 const defaultKpiMapping: KPIFieldMapping = {
-  section: 'BASE_DATA',
+  section: 'QUAL_CRI',
   kpiName: '',
   description: '',
   sourceType: 'System',
@@ -28,6 +28,9 @@ const defaultKpiMapping: KPIFieldMapping = {
   api: '',
   availableToDesigner: true
 };
+
+// Filter out BASE_DATA from available sections for the dropdown
+const availableSections = KPI_SECTIONS.filter(section => section !== 'BASE_DATA');
 
 const KpiMappingForm: React.FC<KpiMappingFormProps> = ({
   onSubmit,
@@ -80,7 +83,7 @@ const KpiMappingForm: React.FC<KpiMappingFormProps> = ({
                 <SelectValue placeholder="Select section" />
               </SelectTrigger>
               <SelectContent>
-                {KPI_SECTIONS.map((section) => (
+                {availableSections.map((section) => (
                   <SelectItem key={section} value={section}>
                     {SECTION_DISPLAY_MAP[section as keyof typeof SECTION_DISPLAY_MAP] || section}
                   </SelectItem>

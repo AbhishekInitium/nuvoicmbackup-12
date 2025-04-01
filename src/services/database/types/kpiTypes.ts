@@ -1,8 +1,9 @@
+
 // Common types for KPI mapping service
 
 export interface KPIFieldMapping {
   _id?: string;
-  section: string; // (BASE_DATA, QUAL_CRI, etc.)
+  section: string; // (QUAL_CRI, etc.)
   kpiName: string;
   description: string;
   sourceType: 'System' | 'External' | 'SAP';
@@ -18,8 +19,6 @@ export interface SchemeAdministrator {
   adminId: string;
   adminName: string;
   calculationBase: string;
-  baseField: string;
-  baseData: KPIField[];
   qualificationFields: KPIField[];
   adjustmentFields: KPIField[];
   exclusionFields: KPIField[];
@@ -57,9 +56,8 @@ export interface DatabaseConnectionStatus {
   details?: any;
 }
 
-// Predefined KPI section options
+// Predefined KPI section options - removed BASE_DATA
 export const KPI_SECTIONS = [
-  'BASE_DATA',
   'QUAL_CRI',
   'ADJ_CRI',
   'EX_CRI',
@@ -68,7 +66,7 @@ export const KPI_SECTIONS = [
 
 // Map from section code to human-readable name for UI display
 export const SECTION_DISPLAY_MAP = {
-  'BASE_DATA': 'Base Data',
+  'BASE_DATA': 'Base Data', // Kept for backward compatibility
   'QUAL_CRI': 'Qualification Criteria',
   'ADJ_CRI': 'Adjustment Criteria',
   'EX_CRI': 'Exclusion Criteria',
@@ -77,7 +75,7 @@ export const SECTION_DISPLAY_MAP = {
 
 // Map from section code to the corresponding field in the SchemeAdministrator
 export const SECTION_TO_FIELD_MAP = {
-  'BASE_DATA': 'baseData',
+  'BASE_DATA': 'baseData', // Kept for backward compatibility
   'QUAL_CRI': 'qualificationFields',
   'ADJ_CRI': 'adjustmentFields',
   'EX_CRI': 'exclusionFields',

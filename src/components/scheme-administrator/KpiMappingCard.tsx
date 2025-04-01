@@ -106,16 +106,6 @@ const KpiMappingCard: React.FC<KpiMappingCardProps> = ({
     adminName: calculationBase.adminName,
     calculationBase: calculationBase.calculationBase,
     createdAt: calculationBase.createdAt,
-    baseData: kpiMappings
-      .filter(m => m.section === 'BASE_DATA')
-      .map(mapping => ({
-        kpi: mapping.kpiName,
-        description: mapping.description,
-        sourceType: mapping.sourceType,
-        sourceField: mapping.sourceField,
-        dataType: mapping.dataType,
-        api: mapping.api || ""
-      })),
     qualificationFields: kpiMappings
       .filter(m => m.section === 'QUAL_CRI')
       .map(mapping => ({
