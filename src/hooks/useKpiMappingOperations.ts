@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useToast } from "@/hooks/use-toast";
@@ -25,7 +26,7 @@ export const useKpiMappingOperations = () => {
     queryKey: ['kpiMappings'],
     queryFn: getKpiFieldMappings,
     refetchOnWindowFocus: false,
-    staleTime: 1000, // Consider data stale after 1 second to force refetching on operations
+    staleTime: 0, // Always consider data stale to force refetching
     meta: {
       onError: (error: Error) => {
         console.error('Error in kpiMappings query:', error);
@@ -48,7 +49,7 @@ export const useKpiMappingOperations = () => {
     queryKey: ['availableKpis'],
     queryFn: getAvailableKpiFields,
     refetchOnWindowFocus: true,
-    staleTime: 10000, // Consider data stale after 10 seconds
+    staleTime: 0, // Always consider data stale to force refetching
     meta: {
       onError: (error: Error) => {
         console.error('Error in availableKpis query:', error);
@@ -70,9 +71,11 @@ export const useKpiMappingOperations = () => {
         title: "Success", 
         description: "KPI field mapping saved successfully" 
       });
-      // Invalidate both queries to force refetch
+      
+      // Force immediate invalidation of both queries
       queryClient.invalidateQueries({ queryKey: ['kpiMappings'] });
       queryClient.invalidateQueries({ queryKey: ['availableKpis'] });
+      
       // Immediate refetch to ensure UI is updated
       setTimeout(() => {
         refetchMappings();
@@ -98,10 +101,13 @@ export const useKpiMappingOperations = () => {
         title: "Success", 
         description: "KPI field mapping updated successfully" 
       });
+      
       setEditingKpi(null);
-      // Invalidate both queries to force refetch
+      
+      // Force immediate invalidation of both queries
       queryClient.invalidateQueries({ queryKey: ['kpiMappings'] });
       queryClient.invalidateQueries({ queryKey: ['availableKpis'] });
+      
       // Immediate refetch to ensure UI is updated
       setTimeout(() => {
         refetchMappings();
@@ -127,9 +133,11 @@ export const useKpiMappingOperations = () => {
           title: "Success", 
           description: "KPI field mapping deleted successfully" 
         });
-        // Invalidate both queries to force refetch
+        
+        // Force immediate invalidation of both queries
         queryClient.invalidateQueries({ queryKey: ['kpiMappings'] });
         queryClient.invalidateQueries({ queryKey: ['availableKpis'] });
+        
         // Immediate refetch to ensure UI is updated
         setTimeout(() => {
           refetchMappings();

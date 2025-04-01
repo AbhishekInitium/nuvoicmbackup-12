@@ -51,7 +51,9 @@ const SchemeAdministrator: React.FC = () => {
   // Create a wrapper for createKpiMapping to ensure we refresh after
   const handleCreateKpiMapping = useCallback(async (kpi: any) => {
     try {
-      await createKpiMapping(kpi);
+      console.log('SchemeAdministrator: Creating KPI mapping:', kpi);
+      const result = await createKpiMapping(kpi);
+      console.log('SchemeAdministrator: KPI creation result:', result);
       handleKpiOperation('Create', true);
       return true;
     } catch (error) {
@@ -63,7 +65,9 @@ const SchemeAdministrator: React.FC = () => {
   // Create a wrapper for updateKpiMapping to ensure we refresh after
   const handleUpdateKpiMapping = useCallback(async (id: string, kpi: any) => {
     try {
-      await updateKpiMapping(id, kpi);
+      console.log('SchemeAdministrator: Updating KPI mapping:', id, kpi);
+      const result = await updateKpiMapping(id, kpi);
+      console.log('SchemeAdministrator: KPI update result:', result);
       handleKpiOperation('Update', true);
       return true;
     } catch (error) {

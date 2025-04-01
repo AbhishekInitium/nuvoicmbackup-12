@@ -96,11 +96,21 @@ export const getAvailableKpiFields = async (): Promise<KPIFieldMapping[]> => {
 export const saveKpiFieldMapping = async (kpiMapping: KPIFieldMapping): Promise<KPIFieldMapping> => {
   try {
     console.log('Saving KPI field mapping:', kpiMapping);
+    
+    // Validate required fields
+    if (!kpiMapping.kpiName || !kpiMapping.section || !kpiMapping.sourceType) {
+      throw new Error('Missing required fields: kpiName, section, or sourceType');
+    }
+    
     const response = await axios.post(`${API_BASE_URL}/kpi-fields`, kpiMapping);
     console.log('Save KPI response:', response.data);
     
     // Return the KPI object from the response
     const savedKpi = response.data.kpi || response.data;
+    
+    if (!savedKpi || !savedKpi._id) {
+      throw new Error('Server returned invalid KPI data without ID');
+    }
     
     // Add small delay to ensure consistency
     await new Promise(resolve => setTimeout(resolve, 100));
@@ -118,10 +128,25 @@ export const saveKpiFieldMapping = async (kpiMapping: KPIFieldMapping): Promise<
 export const updateKpiFieldMapping = async (id: string, kpiMapping: KPIFieldMapping): Promise<KPIFieldMapping> => {
   try {
     console.log(`Updating KPI field mapping with ID: ${id}`, kpiMapping);
+    
+    // Validate required fields and ID
+    if (!id) {
+      throw new Error('Missing KPI ID for update operation');
+    }
+    
+    if (!kpiMapping.kpiName || !kpiMapping.section || !kpiMapping.sourceType) {
+      throw new Error('Missing required fields: kpiName, section, or sourceType');
+    }
+    
     const response = await axios.put(`${API_BASE_URL}/kpi-fields/${id}`, kpiMapping);
     
     // Return the updated KPI object
     const updatedKpi = response.data.kpi || response.data;
+    
+    if (!updatedKpi) {
+      throw new Error('Server returned invalid KPI data');
+    }
+    
     return updatedKpi;
   } catch (error) {
     console.error('Error updating KPI field mapping:', error);
@@ -196,6 +221,11 @@ export const getSchemeMaster = async (schemeId: string): Promise<SchemeMaster | 
 export const deleteKpiFieldMapping = async (id: string): Promise<boolean> => {
   try {
     console.log('Deleting KPI field mapping:', id);
+    
+    if (!id) {
+      throw new Error('Missing KPI ID for delete operation');
+    }
+    
     await axios.delete(`${API_BASE_URL}/kpi-fields/${id}`);
     return true;
   } catch (error) {

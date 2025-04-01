@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
@@ -14,9 +15,9 @@ import { saveSchemeAdminConfig } from '@/services/database/kpiMappingService';
 interface KpiMappingCardProps {
   kpiMappings: KPIFieldMapping[];
   isLoadingMappings: boolean;
-  createKpiMapping: (kpiMapping: KPIFieldMapping) => void;
-  updateKpiMapping: (id: string, kpiMapping: KPIFieldMapping) => void;
-  deleteKpiMapping: (id: string) => void;
+  createKpiMapping: (kpiMapping: KPIFieldMapping) => Promise<boolean>;
+  updateKpiMapping: (id: string, kpiMapping: KPIFieldMapping) => Promise<boolean>;
+  deleteKpiMapping: (id: string) => Promise<boolean>;
   editingKpi: KPIFieldMapping | null;
   startEditingKpi: (kpi: KPIFieldMapping) => void;
   cancelEditingKpi: () => void;
@@ -53,46 +54,69 @@ const KpiMappingCard: React.FC<KpiMappingCardProps> = ({
     createdAt: new Date().toISOString()
   });
 
+  // Update local state whenever kpiMappings changes
   useEffect(() => {
-    console.log("Received KPI mappings update:", kpiMappings);
+    console.log("KpiMappingCard: Received KPI mappings update:", kpiMappings);
     if (Array.isArray(kpiMappings)) {
       setLocalKpiMappings([...kpiMappings]);
     }
   }, [kpiMappings]);
 
   const handleKpiSubmit = async (kpiMapping: KPIFieldMapping) => {
+    console.log("KpiMappingCard: Handling KPI submit:", kpiMapping);
+    let success = false;
+    
     if (editingKpi && editingKpi._id) {
-      await updateKpiMapping(editingKpi._id, kpiMapping);
-      toast({
-        title: "KPI mapping updated",
-        description: "The KPI mapping has been updated successfully",
-      });
+      success = await updateKpiMapping(editingKpi._id, kpiMapping);
+      if (success) {
+        toast({
+          title: "KPI mapping updated",
+          description: "The KPI mapping has been updated successfully",
+        });
+      }
     } else {
-      await createKpiMapping(kpiMapping);
-      toast({
-        title: "KPI mapping created",
-        description: "The new KPI mapping has been created successfully",
-      });
+      success = await createKpiMapping(kpiMapping);
+      if (success) {
+        toast({
+          title: "KPI mapping created",
+          description: "The new KPI mapping has been created successfully",
+        });
+      }
     }
     
-    if (onKpiOperationComplete) {
+    if (success && onKpiOperationComplete) {
+      console.log("KpiMappingCard: Operation successful, triggering refresh");
       onKpiOperationComplete();
     }
     
     setShowForm(false);
   };
 
-  const handleDeleteKpi = (id: string) => {
+  const handleDeleteKpi = async (id: string) => {
     if (window.confirm('Are you sure you want to delete this KPI mapping?')) {
-      deleteKpiMapping(id);
-      toast({
-        title: "Deleting KPI mapping",
-        description: "Please wait while we delete the KPI mapping...",
-      });
+      const success = await deleteKpiMapping(id);
       
-      if (editingKpi && editingKpi._id === id) {
-        cancelEditingKpi();
-        setShowForm(false);
+      if (success) {
+        toast({
+          title: "KPI mapping deleted",
+          description: "The KPI mapping has been deleted successfully",
+        });
+        
+        if (editingKpi && editingKpi._id === id) {
+          cancelEditingKpi();
+          setShowForm(false);
+        }
+        
+        if (onKpiOperationComplete) {
+          console.log("KpiMappingCard: Delete successful, triggering refresh");
+          onKpiOperationComplete();
+        }
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to delete the KPI mapping",
+          variant: "destructive"
+        });
       }
     }
   };
@@ -118,6 +142,7 @@ const KpiMappingCard: React.FC<KpiMappingCardProps> = ({
     setCalculationBase(prev => ({ ...prev, ...newValues }));
   };
 
+  // Computed property to generate JSON view based on current mappings
   const groupedJson = {
     adminId: calculationBase.adminId,
     adminName: calculationBase.adminName,
@@ -182,6 +207,7 @@ const KpiMappingCard: React.FC<KpiMappingCardProps> = ({
 
   const handleRefresh = () => {
     if (onKpiOperationComplete) {
+      console.log("KpiMappingCard: Manual refresh triggered");
       onKpiOperationComplete();
       toast({
         title: "Refreshing Data",
@@ -226,12 +252,16 @@ const KpiMappingCard: React.FC<KpiMappingCardProps> = ({
     }
   };
 
+  // Auto-close form when operations complete
   useEffect(() => {
-    if (!isCreatingKpi && !isUpdatingKpi) {
+    if (!isCreatingKpi && !isUpdatingKpi && (showForm && !editingKpi)) {
+      console.log("KpiMappingCard: Operation completed, auto-refreshing");
       setShowForm(false);
-      handleRefresh();
+      if (onKpiOperationComplete) {
+        onKpiOperationComplete();
+      }
     }
-  }, [isCreatingKpi, isUpdatingKpi]);
+  }, [isCreatingKpi, isUpdatingKpi, showForm, editingKpi, onKpiOperationComplete]);
 
   return (
     <Card className="mb-6 shadow-sm">
@@ -326,7 +356,7 @@ const KpiMappingCard: React.FC<KpiMappingCardProps> = ({
           
           <TabsContent value="list">
             <KpiMappingList 
-              mappings={kpiMappings}
+              mappings={localKpiMappings}
               isLoading={isLoadingMappings}
               onDelete={handleDeleteKpi}
               onEdit={handleEditKpi}
