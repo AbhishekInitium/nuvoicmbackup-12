@@ -13,13 +13,6 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { FileUploader } from './FileUploader';
-
-// Define proper props interface for FileUploader
-interface FileUploaderProps {
-  onFileUpload: (file: any) => void;
-  acceptedFileTypes?: string;
-}
 
 type FormValues = {
   sourceSystem: "SAP" | "Excel" | "Custom";
@@ -96,46 +89,33 @@ export const DataSourceForm: React.FC = () => {
               )}
               
               {form.watch("sourceSystem") === "Excel" && (
-                <>
-                  <FormField
-                    control={form.control}
-                    name="fileFormat"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>File Format</FormLabel>
-                        <Select 
-                          onValueChange={field.onChange} 
-                          defaultValue={field.value}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select file format" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="CSV">CSV</SelectItem>
-                            <SelectItem value="XLSX">Excel (XLSX)</SelectItem>
-                            <SelectItem value="XLS">Excel (XLS)</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormDescription>
-                          Format of the input file
-                        </FormDescription>
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <div>
-                    <FormLabel>Upload Template</FormLabel>
-                    <FileUploader 
-                      acceptedFileTypes=".csv,.xlsx,.xls" 
-                      onFileUpload={(file) => console.log("File uploaded:", file)}
-                    />
-                    <p className="text-sm text-gray-500 mt-2">
-                      Upload a sample file to extract column headers
-                    </p>
-                  </div>
-                </>
+                <FormField
+                  control={form.control}
+                  name="fileFormat"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>File Format</FormLabel>
+                      <Select 
+                        onValueChange={field.onChange} 
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select file format" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="CSV">CSV</SelectItem>
+                          <SelectItem value="XLSX">Excel (XLSX)</SelectItem>
+                          <SelectItem value="XLS">Excel (XLS)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormDescription>
+                        Format of the input file
+                      </FormDescription>
+                    </FormItem>
+                  )}
+                />
               )}
               
               {form.watch("sourceSystem") === "Custom" && (
