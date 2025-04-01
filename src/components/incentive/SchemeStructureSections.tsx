@@ -7,6 +7,7 @@ import ParticipantsSection from './ParticipantsSection';
 import MeasurementRules from './MeasurementRules';
 import CreditRules from './CreditRules';
 import CustomRules from './CustomRules';
+import SchemeAdministrator from './SchemeAdministrator';
 
 interface SchemeStructureSectionsProps {
   plan: IncentivePlan;
@@ -24,6 +25,13 @@ const SchemeStructureSections: React.FC<SchemeStructureSectionsProps> = ({
         <RevenueBaseSelector
           revenueBase={plan.revenueBase}
           updateRevenueBase={(value) => updatePlan('revenueBase', value)}
+        />
+        
+        {/* Scheme Administrator for technical configuration */}
+        <SchemeAdministrator 
+          revenueBase={plan.revenueBase}
+          schemeId={plan.schemeId}
+          name={plan.name}
         />
         
         {/* Participants section remains before the main metrics */}
