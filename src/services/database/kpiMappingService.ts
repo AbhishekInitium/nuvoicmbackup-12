@@ -1,45 +1,20 @@
 
 import axios from 'axios';
+import {
+  KPIFieldMapping, 
+  SchemeMaster, 
+  DatabaseConnectionStatus,
+  KPI_SECTIONS
+} from './types/kpiTypes';
+
+import * as inMemoryService from './inMemoryKpiService';
+
+// Re-export KPI sections for convenience
+export { KPI_SECTIONS };
+export type { KPIFieldMapping, SchemeMaster, DatabaseConnectionStatus };
 
 // Base URL for API requests - Use a relative URL to make it work in all environments
 const API_BASE_URL = '/api';
-
-export interface KPIFieldMapping {
-  _id?: string;
-  section: string; // Added section field (BASE_DATA, QUAL_CRI, etc.)
-  kpiName: string;
-  description: string; // Added description field
-  sourceType: 'System' | 'External';
-  sourceField: string;
-  sourceFileHeader?: string;
-  dataType: 'string' | 'number' | 'date' | 'boolean' | 'Char4' | '';
-  api?: string; // Added API endpoint information
-  availableToDesigner: boolean;
-  createdAt?: string;
-}
-
-export interface SchemeMaster {
-  _id?: string;
-  schemeId: string;
-  kpiFields: string[]; // Array of kpiNames selected
-  createdAt?: string;
-  updatedAt?: string;
-}
-
-export interface DatabaseConnectionStatus {
-  connected: boolean;
-  message: string;
-  details?: any;
-}
-
-// Predefined KPI section options
-export const KPI_SECTIONS = [
-  'BASE_DATA',
-  'QUAL_CRI',
-  'ADJ_CRI',
-  'EX_CRI',
-  'CUSTOM_RULES'
-];
 
 /**
  * Check database connection status
