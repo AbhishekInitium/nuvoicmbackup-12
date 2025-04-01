@@ -11,8 +11,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Trash2, Edit, Eye, Clipboard } from 'lucide-react';
-import { KPIFieldMapping } from '@/services/database/types/kpiTypes';
-import { SECTION_DISPLAY_MAP } from '@/services/database/types/kpiTypes';
+import { KPIFieldMapping, SECTION_DISPLAY_MAP } from '@/services/database/types/kpiTypes';
 
 interface KpiMappingListProps {
   mappings: KPIFieldMapping[];

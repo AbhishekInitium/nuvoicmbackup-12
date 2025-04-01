@@ -6,7 +6,12 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
-import { KPIFieldMapping, KPI_SECTIONS, SECTION_DISPLAY_MAP } from '@/services/database/types/kpiTypes';
+import { 
+  KPIFieldMapping, 
+  KPI_SECTIONS, 
+  SECTION_DISPLAY_MAP, 
+  SourceType
+} from '@/services/database/types/kpiTypes';
 import { Card } from '@/components/ui/card';
 
 interface KpiMappingFormProps {
@@ -29,8 +34,8 @@ const defaultKpiMapping: KPIFieldMapping = {
   availableToDesigner: true
 };
 
-// Filter out BASE_DATA from available sections for the dropdown
-const availableSections = KPI_SECTIONS.filter(section => section !== 'BASE_DATA');
+// Convert object keys to an array for the dropdown
+const availableSections = Object.keys(KPI_SECTIONS);
 
 const KpiMappingForm: React.FC<KpiMappingFormProps> = ({
   onSubmit,
@@ -122,7 +127,7 @@ const KpiMappingForm: React.FC<KpiMappingFormProps> = ({
             <Label htmlFor="sourceType">Source Type</Label>
             <Select
               value={kpiMapping.sourceType}
-              onValueChange={(value) => handleChange('sourceType', value as 'System' | 'External' | 'SAP')}
+              onValueChange={(value) => handleChange('sourceType', value as SourceType)}
             >
               <SelectTrigger className="bg-white">
                 <SelectValue placeholder="Select source type" />

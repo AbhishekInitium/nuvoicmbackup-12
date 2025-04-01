@@ -9,13 +9,33 @@ export const KPI_SECTIONS = {
 
 export type KPISectionKey = keyof typeof KPI_SECTIONS;
 
+// Section display names mapping
+export const SECTION_DISPLAY_MAP = {
+  QUAL_CRI: 'Qualification Criteria',
+  ADJ_CRI: 'Adjustment Criteria',
+  EX_CRI: 'Exclusion Criteria',
+  CUSTOM_RULES: 'Custom Rules',
+} as const;
+
+// Source types
+export type SourceType = 'System' | 'External' | 'SAP';
+
+// CalculationBase type for SchemeHeader
+export interface CalculationBase {
+  adminId: string;
+  adminName: string;
+  calculationBase: string;
+  createdAt: string;
+  updatedAt?: string;
+}
+
 // KPI Field Mapping Type
 export interface KPIFieldMapping {
   _id?: string;
   section: string;
   kpiName: string;
   description?: string;
-  sourceType: 'System' | 'External';
+  sourceType: SourceType;
   sourceField?: string;
   sourceFileHeader?: string;
   dataType?: string;
