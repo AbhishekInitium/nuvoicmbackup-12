@@ -33,10 +33,10 @@ const RevenueBaseSelector: React.FC<RevenueBaseSelectorProps> = ({
           </label>
           <Select 
             onValueChange={(schemeId) => onSchemeSelect && onSchemeSelect(schemeId)}
-            disabled={isLoading || disabled}
+            disabled={isLoading}
           >
             <SelectTrigger className="w-full bg-white">
-              <SelectValue placeholder={disabled ? "Configuration already selected" : "Choose a scheme configuration"} />
+              <SelectValue placeholder="Choose a scheme configuration" />
             </SelectTrigger>
             <SelectContent>
               {isLoading ? (
@@ -57,11 +57,6 @@ const RevenueBaseSelector: React.FC<RevenueBaseSelectorProps> = ({
               )}
             </SelectContent>
           </Select>
-          {disabled && (
-            <p className="mt-1 text-sm text-amber-600">
-              Configuration can only be selected once. To change, start a new scheme design.
-            </p>
-          )}
         </div>
 
         {/* Current Revenue Base Display */}
