@@ -16,7 +16,11 @@ export const useIncentivePlan = (
   refetchPlans?: () => void
 ) => {
   const { plan: copyPlan, setPlan: setInternalPlan, createNewScheme: createNew, copyExistingScheme: copyScheme } = useSchemeCopy();
-  const [plan, setPlan] = useState<IncentivePlan>(initialPlan || DEFAULT_PLAN);
+  // Initialize with a complete plan object including schemeId
+  const [plan, setPlan] = useState<IncentivePlan>(initialPlan || {
+    ...DEFAULT_PLAN,
+    schemeId: '', // Ensure schemeId is present even in the initial state
+  });
   
   // Pass the current plan state to the save hook
   const { savePlanToS4 } = usePlanSave(plan, savePlanFunction, refetchPlans);
