@@ -8,6 +8,7 @@ import { getSchemeAdminConfig } from '@/services/database/mongoDBService';
 import ConfigurationSelector from './ConfigurationSelector';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Loader2 } from 'lucide-react';
+import { v4 as uuidv4 } from 'uuid';
 
 interface SchemeAdministratorScreenProps {
   onBack: () => void;
@@ -59,8 +60,9 @@ const SchemeAdministratorScreen: React.FC<SchemeAdministratorScreenProps> = ({ o
   };
   
   const handleCreateNew = () => {
+    // Create a new empty configuration with required initial values
     setAdminConfig({
-      adminId: '',
+      adminId: uuidv4(),
       adminName: '',
       createdAt: new Date().toISOString(),
       calculationBase: '',
@@ -83,9 +85,7 @@ const SchemeAdministratorScreen: React.FC<SchemeAdministratorScreenProps> = ({ o
 
   // Initialize with an empty form when first loaded
   useEffect(() => {
-    if (!adminConfig) {
-      handleCreateNew();
-    }
+    handleCreateNew();
   }, []);
 
   return (
