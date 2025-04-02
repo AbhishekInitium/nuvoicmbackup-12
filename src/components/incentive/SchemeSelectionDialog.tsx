@@ -2,7 +2,7 @@
 import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import ExistingSchemeSelector from './ExistingSchemeSelector';
-import { IncentivePlanWithStatus } from '@/services/incentive/incentivePlanService';
+import { IncentivePlanWithStatus } from '@/services/incentive/types/incentiveServiceTypes';
 
 interface SchemeSelectionDialogProps {
   open: boolean;
