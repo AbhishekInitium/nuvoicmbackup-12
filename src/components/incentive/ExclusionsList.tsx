@@ -4,6 +4,7 @@ import { PlusCircle } from 'lucide-react';
 import ActionButton from '../ui-custom/ActionButton';
 import { Exclusion } from '@/types/incentiveTypes';
 import ExclusionForm from './ExclusionForm';
+import { SchemeAdminConfig } from '@/types/schemeAdminTypes';
 
 interface ExclusionsListProps {
   exclusions: Exclusion[];
@@ -11,6 +12,7 @@ interface ExclusionsListProps {
   onAddExclusion: () => void;
   onUpdateExclusion: (index: number, field: keyof Exclusion, value: string | number) => void;
   onRemoveExclusion: (index: number) => void;
+  selectedScheme?: SchemeAdminConfig | null;
 }
 
 const ExclusionsList: React.FC<ExclusionsListProps> = ({
@@ -18,7 +20,8 @@ const ExclusionsList: React.FC<ExclusionsListProps> = ({
   dbFields,
   onAddExclusion,
   onUpdateExclusion,
-  onRemoveExclusion
+  onRemoveExclusion,
+  selectedScheme
 }) => {
   return (
     <>
@@ -55,6 +58,7 @@ const ExclusionsList: React.FC<ExclusionsListProps> = ({
               dbFields={dbFields}
               onUpdate={onUpdateExclusion}
               onRemove={onRemoveExclusion}
+              selectedScheme={selectedScheme}
             />
           ))}
         </div>

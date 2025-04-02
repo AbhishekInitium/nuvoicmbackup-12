@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { PlusCircle } from 'lucide-react';
 import ActionButton from '../ui-custom/ActionButton';
@@ -100,6 +99,7 @@ const MeasurementRules: React.FC<MeasurementRulesProps> = ({
                 onAddMetric={() => {}}
                 onUpdateMetric={(field, value) => updatePrimaryMetric(index, field, value)}
                 onRemoveMetric={() => removePrimaryMetric(index)}
+                selectedScheme={selectedScheme}
               />
             ))}
           </div>
@@ -114,6 +114,7 @@ const MeasurementRules: React.FC<MeasurementRulesProps> = ({
         onRemoveAdjustment={removeAdjustment}
         onAddAdjustment={addAdjustment}
         currencySymbol={currencySymbol}
+        selectedScheme={selectedScheme}
       />
 
       {/* Exclusions */}
@@ -123,6 +124,7 @@ const MeasurementRules: React.FC<MeasurementRulesProps> = ({
         onUpdateExclusion={updateExclusion}
         onRemoveExclusion={removeExclusion}
         onAddExclusion={addExclusion}
+        selectedScheme={selectedScheme}
       />
     </div>
   );

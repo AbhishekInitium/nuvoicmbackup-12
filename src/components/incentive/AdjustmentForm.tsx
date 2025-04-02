@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import GlassCard from '../ui-custom/GlassCard';
 import { Adjustment } from '@/types/incentiveTypes';
 import { OPERATORS } from '@/constants/incentiveConstants';
+import { SchemeAdminConfig } from '@/types/schemeAdminTypes';
 
 interface AdjustmentFormProps {
   adjustment: Adjustment;
@@ -13,6 +14,7 @@ interface AdjustmentFormProps {
   dbFields: string[];
   onUpdate: (index: number, field: keyof Adjustment, value: string | number) => void;
   onRemove: (index: number) => void;
+  selectedScheme?: SchemeAdminConfig | null;
 }
 
 const AdjustmentForm: React.FC<AdjustmentFormProps> = ({
@@ -20,8 +22,35 @@ const AdjustmentForm: React.FC<AdjustmentFormProps> = ({
   index,
   dbFields,
   onUpdate,
-  onRemove
+  onRemove,
+  selectedScheme
 }) => {
+  // Get data type for the selected field
+  const getFieldDataType = (fieldName: string): string => {
+    if (!selectedScheme) return 'Char10'; // Default to text if no scheme
+    
+    // Look for the field in adjustment fields
+    const fieldConfig = selectedScheme.adjustmentFields?.find(kpi => kpi.kpi === fieldName);
+    return fieldConfig?.dataType || 'Char10'; // Default to text if not found
+  };
+
+  // Determine input type based on data type
+  const getInputTypeForDataType = (dataType: string) => {
+    switch(dataType) {
+      case 'Int8':
+      case 'Decimal':
+      case 'Currency':
+        return 'number';
+      case 'Date':
+        return 'date';
+      default:
+        return 'text';
+    }
+  };
+
+  const dataType = getFieldDataType(adjustment.field || '');
+  const inputType = getInputTypeForDataType(dataType);
+
   return (
     <GlassCard key={index} variant="outlined" className="p-4">
       <div className="flex justify-between items-start">
@@ -63,10 +92,20 @@ const AdjustmentForm: React.FC<AdjustmentFormProps> = ({
           <div className="sm:col-span-2">
             <label className="block text-sm font-medium text-app-gray-700 mb-2">Value</label>
             <Input 
-              type="number" 
+              type={inputType}
               value={adjustment.value || 0}
-              onChange={(e) => onUpdate(index, 'value', parseFloat(e.target.value))}
-              step="0.01"
+              onChange={(e) => {
+                let value = e.target.value;
+                
+                // Parse value according to type
+                if (inputType === 'number') {
+                  const numValue = parseFloat(value);
+                  onUpdate(index, 'value', isNaN(numValue) ? 0 : numValue);
+                } else {
+                  onUpdate(index, 'value', value);
+                }
+              }}
+              className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
             />
           </div>
           
@@ -77,6 +116,7 @@ const AdjustmentForm: React.FC<AdjustmentFormProps> = ({
               step="0.01"
               value={adjustment.factor || 1}
               onChange={(e) => onUpdate(index, 'factor', parseFloat(e.target.value))}
+              className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
             />
           </div>
           

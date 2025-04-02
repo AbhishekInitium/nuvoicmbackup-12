@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import GlassCard from '../ui-custom/GlassCard';
 import { Exclusion } from '@/types/incentiveTypes';
 import { OPERATORS } from '@/constants/incentiveConstants';
+import { SchemeAdminConfig } from '@/types/schemeAdminTypes';
 
 interface ExclusionFormProps {
   exclusion: Exclusion;
@@ -13,6 +14,7 @@ interface ExclusionFormProps {
   dbFields: string[];
   onUpdate: (index: number, field: keyof Exclusion, value: string | number) => void;
   onRemove: (index: number) => void;
+  selectedScheme?: SchemeAdminConfig | null;
 }
 
 const ExclusionForm: React.FC<ExclusionFormProps> = ({
@@ -20,8 +22,35 @@ const ExclusionForm: React.FC<ExclusionFormProps> = ({
   index,
   dbFields,
   onUpdate,
-  onRemove
+  onRemove,
+  selectedScheme
 }) => {
+  // Get data type for the selected field
+  const getFieldDataType = (fieldName: string): string => {
+    if (!selectedScheme) return 'Char10'; // Default to text if no scheme
+    
+    // Look for the field in exclusion fields
+    const fieldConfig = selectedScheme.exclusionFields?.find(kpi => kpi.kpi === fieldName);
+    return fieldConfig?.dataType || 'Char10'; // Default to text if not found
+  };
+
+  // Determine input type based on data type
+  const getInputTypeForDataType = (dataType: string) => {
+    switch(dataType) {
+      case 'Int8':
+      case 'Decimal':
+      case 'Currency':
+        return 'number';
+      case 'Date':
+        return 'date';
+      default:
+        return 'text';
+    }
+  };
+
+  const dataType = getFieldDataType(exclusion.field || '');
+  const inputType = getInputTypeForDataType(dataType);
+
   return (
     <GlassCard key={index} variant="outlined" className="p-4">
       <div className="flex justify-between items-start">
@@ -63,14 +92,20 @@ const ExclusionForm: React.FC<ExclusionFormProps> = ({
           <div>
             <label className="block text-sm font-medium text-app-gray-700 mb-2">Value</label>
             <Input 
-              type="text" 
+              type={inputType}
               value={exclusion.value || ''}
               onChange={(e) => {
-                const value = e.target.value;
-                // Try to parse as number if possible
-                const numValue = parseFloat(value);
-                onUpdate(index, 'value', isNaN(numValue) ? value : numValue);
+                let value = e.target.value;
+                
+                // Parse value according to type
+                if (inputType === 'number') {
+                  const numValue = parseFloat(value);
+                  onUpdate(index, 'value', isNaN(numValue) ? 0 : numValue);
+                } else {
+                  onUpdate(index, 'value', value);
+                }
               }}
+              className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
             />
           </div>
           

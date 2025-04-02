@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import GlassCard from '../ui-custom/GlassCard';
 import { CustomRule, RuleCondition } from '@/types/incentiveTypes';
 import RuleConditionComponent from './RuleCondition';
+import { SchemeAdminConfig } from '@/types/schemeAdminTypes';
 
 interface CustomRuleCardProps {
   rule: CustomRule;
@@ -18,6 +19,7 @@ interface CustomRuleCardProps {
   onAddCondition: () => void;
   onRemoveCondition: (conditionIndex: number) => void;
   onRemoveRule: () => void;
+  selectedScheme?: SchemeAdminConfig | null;
 }
 
 const CustomRuleCard: React.FC<CustomRuleCardProps> = ({
@@ -29,7 +31,8 @@ const CustomRuleCard: React.FC<CustomRuleCardProps> = ({
   onUpdateCondition,
   onAddCondition,
   onRemoveCondition,
-  onRemoveRule
+  onRemoveRule,
+  selectedScheme
 }) => {
   return (
     <GlassCard className="p-6">
@@ -86,6 +89,7 @@ const CustomRuleCard: React.FC<CustomRuleCardProps> = ({
               availableFields={availableFields}
               onUpdate={(field, value) => onUpdateCondition(condIndex, field, value)}
               onRemove={() => onRemoveCondition(condIndex)}
+              selectedScheme={selectedScheme}
             />
           ))}
         </div>

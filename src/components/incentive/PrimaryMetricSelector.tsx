@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { PrimaryMetric } from '@/types/incentiveTypes';
 import GlassCard from '../ui-custom/GlassCard';
 import { OPERATORS } from '@/constants/incentiveConstants';
+import { SchemeAdminConfig } from '@/types/schemeAdminTypes';
 
 interface PrimaryMetricSelectorProps {
   primaryMetrics: PrimaryMetric[];
@@ -14,6 +15,7 @@ interface PrimaryMetricSelectorProps {
   onAddMetric: () => void;
   onUpdateMetric: (field: keyof PrimaryMetric, value: string | number) => void;
   onRemoveMetric: () => void;
+  selectedScheme?: SchemeAdminConfig | null;
 }
 
 const PrimaryMetricSelector: React.FC<PrimaryMetricSelectorProps> = ({
@@ -22,10 +24,44 @@ const PrimaryMetricSelector: React.FC<PrimaryMetricSelectorProps> = ({
   currencySymbol,
   onAddMetric,
   onUpdateMetric,
-  onRemoveMetric
+  onRemoveMetric,
+  selectedScheme
 }) => {
   // Since we're working with a single metric at a time
   const metric = primaryMetrics[0];
+
+  // Get data type for the selected field
+  const getFieldDataType = (fieldName: string): string => {
+    if (!selectedScheme) return 'Char10'; // Default to text if no scheme
+    
+    // Look for the field in all KPI collections
+    const allKpis = [
+      ...(selectedScheme.qualificationFields || []),
+      ...(selectedScheme.adjustmentFields || []),
+      ...(selectedScheme.exclusionFields || []),
+      ...(selectedScheme.customRules || [])
+    ];
+    
+    const fieldConfig = allKpis.find(kpi => kpi.kpi === fieldName);
+    return fieldConfig?.dataType || 'Char10'; // Default to text if not found
+  };
+
+  // Determine input type based on data type
+  const getInputTypeForDataType = (dataType: string) => {
+    switch(dataType) {
+      case 'Int8':
+      case 'Decimal':
+      case 'Currency':
+        return 'number';
+      case 'Date':
+        return 'date';
+      default:
+        return 'text';
+    }
+  };
+
+  const dataType = getFieldDataType(metric.field);
+  const inputType = getInputTypeForDataType(dataType);
 
   return (
     <GlassCard variant="outlined" className="p-4">
@@ -68,10 +104,20 @@ const PrimaryMetricSelector: React.FC<PrimaryMetricSelectorProps> = ({
           <div className="sm:col-span-3">
             <label className="block text-sm font-medium text-app-gray-700 mb-2">Value</label>
             <Input 
-              type="number" 
+              type={inputType}
               value={metric.value}
-              onChange={(e) => onUpdateMetric('value', parseFloat(e.target.value))}
-              step="0.01"
+              onChange={(e) => {
+                let value = e.target.value;
+                
+                // Parse value according to type
+                if (inputType === 'number') {
+                  const numValue = parseFloat(value);
+                  onUpdateMetric('value', isNaN(numValue) ? 0 : numValue);
+                } else {
+                  onUpdateMetric('value', value);
+                }
+              }}
+              className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
             />
           </div>
           

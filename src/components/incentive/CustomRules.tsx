@@ -75,6 +75,7 @@ const CustomRules: React.FC<CustomRulesProps> = ({
               onAddCondition={() => addCustomRuleCondition(index)}
               onRemoveCondition={(conditionIndex) => removeCustomRuleCondition(index, conditionIndex)}
               onRemoveRule={() => removeCustomRule(index)}
+              selectedScheme={selectedScheme}
             />
           ))}
         </div>

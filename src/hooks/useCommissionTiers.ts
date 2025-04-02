@@ -18,7 +18,7 @@ export const useCommissionTiers = (
   const { toast } = useToast();
   const [tiers, setTiers] = useState<Tier[]>(initialCommissionStructure.tiers || []);
 
-  // Add new tier with empty/default values
+  // Add new tier with empty values
   const addTier = () => {
     const newTier: Tier = {
       from: 0,

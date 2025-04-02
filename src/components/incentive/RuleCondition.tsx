@@ -5,6 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { RuleCondition } from '@/types/incentiveTypes';
 import { OPERATORS, DB_FIELDS } from '@/constants/incentiveConstants';
+import { SchemeAdminConfig } from '@/types/schemeAdminTypes';
 
 interface RuleConditionComponentProps {
   condition: RuleCondition;
@@ -12,6 +13,7 @@ interface RuleConditionComponentProps {
   availableFields?: string[];
   onUpdate: (field: keyof RuleCondition, value: string | number) => void;
   onRemove: () => void;
+  selectedScheme?: SchemeAdminConfig | null;
 }
 
 const RuleConditionComponent: React.FC<RuleConditionComponentProps> = ({
@@ -19,7 +21,8 @@ const RuleConditionComponent: React.FC<RuleConditionComponentProps> = ({
   currencySymbol,
   availableFields = [],
   onUpdate,
-  onRemove
+  onRemove,
+  selectedScheme
 }) => {
   // Get field options from DB_FIELDS or use provided availableFields
   const getFieldOptions = () => {
@@ -33,6 +36,39 @@ const RuleConditionComponent: React.FC<RuleConditionComponentProps> = ({
   };
   
   const fieldOptions = getFieldOptions();
+
+  // Get data type for the selected field
+  const getFieldDataType = (fieldName: string): string => {
+    if (!selectedScheme) return 'Char10'; // Default to text if no scheme
+    
+    // Look for the field in all KPI collections
+    const allKpis = [
+      ...(selectedScheme.qualificationFields || []),
+      ...(selectedScheme.adjustmentFields || []),
+      ...(selectedScheme.exclusionFields || []),
+      ...(selectedScheme.customRules || [])
+    ];
+    
+    const fieldConfig = allKpis.find(kpi => kpi.kpi === fieldName);
+    return fieldConfig?.dataType || 'Char10'; // Default to text if not found
+  };
+
+  // Determine input type based on data type
+  const getInputTypeForDataType = (dataType: string) => {
+    switch(dataType) {
+      case 'Int8':
+      case 'Decimal':
+      case 'Currency':
+        return 'number';
+      case 'Date':
+        return 'date';
+      default:
+        return 'text';
+    }
+  };
+
+  const dataType = getFieldDataType(condition.field || '');
+  const inputType = getInputTypeForDataType(dataType);
 
   return (
     <div className="flex items-center space-x-3">
@@ -65,14 +101,19 @@ const RuleConditionComponent: React.FC<RuleConditionComponentProps> = ({
       </Select>
       
       <Input 
-        type="text" 
-        className="w-36"
+        type={inputType}
+        className="w-36 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
         value={condition.value || ''}
         onChange={(e) => {
           const value = e.target.value;
-          // Try to parse as number if possible
-          const numValue = parseFloat(value);
-          onUpdate('value', isNaN(numValue) ? value : numValue);
+          
+          // Parse value according to type
+          if (inputType === 'number') {
+            const numValue = parseFloat(value);
+            onUpdate('value', isNaN(numValue) ? 0 : numValue);
+          } else {
+            onUpdate('value', value);
+          }
         }}
       />
       

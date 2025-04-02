@@ -4,6 +4,7 @@ import { PlusCircle } from 'lucide-react';
 import ActionButton from '../ui-custom/ActionButton';
 import { Adjustment } from '@/types/incentiveTypes';
 import AdjustmentForm from './AdjustmentForm';
+import { SchemeAdminConfig } from '@/types/schemeAdminTypes';
 
 interface AdjustmentsListProps {
   adjustments: Adjustment[];
@@ -12,6 +13,7 @@ interface AdjustmentsListProps {
   onUpdateAdjustment: (index: number, field: keyof Adjustment, value: string | number) => void;
   onRemoveAdjustment: (index: number) => void;
   currencySymbol: string;
+  selectedScheme?: SchemeAdminConfig | null;
 }
 
 const AdjustmentsList: React.FC<AdjustmentsListProps> = ({
@@ -20,12 +22,13 @@ const AdjustmentsList: React.FC<AdjustmentsListProps> = ({
   onAddAdjustment,
   onUpdateAdjustment,
   onRemoveAdjustment,
-  currencySymbol
+  currencySymbol,
+  selectedScheme
 }) => {
   return (
     <>
       <div className="flex justify-between items-center mb-4">
-        <h3 className="text-base font-medium text-app-gray-700">Adjustment Factors</h3>
+        <h3 className="text-base font-medium text-app-gray-700">Adjustments</h3>
         <ActionButton 
           variant="outline"
           size="sm"
@@ -37,7 +40,7 @@ const AdjustmentsList: React.FC<AdjustmentsListProps> = ({
       
       {adjustments.length === 0 ? (
         <div className="text-center py-8 border border-dashed rounded-lg">
-          <p className="text-app-gray-500">No adjustment factors defined yet</p>
+          <p className="text-app-gray-500">No adjustments defined yet</p>
           <ActionButton
             variant="outline"
             size="sm"
@@ -57,6 +60,7 @@ const AdjustmentsList: React.FC<AdjustmentsListProps> = ({
               dbFields={dbFields}
               onUpdate={onUpdateAdjustment}
               onRemove={onRemoveAdjustment}
+              selectedScheme={selectedScheme}
             />
           ))}
         </div>
