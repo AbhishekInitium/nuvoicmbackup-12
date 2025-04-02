@@ -18,29 +18,20 @@ export const useCommissionTiers = (
   const { toast } = useToast();
   const [tiers, setTiers] = useState<Tier[]>(initialCommissionStructure.tiers || []);
 
-  // Add new tier
+  // Add new tier with empty/default values
   const addTier = () => {
-    const lastTier = tiers.length > 0 ? tiers[tiers.length - 1] : null;
-    const newFrom = lastTier ? lastTier.to : 0;
-    const newTo = newFrom + 100000;
-    const newRate = 0.05;
-
     const newTier: Tier = {
-      from: newFrom,
-      to: newTo,
-      rate: newRate,
-      description: `${newFrom} - ${newTo}`
+      from: 0,
+      to: 0,
+      rate: 0,
+      description: ''
     };
 
     const newTiers = [...tiers, newTier];
     setTiers(newTiers);
     onUpdateCommissionStructure({ tiers: newTiers });
     
-    toast({
-      title: "Tier Added",
-      description: `Added tier for ${newFrom} - ${newTo}`,
-      variant: "default"
-    });
+    // Toast notification removed
   };
 
   // Remove tier
@@ -58,12 +49,6 @@ export const useCommissionTiers = (
     newTiers.splice(index, 1);
     setTiers(newTiers);
     onUpdateCommissionStructure({ tiers: newTiers });
-    
-    toast({
-      title: "Tier Removed",
-      description: "Commission tier has been removed.",
-      variant: "default"
-    });
   };
 
   // Update tier
@@ -73,32 +58,7 @@ export const useCommissionTiers = (
     
     // Update description
     newTiers[index].description = `${newTiers[index].from} - ${newTiers[index].to}`;
-    
-    // Validate
-    if (field === 'from' && index > 0) {
-      const prevTier = newTiers[index - 1];
-      if (value < prevTier.to) {
-        toast({
-          title: "Invalid Range",
-          description: "From value must be greater than or equal to previous tier's To value.",
-          variant: "destructive"
-        });
-        return;
-      }
-    }
-    
-    if (field === 'to' && index < newTiers.length - 1) {
-      const nextTier = newTiers[index + 1];
-      if (value > nextTier.from) {
-        toast({
-          title: "Invalid Range",
-          description: "To value must be less than or equal to next tier's From value.",
-          variant: "destructive"
-        });
-        return;
-      }
-    }
-    
+
     setTiers(newTiers);
     onUpdateCommissionStructure({ tiers: newTiers });
   };

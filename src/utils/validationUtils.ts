@@ -30,9 +30,26 @@ export const validatePlanFields = (plan: IncentivePlan): string[] => {
   if (!plan.commissionStructure.tiers || plan.commissionStructure.tiers.length === 0) {
     errors.push("At least one commission tier is required");
   } else {
+    // Validate tier values only during save
     plan.commissionStructure.tiers.forEach((tier, index) => {
       if (tier.rate <= 0) {
         errors.push(`Tier ${index + 1} must have a positive commission rate`);
+      }
+      
+      if (tier.from < 0) {
+        errors.push(`Tier ${index + 1} must have a non-negative starting value`);
+      }
+      
+      if (tier.to <= tier.from) {
+        errors.push(`Tier ${index + 1} must have an ending value greater than its starting value`);
+      }
+      
+      // Check for overlaps with previous tiers
+      if (index > 0) {
+        const prevTier = plan.commissionStructure.tiers[index - 1];
+        if (tier.from < prevTier.to) {
+          errors.push(`Tier ${index + 1} overlaps with Tier ${index}. Please adjust the ranges.`);
+        }
       }
     });
   }

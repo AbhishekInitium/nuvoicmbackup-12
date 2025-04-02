@@ -25,10 +25,10 @@ const TierRow: React.FC<TierRowProps> = ({
           <input 
             type="text" 
             className="form-input pl-8 py-2"
-            value={tier.from}
+            value={tier.from === 0 && index > 0 ? '' : tier.from}
             onChange={(e) => {
               const value = e.target.value.replace(/[^0-9]/g, '');
-              updateTier(index, 'from', value ? parseInt(value) : '');
+              updateTier(index, 'from', value ? parseInt(value) : 0);
             }}
             disabled={index > 0} // First tier's "from" can be edited, others are derived
             placeholder="Enter amount"
@@ -43,10 +43,10 @@ const TierRow: React.FC<TierRowProps> = ({
           <input 
             type="text" 
             className="form-input pl-8 py-2"
-            value={tier.to}
+            value={tier.to === 0 ? '' : tier.to}
             onChange={(e) => {
               const value = e.target.value.replace(/[^0-9]/g, '');
-              updateTier(index, 'to', value ? parseInt(value) : '');
+              updateTier(index, 'to', value ? parseInt(value) : 0);
             }}
             placeholder="Enter amount"
           />
@@ -60,10 +60,10 @@ const TierRow: React.FC<TierRowProps> = ({
           <input 
             type="text" 
             className="form-input pl-8 py-2"
-            value={tier.rate}
+            value={tier.rate === 0 ? '' : tier.rate}
             onChange={(e) => {
               const value = e.target.value.replace(/[^0-9]/g, '');
-              updateTier(index, 'rate', value ? parseInt(value) : '');
+              updateTier(index, 'rate', value ? parseInt(value) : 0);
             }}
             placeholder="Enter rate"
           />
