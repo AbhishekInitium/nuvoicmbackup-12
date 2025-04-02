@@ -20,6 +20,7 @@ const SchemeAdministratorScreen: React.FC<SchemeAdministratorScreenProps> = ({ o
   const [selectedConfigId, setSelectedConfigId] = useState<string | undefined>(undefined);
   const [isLoading, setIsLoading] = useState(false);
   const [isNewConfig, setIsNewConfig] = useState(true);
+  const [formKey, setFormKey] = useState(Date.now()); // Add a key to force re-render
   
   const handleSaveSuccess = (id: string) => {
     toast({
@@ -48,6 +49,7 @@ const SchemeAdministratorScreen: React.FC<SchemeAdministratorScreenProps> = ({ o
       setAdminConfig(fullConfig);
       setSelectedConfigId(config._id);
       setIsNewConfig(false);
+      setFormKey(Date.now()); // Force re-render of the form
     } catch (error) {
       toast({
         title: "Error Loading Configuration",
@@ -61,7 +63,7 @@ const SchemeAdministratorScreen: React.FC<SchemeAdministratorScreenProps> = ({ o
   
   const handleCreateNew = () => {
     // Create a new empty configuration with required initial values
-    setAdminConfig({
+    const newConfig: Partial<SchemeAdminConfig> = {
       adminId: uuidv4(),
       adminName: '',
       createdAt: new Date().toISOString(),
@@ -74,13 +76,22 @@ const SchemeAdministratorScreen: React.FC<SchemeAdministratorScreenProps> = ({ o
       adjustmentFields: [],
       exclusionFields: [],
       customRules: []
-    });
+    };
+    
+    setAdminConfig(newConfig);
     setSelectedConfigId(undefined);
     setIsNewConfig(true);
+    setFormKey(Date.now()); // Force re-render of the form
   };
   
   const handleConfigUpdate = useCallback((config: Partial<SchemeAdminConfig>) => {
-    setAdminConfig(config);
+    setAdminConfig(prev => {
+      // Only update if there are actual changes to avoid unnecessary re-renders
+      if (JSON.stringify(prev) !== JSON.stringify(config)) {
+        return config;
+      }
+      return prev;
+    });
   }, []);
 
   // Initialize with an empty form when first loaded
@@ -116,7 +127,7 @@ const SchemeAdministratorScreen: React.FC<SchemeAdministratorScreenProps> = ({ o
           <TabsContent value="kpi-mapping">
             {adminConfig && (
               <KpiMappingForm 
-                key={selectedConfigId || "new-config"} 
+                key={formKey} 
                 onSaveSuccess={handleSaveSuccess} 
                 initialConfig={adminConfig} 
                 onConfigUpdate={handleConfigUpdate}

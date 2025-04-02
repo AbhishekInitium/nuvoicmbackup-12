@@ -46,6 +46,7 @@ export const KpiMappingForm: React.FC<KpiMappingFormProps> = ({
     customRules: initialConfig.customRules || []
   });
   
+  // Initialize the form with default values or values from initialConfig
   const form = useForm({
     defaultValues: {
       adminId: initialConfig.adminId || uuidv4(),
@@ -54,9 +55,14 @@ export const KpiMappingForm: React.FC<KpiMappingFormProps> = ({
     }
   });
 
-  // Update form when initialConfig changes (for loading existing configs)
+  // Set initial form values when component mounts or initialConfig changes
   useEffect(() => {
     if (initialConfig) {
+      console.log("Setting form values from initialConfig:", {
+        adminName: initialConfig.adminName,
+        calculationBase: initialConfig.calculationBase
+      });
+      
       // Reset the form with the new values
       form.reset({
         adminId: initialConfig.adminId || uuidv4(),
@@ -76,10 +82,13 @@ export const KpiMappingForm: React.FC<KpiMappingFormProps> = ({
 
   const updateParentConfig = useCallback(() => {
     if (onConfigUpdate) {
+      const formValues = form.getValues();
+      console.log("Updating parent config with form values:", formValues);
+      
       const updatedConfig: Partial<SchemeAdminConfig> = {
-        adminId: form.getValues().adminId,
-        adminName: form.getValues().adminName,
-        calculationBase: form.getValues().calculationBase,
+        adminId: formValues.adminId,
+        adminName: formValues.adminName,
+        calculationBase: formValues.calculationBase,
         qualificationFields: kpiData.qualificationFields,
         adjustmentFields: kpiData.adjustmentFields,
         exclusionFields: kpiData.exclusionFields,
@@ -258,7 +267,15 @@ export const KpiMappingForm: React.FC<KpiMappingFormProps> = ({
                   <FormItem>
                     <FormLabel>Configuration Name</FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder="e.g., NorthAmerica_Orders_2024" />
+                      <Input 
+                        {...field} 
+                        placeholder="e.g., NorthAmerica_Orders_2024" 
+                        onChange={(e) => {
+                          field.onChange(e);
+                          // Log for debugging
+                          console.log("Name input changed:", e.target.value);
+                        }}
+                      />
                     </FormControl>
                     <FormDescription>
                       A descriptive name for this scheme configuration
@@ -274,7 +291,15 @@ export const KpiMappingForm: React.FC<KpiMappingFormProps> = ({
                   <FormItem>
                     <FormLabel>Calculation Base</FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder="e.g., Sales Orders" />
+                      <Input 
+                        {...field} 
+                        placeholder="e.g., Sales Orders" 
+                        onChange={(e) => {
+                          field.onChange(e);
+                          // Log for debugging
+                          console.log("Calculation base changed:", e.target.value);
+                        }}
+                      />
                     </FormControl>
                     <FormDescription>
                       The primary metric used for calculations

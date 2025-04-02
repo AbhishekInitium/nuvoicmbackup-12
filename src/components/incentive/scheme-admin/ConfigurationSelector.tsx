@@ -65,10 +65,10 @@ const ConfigurationSelector: React.FC<ConfigurationSelectorProps> = ({
           value={selectedConfigId || ""}
           disabled={loading}
         >
-          <SelectTrigger className="w-full">
-            <SelectValue placeholder="Select a configuration" />
+          <SelectTrigger className="w-full bg-white">
+            <SelectValue placeholder={selectedConfigId ? "Select a configuration" : "New Configuration"} />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="bg-white">
             {configs.map((config) => (
               <SelectItem key={config._id} value={config._id || ""}>
                 {config.adminName || "Unnamed Configuration"}
