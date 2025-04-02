@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { Trash2, PlusCircle } from 'lucide-react';
 import { useForm, Controller, useFieldArray } from 'react-hook-form';
@@ -99,7 +100,7 @@ export const KpiMappingForm: React.FC<KpiMappingFormProps> = ({ onSaveSuccess, i
     try {
       setIsSaving(true);
       
-      const configToSave: SchemeAdminConfig = {
+      const configToSave: Partial<SchemeAdminConfig> = {
         name,
         description,
         kpis,
@@ -112,7 +113,7 @@ export const KpiMappingForm: React.FC<KpiMappingFormProps> = ({ onSaveSuccess, i
         configToSave._id = configId;
       }
       
-      const savedConfigId = await saveSchemeAdmin(configToSave);
+      const savedConfigId = await saveSchemeAdmin(configToSave as SchemeAdminConfig);
       
       setIsSaving(false);
       if (onSaveSuccess) {
