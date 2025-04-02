@@ -45,7 +45,7 @@ const CustomRuleCard: React.FC<CustomRuleCardProps> = ({
             />
           </div>
           <Textarea 
-            value={rule.description}
+            value={rule.description || ''}
             className="mt-1 resize-none border-none p-0 focus-visible:ring-0 text-app-gray-500"
             onChange={(e) => onUpdateRule('description', e.target.value)}
           />

@@ -23,7 +23,15 @@ const CustomRules: React.FC<CustomRulesProps> = ({
   selectedScheme
 }) => {
   const currencySymbol = getCurrencySymbol(currency);
-  const { rules, addRule, updateRule, removeRule } = useCustomRules(customRules, updateCustomRules);
+  const { 
+    rules, 
+    addCustomRule, 
+    updateCustomRule, 
+    removeCustomRule,
+    addCustomRuleCondition,
+    removeCustomRuleCondition,
+    updateCustomRuleCondition
+  } = useCustomRules(customRules, updateCustomRules);
 
   // Get custom fields from the selected scheme if available
   const getCustomFields = () => {
@@ -40,7 +48,7 @@ const CustomRules: React.FC<CustomRulesProps> = ({
         <ActionButton
           variant="outline"
           size="sm"
-          onClick={addRule}
+          onClick={addCustomRule}
         >
           <PlusCircle size={16} className="mr-1" /> Add Custom Rule
         </ActionButton>
@@ -51,7 +59,7 @@ const CustomRules: React.FC<CustomRulesProps> = ({
           message="No custom rules defined"
           description="Add custom rules to handle specific business requirements"
           buttonText="Add Custom Rule"
-          onAction={addRule}
+          onAction={addCustomRule}
         />
       ) : (
         <div className="space-y-4">
@@ -59,10 +67,14 @@ const CustomRules: React.FC<CustomRulesProps> = ({
             <CustomRuleCard
               key={index}
               rule={rule}
+              ruleIndex={index}
               currencySymbol={currencySymbol}
-              customFields={customFields}
-              onUpdate={(field, value) => updateRule(index, field, value)}
-              onDelete={() => removeRule(index)}
+              availableFields={customFields}
+              onUpdateRule={(field, value) => updateCustomRule(index, field, value)}
+              onUpdateCondition={(conditionIndex, field, value) => updateCustomRuleCondition(index, conditionIndex, field, value)}
+              onAddCondition={() => addCustomRuleCondition(index)}
+              onRemoveCondition={(conditionIndex) => removeCustomRuleCondition(index, conditionIndex)}
+              onRemoveRule={() => removeCustomRule(index)}
             />
           ))}
         </div>
