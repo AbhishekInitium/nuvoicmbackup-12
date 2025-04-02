@@ -1,4 +1,3 @@
-
 import { IncentivePlan } from '@/types/incentiveTypes';
 import { IncentivePlanWithStatus } from '@/services/incentive/types/incentiveServiceTypes';
 import { SchemeAdminConfig } from '@/types/schemeAdminTypes';
@@ -178,10 +177,16 @@ export const getSchemeAdminConfig = async (configId: string): Promise<SchemeAdmi
     console.log(`Fetching scheme admin configuration with ID: ${configId}`);
     const response = await axios.get(`${ADMIN_API_URL}/${configId}`);
     
+    if (!response.data) {
+      throw new Error(`No configuration found with ID: ${configId}`);
+    }
+    
+    console.log(`Successfully fetched admin config with ID: ${configId}`, response.data);
+    
     // Ensure the config has required fields
     const config = {
       ...response.data,
-      name: response.data.name || `Configuration ${response.data._id.substring(0, 8)}`,
+      name: response.data.name || response.data.adminName || `Configuration ${response.data._id?.substring(0, 8)}`,
       description: response.data.description || '',
       kpis: response.data.kpis || [],
       dataSources: response.data.dataSources || []

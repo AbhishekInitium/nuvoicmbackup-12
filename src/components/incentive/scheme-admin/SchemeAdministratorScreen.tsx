@@ -13,7 +13,7 @@ import {
   SelectValue 
 } from "@/components/ui/select";
 import { getSchemeAdminConfigs, getSchemeAdminConfig } from '@/services/database/mongoDBService';
-import { PlusCircle } from 'lucide-react';
+import { PlusCircle, Loader2 } from 'lucide-react';
 import ActionButton from '../../ui-custom/ActionButton';
 
 interface SchemeAdministratorScreenProps {
@@ -128,15 +128,26 @@ const SchemeAdministratorScreen: React.FC<SchemeAdministratorScreenProps> = ({ o
             value={selectedSchemeId}
             onValueChange={handleSchemeChange}
           >
-            <SelectTrigger>
-              <SelectValue placeholder="Select a configuration or create new" />
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder={loading ? "Loading..." : "Select a configuration or create new"} />
             </SelectTrigger>
             <SelectContent>
-              {schemeConfigs.map(config => (
-                <SelectItem key={config._id} value={config._id || ''}>
-                  {config.name || `Configuration ${config._id?.substring(0, 8)}`}
-                </SelectItem>
-              ))}
+              {loading ? (
+                <div className="flex items-center justify-center py-2">
+                  <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                  Loading configurations...
+                </div>
+              ) : schemeConfigs.length === 0 ? (
+                <div className="p-2 text-sm text-muted-foreground">
+                  No configurations available
+                </div>
+              ) : (
+                schemeConfigs.map((config) => (
+                  <SelectItem key={config._id} value={config._id || ''}>
+                    {config.name || config.adminName || `Configuration ${config._id?.substring(0, 8)}`}
+                  </SelectItem>
+                ))
+              )}
             </SelectContent>
           </Select>
           
@@ -147,12 +158,19 @@ const SchemeAdministratorScreen: React.FC<SchemeAdministratorScreenProps> = ({ o
       </div>
       
       <div className="mt-6">
-        <KpiMappingForm 
-          onSaveSuccess={handleSaveSuccess} 
-          initialConfig={adminConfig} 
-          onConfigUpdate={setAdminConfig}
-          isLoading={loading}
-        />
+        {loading ? (
+          <div className="flex items-center justify-center p-8 border rounded-md bg-background">
+            <Loader2 className="w-6 h-6 animate-spin mr-2" />
+            <span>Loading configuration details...</span>
+          </div>
+        ) : (
+          <KpiMappingForm 
+            onSaveSuccess={handleSaveSuccess} 
+            initialConfig={adminConfig} 
+            onConfigUpdate={setAdminConfig}
+            isLoading={loading}
+          />
+        )}
       </div>
     </div>
   );
