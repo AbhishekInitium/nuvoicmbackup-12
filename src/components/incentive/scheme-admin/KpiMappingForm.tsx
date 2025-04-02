@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -56,12 +57,14 @@ export const KpiMappingForm: React.FC<KpiMappingFormProps> = ({
   // Update form when initialConfig changes (for loading existing configs)
   useEffect(() => {
     if (initialConfig) {
+      // Reset the form with the new values
       form.reset({
         adminId: initialConfig.adminId || uuidv4(),
         adminName: initialConfig.adminName || "",
         calculationBase: initialConfig.calculationBase || ""
       });
       
+      // Update KPI data state with the new values
       setKpiData({
         qualificationFields: initialConfig.qualificationFields || [],
         adjustmentFields: initialConfig.adjustmentFields || [],
@@ -89,19 +92,16 @@ export const KpiMappingForm: React.FC<KpiMappingFormProps> = ({
     }
   }, [kpiData, form, initialConfig, onConfigUpdate]);
 
-  // This was causing the infinite update loop - we'll use a more controlled approach
-  const debouncedUpdateConfig = useCallback(() => {
-    // Only update parent config when form changes, not on every render
+  // This controls the form updates without causing infinite loops
+  useEffect(() => {
+    // Set up subscription to form changes
     const subscription = form.watch(() => {
       updateParentConfig();
     });
     
+    // Cleanup subscription on unmount
     return () => subscription.unsubscribe();
   }, [form, updateParentConfig]);
-
-  useEffect(() => {
-    debouncedUpdateConfig();
-  }, [debouncedUpdateConfig]);
 
   // Also update parent when kpiData changes
   useEffect(() => {
