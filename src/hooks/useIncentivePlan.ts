@@ -47,10 +47,11 @@ export const useIncentivePlan = (
    * Creates a new empty incentive scheme
    */
   const createNewScheme = () => {
-    const emptyPlan = {
+    const emptyPlan: IncentivePlan = {
       ...DEFAULT_PLAN,
       participants: [],
       salesQuota: 0,
+      // Ensure schemeId is included to satisfy the IncentivePlan type
       schemeId: '',
       name: '',
       description: '',
