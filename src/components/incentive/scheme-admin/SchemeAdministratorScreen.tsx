@@ -1,10 +1,13 @@
 
-import React, { useState } from 'react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { KpiMappingForm } from './KpiMappingForm';
+import React, { useState, useEffect, useCallback } from 'react';
 import { SchemeHeader } from './SchemeHeader';
+import { KpiMappingForm } from './KpiMappingForm';
 import { SchemeAdminConfig } from '@/types/schemeAdminTypes';
 import { useToast } from '@/hooks/use-toast';
+import { getSchemeAdminConfig } from '@/services/database/mongoDBService';
+import ConfigurationSelector from './ConfigurationSelector';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Loader2 } from 'lucide-react';
 
 interface SchemeAdministratorScreenProps {
   onBack: () => void;
@@ -12,14 +15,78 @@ interface SchemeAdministratorScreenProps {
 
 const SchemeAdministratorScreen: React.FC<SchemeAdministratorScreenProps> = ({ onBack }) => {
   const { toast } = useToast();
-  const [adminConfig, setAdminConfig] = useState<Partial<SchemeAdminConfig>>({});
+  const [adminConfig, setAdminConfig] = useState<Partial<SchemeAdminConfig> | null>(null);
+  const [selectedConfigId, setSelectedConfigId] = useState<string | undefined>(undefined);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isNewConfig, setIsNewConfig] = useState(true);
   
   const handleSaveSuccess = (id: string) => {
     toast({
       title: "Configuration Saved",
       description: `Successfully saved KPI configuration with ID: ${id.substring(0, 8)}...`,
     });
+    
+    // Update selected config ID after saving
+    if (isNewConfig) {
+      setSelectedConfigId(id);
+      setIsNewConfig(false);
+    }
   };
+  
+  const handleSelectConfig = async (config: SchemeAdminConfig | null) => {
+    if (!config || !config._id) {
+      setAdminConfig(null);
+      setSelectedConfigId(undefined);
+      return;
+    }
+    
+    setIsLoading(true);
+    try {
+      // Fetch the complete configuration with all fields
+      const fullConfig = await getSchemeAdminConfig(config._id);
+      setAdminConfig(fullConfig);
+      setSelectedConfigId(config._id);
+      setIsNewConfig(false);
+    } catch (error) {
+      toast({
+        title: "Error Loading Configuration",
+        description: "Failed to load the selected configuration",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  const handleCreateNew = () => {
+    setAdminConfig({
+      adminId: '',
+      adminName: '',
+      createdAt: new Date().toISOString(),
+      calculationBase: '',
+      baseField: '',
+      baseData: {
+        source: 'Excel'
+      },
+      qualificationFields: [],
+      adjustmentFields: [],
+      exclusionFields: [],
+      customRules: []
+    });
+    setSelectedConfigId(undefined);
+    setIsNewConfig(true);
+  };
+  
+  const handleConfigUpdate = useCallback((config: Partial<SchemeAdminConfig>) => {
+    setAdminConfig(config);
+  }, []);
+
+  // Initialize with an empty form when first loaded
+  useEffect(() => {
+    if (!adminConfig) {
+      handleCreateNew();
+    }
+  }, []);
 
   return (
     <div className="max-w-6xl mx-auto px-4">
@@ -29,13 +96,36 @@ const SchemeAdministratorScreen: React.FC<SchemeAdministratorScreenProps> = ({ o
         onBack={onBack}
       />
       
-      <div className="mt-8">
-        <KpiMappingForm 
-          onSaveSuccess={handleSaveSuccess} 
-          initialConfig={adminConfig} 
-          onConfigUpdate={setAdminConfig}
-        />
-      </div>
+      <ConfigurationSelector 
+        onConfigSelect={handleSelectConfig}
+        onCreateNew={handleCreateNew}
+        selectedConfigId={selectedConfigId}
+      />
+      
+      {isLoading ? (
+        <div className="flex justify-center items-center py-20">
+          <Loader2 className="h-8 w-8 animate-spin text-gray-500" />
+          <p className="ml-3 text-gray-500">Loading configuration...</p>
+        </div>
+      ) : (
+        <Tabs defaultValue="kpi-mapping" className="mt-8">
+          <TabsList>
+            <TabsTrigger value="kpi-mapping">KPI Mapping</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="kpi-mapping">
+            {adminConfig && (
+              <KpiMappingForm 
+                key={selectedConfigId || "new-config"} 
+                onSaveSuccess={handleSaveSuccess} 
+                initialConfig={adminConfig} 
+                onConfigUpdate={handleConfigUpdate}
+                isEditMode={!isNewConfig}
+              />
+            )}
+          </TabsContent>
+        </Tabs>
+      )}
     </div>
   );
 };

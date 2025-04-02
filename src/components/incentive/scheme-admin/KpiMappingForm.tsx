@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import {
@@ -23,12 +23,14 @@ interface KpiMappingFormProps {
   onSaveSuccess: (id: string) => void;
   initialConfig?: Partial<SchemeAdminConfig>;
   onConfigUpdate?: (config: Partial<SchemeAdminConfig>) => void;
+  isEditMode?: boolean;
 }
 
 export const KpiMappingForm: React.FC<KpiMappingFormProps> = ({ 
   onSaveSuccess,
   initialConfig = {},
-  onConfigUpdate
+  onConfigUpdate,
+  isEditMode = false
 }) => {
   const { toast } = useToast();
   const [isSaving, setIsSaving] = useState(false);
@@ -38,21 +40,39 @@ export const KpiMappingForm: React.FC<KpiMappingFormProps> = ({
     exclusionFields: KpiField[];
     customRules: KpiField[];
   }>({
-    qualificationFields: [],
-    adjustmentFields: [],
-    exclusionFields: [],
-    customRules: []
+    qualificationFields: initialConfig.qualificationFields || [],
+    adjustmentFields: initialConfig.adjustmentFields || [],
+    exclusionFields: initialConfig.exclusionFields || [],
+    customRules: initialConfig.customRules || []
   });
   
   const form = useForm({
     defaultValues: {
       adminId: initialConfig.adminId || uuidv4(),
-      adminName: initialConfig.adminName || "NorthAmerica_Orders_2024",
-      calculationBase: initialConfig.calculationBase || "Sales Orders"
+      adminName: initialConfig.adminName || "",
+      calculationBase: initialConfig.calculationBase || ""
     }
   });
 
+  // Update form when initialConfig changes (for loading existing configs)
   useEffect(() => {
+    if (initialConfig) {
+      form.reset({
+        adminId: initialConfig.adminId || uuidv4(),
+        adminName: initialConfig.adminName || "",
+        calculationBase: initialConfig.calculationBase || ""
+      });
+      
+      setKpiData({
+        qualificationFields: initialConfig.qualificationFields || [],
+        adjustmentFields: initialConfig.adjustmentFields || [],
+        exclusionFields: initialConfig.exclusionFields || [],
+        customRules: initialConfig.customRules || []
+      });
+    }
+  }, [initialConfig]);
+
+  const updateParentConfig = useCallback(() => {
     if (onConfigUpdate) {
       const updatedConfig: Partial<SchemeAdminConfig> = {
         adminId: form.getValues().adminId,
@@ -62,12 +82,17 @@ export const KpiMappingForm: React.FC<KpiMappingFormProps> = ({
         adjustmentFields: kpiData.adjustmentFields,
         exclusionFields: kpiData.exclusionFields,
         customRules: kpiData.customRules,
-        createdAt: new Date().toISOString()
+        createdAt: initialConfig.createdAt || new Date().toISOString(),
+        _id: initialConfig._id
       };
       
       onConfigUpdate(updatedConfig);
     }
-  }, [kpiData, form.getValues, onConfigUpdate]);
+  }, [kpiData, form, initialConfig, onConfigUpdate]);
+
+  useEffect(() => {
+    updateParentConfig();
+  }, [kpiData, updateParentConfig]);
 
   const handleAddKpi = (category: 'qualification' | 'adjustment' | 'exclusion' | 'custom') => {
     const newKpi: KpiField = {
@@ -159,12 +184,14 @@ export const KpiMappingForm: React.FC<KpiMappingFormProps> = ({
   const handleSaveConfig = async (formValues: any) => {
     // Create the complete config object with all required fields
     const adminConfig: SchemeAdminConfig = {
+      _id: initialConfig._id, // Include _id if editing existing config
       adminId: formValues.adminId,
       adminName: formValues.adminName,
-      createdAt: new Date().toISOString(),
+      createdAt: initialConfig.createdAt || new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
       calculationBase: formValues.calculationBase,
-      baseField: "",
-      baseData: {
+      baseField: initialConfig.baseField || "",
+      baseData: initialConfig.baseData || {
         source: "Excel" 
       },
       qualificationFields: kpiData.qualificationFields,
@@ -175,12 +202,12 @@ export const KpiMappingForm: React.FC<KpiMappingFormProps> = ({
     
     try {
       setIsSaving(true);
-      console.log("Saving admin config to MongoDB:", adminConfig);
+      console.log(`${isEditMode ? "Updating" : "Saving"} admin config to MongoDB:`, adminConfig);
       const id = await saveSchemeAdmin(adminConfig);
       
       toast({
-        title: "Configuration Saved",
-        description: `Scheme configuration "${formValues.adminName}" saved successfully`,
+        title: isEditMode ? "Configuration Updated" : "Configuration Saved",
+        description: `Scheme configuration "${formValues.adminName}" ${isEditMode ? "updated" : "saved"} successfully`,
         variant: "default"
       });
       
@@ -200,7 +227,9 @@ export const KpiMappingForm: React.FC<KpiMappingFormProps> = ({
 
   return (
     <div className="space-y-8">
-      <h2 className="text-xl font-semibold">Configure KPI Mappings</h2>
+      <h2 className="text-xl font-semibold">
+        {isEditMode ? "Edit KPI Configuration" : "Create KPI Configuration"}
+      </h2>
       
       <Form {...form}>
         <form onSubmit={form.handleSubmit(handleSaveConfig)} className="space-y-6">
@@ -376,7 +405,7 @@ export const KpiMappingForm: React.FC<KpiMappingFormProps> = ({
           
           <div className="flex justify-end pt-6 border-t">
             <Button type="submit" className="w-40" disabled={isSaving}>
-              {isSaving ? "Saving..." : "Save Configuration"}
+              {isSaving ? "Saving..." : isEditMode ? "Update Configuration" : "Save Configuration"}
             </Button>
           </div>
         </form>
