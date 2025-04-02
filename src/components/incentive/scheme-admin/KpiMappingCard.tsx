@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Trash2, Edit2, Check, X } from 'lucide-react';
 import { Card } from '@/components/ui/card';
@@ -32,6 +31,15 @@ export const KpiMappingCard: React.FC<KpiMappingCardProps> = ({ kpi, onUpdate, o
     setIsEditing(false);
   };
 
+  const dataTypeOptions = [
+    'Char4', 
+    'Char10', 
+    'Int8', 
+    'Decimal', 
+    'Date', 
+    'Currency'
+  ];
+
   return (
     <Card className="p-4">
       {isEditing ? (
@@ -52,12 +60,21 @@ export const KpiMappingCard: React.FC<KpiMappingCardProps> = ({ kpi, onUpdate, o
               <Label htmlFor={`dataType-${kpi.id}`} className="mb-2 block text-sm font-medium">
                 Data Type
               </Label>
-              <Input
-                id={`dataType-${kpi.id}`}
+              <Select 
                 value={localKpi.dataType}
-                onChange={(e) => handleChange('dataType', e.target.value)}
-                placeholder="e.g., Char4, Int8, Date"
-              />
+                onValueChange={(value) => handleChange('dataType', value)}
+              >
+                <SelectTrigger id={`dataType-${kpi.id}`}>
+                  <SelectValue placeholder="Select Data Type" />
+                </SelectTrigger>
+                <SelectContent>
+                  {dataTypeOptions.map((type) => (
+                    <SelectItem key={type} value={type}>
+                      {type}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
 
