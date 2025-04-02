@@ -10,6 +10,7 @@ interface RevenueBaseSelectorProps {
   schemeConfigs?: SchemeAdminConfig[];
   onSchemeSelect?: (schemeId: string) => void;
   isLoading?: boolean;
+  disabled?: boolean;
 }
 
 const RevenueBaseSelector: React.FC<RevenueBaseSelectorProps> = ({ 
@@ -17,7 +18,8 @@ const RevenueBaseSelector: React.FC<RevenueBaseSelectorProps> = ({
   updateRevenueBase,
   schemeConfigs = [],
   onSchemeSelect,
-  isLoading = false
+  isLoading = false,
+  disabled = false
 }) => {
   return (
     <div className="space-y-4">
@@ -31,10 +33,10 @@ const RevenueBaseSelector: React.FC<RevenueBaseSelectorProps> = ({
           </label>
           <Select 
             onValueChange={(schemeId) => onSchemeSelect && onSchemeSelect(schemeId)}
-            disabled={isLoading}
+            disabled={isLoading || disabled}
           >
             <SelectTrigger className="w-full bg-white">
-              <SelectValue placeholder="Choose a scheme configuration" />
+              <SelectValue placeholder={disabled ? "Configuration already selected" : "Choose a scheme configuration"} />
             </SelectTrigger>
             <SelectContent>
               {isLoading ? (
@@ -55,6 +57,11 @@ const RevenueBaseSelector: React.FC<RevenueBaseSelectorProps> = ({
               )}
             </SelectContent>
           </Select>
+          {disabled && (
+            <p className="mt-1 text-sm text-amber-600">
+              Configuration can only be selected once. To change, start a new scheme design.
+            </p>
+          )}
         </div>
 
         {/* Current Revenue Base Display */}

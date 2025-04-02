@@ -1,11 +1,12 @@
 
 import React from 'react';
+import { CustomRule } from '@/types/incentiveTypes';
 import { PlusCircle } from 'lucide-react';
 import ActionButton from '../ui-custom/ActionButton';
-import { CustomRule } from '@/types/incentiveTypes';
+import CustomRuleCard from './CustomRuleCard';
+import EmptyRulesState from './EmptyRulesState';
 import { getCurrencySymbol } from '@/utils/incentiveUtils';
 import { useCustomRules } from './useCustomRules';
-import CustomRuleCard from './CustomRuleCard';
 import { SchemeAdminConfig } from '@/types/schemeAdminTypes';
 
 interface CustomRulesProps {
@@ -15,78 +16,53 @@ interface CustomRulesProps {
   selectedScheme?: SchemeAdminConfig | null;
 }
 
-const CustomRules: React.FC<CustomRulesProps> = ({ 
-  customRules, 
+const CustomRules: React.FC<CustomRulesProps> = ({
+  customRules,
   currency,
   updateCustomRules,
   selectedScheme
 }) => {
   const currencySymbol = getCurrencySymbol(currency);
-  const { 
-    rules, 
-    addCustomRule, 
-    removeCustomRule,
-    addCustomRuleCondition,
-    removeCustomRuleCondition,
-    updateCustomRule,
-    updateCustomRuleCondition
-  } = useCustomRules(customRules, updateCustomRules);
+  const { rules, addRule, updateRule, removeRule } = useCustomRules(customRules, updateCustomRules);
 
-  // Get available fields from the selected scheme configuration
-  const getAvailableFields = () => {
-    if (!selectedScheme) return [];
-    
-    // Gather KPIs from all categories
-    const qualificationKpis = selectedScheme.qualificationFields?.map(field => field.kpi) || [];
-    const adjustmentKpis = selectedScheme.adjustmentFields?.map(field => field.kpi) || [];
-    const exclusionKpis = selectedScheme.exclusionFields?.map(field => field.kpi) || [];
-    const customKpis = selectedScheme.customRules?.map(field => field.kpi) || [];
-    
-    // Merge all KPIs and remove duplicates
-    return [...new Set([...qualificationKpis, ...adjustmentKpis, ...exclusionKpis, ...customKpis])];
+  // Get custom fields from the selected scheme if available
+  const getCustomFields = () => {
+    if (!selectedScheme?.customRules?.length) return [];
+    return selectedScheme.customRules.map(rule => rule.kpi);
   };
+
+  const customFields = getCustomFields();
 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h3 className="text-base font-medium text-app-gray-700">Custom Rules</h3>
-        <ActionButton 
+        <h3 className="text-lg font-medium">Custom Rules</h3>
+        <ActionButton
           variant="outline"
           size="sm"
-          onClick={addCustomRule}
+          onClick={addRule}
         >
-          <PlusCircle size={16} className="mr-1" /> Add Rule
+          <PlusCircle size={16} className="mr-1" /> Add Custom Rule
         </ActionButton>
       </div>
-      
+
       {rules.length === 0 ? (
-        <div className="text-center py-8 border border-dashed rounded-lg">
-          <p className="text-app-gray-500">No custom rules defined yet</p>
-          <ActionButton
-            variant="outline"
-            size="sm"
-            onClick={addCustomRule}
-            className="mx-auto mt-4"
-          >
-            <PlusCircle size={16} className="mr-1" /> Add Rule
-          </ActionButton>
-        </div>
+        <EmptyRulesState
+          message="No custom rules defined"
+          description="Add custom rules to handle specific business requirements"
+          buttonText="Add Custom Rule"
+          onAction={addRule}
+        />
       ) : (
-        <div className="space-y-8">
-          {rules.map((rule, ruleIndex) => (
+        <div className="space-y-4">
+          {rules.map((rule, index) => (
             <CustomRuleCard
-              key={ruleIndex}
+              key={index}
               rule={rule}
-              ruleIndex={ruleIndex}
               currencySymbol={currencySymbol}
-              availableFields={getAvailableFields()}
-              onUpdateRule={(field, value) => updateCustomRule(ruleIndex, field, value)}
-              onUpdateCondition={(condIndex, field, value) => 
-                updateCustomRuleCondition(ruleIndex, condIndex, field, value)
-              }
-              onAddCondition={() => addCustomRuleCondition(ruleIndex)}
-              onRemoveCondition={(condIndex) => removeCustomRuleCondition(ruleIndex, condIndex)}
-              onRemoveRule={() => removeCustomRule(ruleIndex)}
+              customFields={customFields}
+              onUpdate={(field, value) => updateRule(index, field, value)}
+              onDelete={() => removeRule(index)}
             />
           ))}
         </div>

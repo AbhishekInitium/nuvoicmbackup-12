@@ -23,6 +23,7 @@ const SchemeStructureSections: React.FC<SchemeStructureSectionsProps> = ({
   const [schemeConfigs, setSchemeConfigs] = useState<SchemeAdminConfig[]>([]);
   const [selectedScheme, setSelectedScheme] = useState<SchemeAdminConfig | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [schemeSelected, setSchemeSelected] = useState(false);
   const { toast } = useToast();
 
   // Fetch available scheme configurations on component mount
@@ -55,6 +56,7 @@ const SchemeStructureSections: React.FC<SchemeStructureSectionsProps> = ({
       
       if (selectedConfig) {
         setSelectedScheme(selectedConfig);
+        setSchemeSelected(true);
         
         // Update the revenue base with the selected scheme's calculation base
         updatePlan('revenueBase', selectedConfig.calculationBase);
@@ -88,6 +90,7 @@ const SchemeStructureSections: React.FC<SchemeStructureSectionsProps> = ({
           schemeConfigs={schemeConfigs}
           onSchemeSelect={handleSchemeSelection}
           isLoading={isLoading}
+          disabled={schemeSelected}
         />
         
         {/* Participants section remains before the main metrics */}

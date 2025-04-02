@@ -45,43 +45,24 @@ const MeasurementRules: React.FC<MeasurementRulesProps> = ({
   const getQualificationFields = () => {
     if (!selectedScheme?.qualificationFields?.length) return getDbFields();
     
-    // Extract KPI names from qualification fields and add them to the list
-    const schemeKpis = selectedScheme.qualificationFields.map(field => field.kpi);
-    return [...new Set([...schemeKpis, ...getDbFields()])];
+    // Extract KPI names from qualification fields
+    return selectedScheme.qualificationFields.map(field => field.kpi);
   };
 
   // Get fields for adjustments
   const getAdjustmentFields = () => {
-    if (!selectedScheme) return getDbFields();
+    if (!selectedScheme?.adjustmentFields?.length) return getDbFields();
     
-    // Use adjustment fields if available, otherwise fall back to all fields
-    const adjustmentKpis = selectedScheme.adjustmentFields?.map(field => field.kpi) || [];
-    
-    // If no specific adjustment fields, use qualification fields too
-    const qualificationKpis = selectedScheme.qualificationFields?.map(field => field.kpi) || [];
-    
-    return [...new Set([
-      ...adjustmentKpis,
-      ...qualificationKpis,
-      ...getDbFields()
-    ])];
+    // Use adjustment fields if available
+    return selectedScheme.adjustmentFields.map(field => field.kpi);
   };
 
   // Get fields for exclusions
   const getExclusionFields = () => {
-    if (!selectedScheme) return getDbFields();
+    if (!selectedScheme?.exclusionFields?.length) return getDbFields();
     
-    // Use exclusion fields if available, otherwise fall back to all fields
-    const exclusionKpis = selectedScheme.exclusionFields?.map(field => field.kpi) || [];
-    
-    // If no specific exclusion fields, use qualification fields too
-    const qualificationKpis = selectedScheme.qualificationFields?.map(field => field.kpi) || [];
-    
-    return [...new Set([
-      ...exclusionKpis,
-      ...qualificationKpis,
-      ...getDbFields()
-    ])];
+    // Use exclusion fields if available
+    return selectedScheme.exclusionFields.map(field => field.kpi);
   };
 
   return (
