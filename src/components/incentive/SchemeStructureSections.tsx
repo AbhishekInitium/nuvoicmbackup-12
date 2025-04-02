@@ -3,9 +3,7 @@ import React, { useState, useEffect } from 'react';
 import SectionPanel from '../ui-custom/SectionPanel';
 import { IncentivePlan } from '@/types/incentiveTypes';
 import RevenueBaseSelector from './RevenueBaseSelector';
-import ParticipantsSection from './ParticipantsSection';
 import MeasurementRules from './MeasurementRules';
-import CreditRules from './CreditRules';
 import CustomRules from './CustomRules';
 import { getSchemeAdminConfigs, getSchemeAdminConfig } from '@/services/database/mongoDBService';
 import { SchemeAdminConfig } from '@/types/schemeAdminTypes';
@@ -88,12 +86,6 @@ const SchemeStructureSections: React.FC<SchemeStructureSectionsProps> = ({
           schemeConfigs={schemeConfigs}
           onSchemeSelect={handleSchemeSelection}
           isLoading={isLoading}
-        />
-        
-        {/* Participants section remains before the main metrics */}
-        <ParticipantsSection 
-          participants={plan.participants} 
-          updatePlan={updatePlan} 
         />
         
         {/* 2. Qualifying Criteria, 3. Adjustments + Exclusions */}
