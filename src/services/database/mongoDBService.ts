@@ -127,11 +127,12 @@ export const getSchemeAdminConfigs = async (): Promise<SchemeAdminConfig[]> => {
 
 /**
  * Save a scheme administrator configuration to MongoDB
+ * For new configs, creates a new document
+ * For existing configs, updates the existing document
  */
 export const saveSchemeAdmin = async (config: SchemeAdminConfig): Promise<string> => {
   try {
     console.log('Saving scheme admin configuration to MongoDB...');
-    console.log('Config data:', JSON.stringify(config, null, 2));
     
     // Ensure updated timestamp is set
     const configToSave = {
@@ -139,14 +140,28 @@ export const saveSchemeAdmin = async (config: SchemeAdminConfig): Promise<string
       updatedAt: new Date().toISOString()
     };
     
-    const response = await axios.post(ADMIN_API_URL, configToSave);
-    
-    if (response.status === 201 && response.data._id) {
-      console.log(`Successfully saved admin config with MongoDB ID: ${response.data._id}`);
-      return response.data._id;
+    // Check if this is an update or a new record
+    if (config._id) {
+      console.log(`Updating existing admin config with ID: ${config._id}`);
+      const response = await axios.put(`${ADMIN_API_URL}/${config._id}`, configToSave);
+      
+      if (response.status === 200) {
+        console.log(`Successfully updated admin config with ID: ${config._id}`);
+        return config._id;
+      } else {
+        throw new Error(`Unexpected response when updating admin config: ${response.status}`);
+      }
     } else {
-      console.error("Unexpected response when saving admin config:", response.status, response.data);
-      throw new Error('Unexpected response from server');
+      // This is a new config
+      console.log('Creating new admin config');
+      const response = await axios.post(ADMIN_API_URL, configToSave);
+      
+      if (response.status === 201 && response.data._id) {
+        console.log(`Successfully created admin config with MongoDB ID: ${response.data._id}`);
+        return response.data._id;
+      } else {
+        throw new Error(`Unexpected response when creating admin config: ${response.status}`);
+      }
     }
   } catch (error) {
     console.error('Error saving scheme admin configuration:', error);

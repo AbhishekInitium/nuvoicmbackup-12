@@ -60,7 +60,9 @@ export const KpiMappingForm: React.FC<KpiMappingFormProps> = ({
     if (initialConfig) {
       console.log("Setting form values from initialConfig:", {
         adminName: initialConfig.adminName,
-        calculationBase: initialConfig.calculationBase
+        calculationBase: initialConfig.calculationBase,
+        _id: initialConfig._id,
+        isEditMode: isEditMode
       });
       
       // Reset the form with the new values
@@ -78,14 +80,14 @@ export const KpiMappingForm: React.FC<KpiMappingFormProps> = ({
         customRules: initialConfig.customRules || []
       });
     }
-  }, [initialConfig, form]);
+  }, [initialConfig, form, isEditMode]);
 
   const updateParentConfig = useCallback(() => {
     if (onConfigUpdate) {
       const formValues = form.getValues();
-      console.log("Updating parent config with form values:", formValues);
       
       const updatedConfig: Partial<SchemeAdminConfig> = {
+        _id: initialConfig._id, // Keep the MongoDB ID for updates
         adminId: formValues.adminId,
         adminName: formValues.adminName,
         calculationBase: formValues.calculationBase,
@@ -93,8 +95,7 @@ export const KpiMappingForm: React.FC<KpiMappingFormProps> = ({
         adjustmentFields: kpiData.adjustmentFields,
         exclusionFields: kpiData.exclusionFields,
         customRules: kpiData.customRules,
-        createdAt: initialConfig.createdAt || new Date().toISOString(),
-        _id: initialConfig._id
+        createdAt: initialConfig.createdAt || new Date().toISOString()
       };
       
       onConfigUpdate(updatedConfig);
@@ -270,11 +271,6 @@ export const KpiMappingForm: React.FC<KpiMappingFormProps> = ({
                       <Input 
                         {...field} 
                         placeholder="e.g., NorthAmerica_Orders_2024" 
-                        onChange={(e) => {
-                          field.onChange(e);
-                          // Log for debugging
-                          console.log("Name input changed:", e.target.value);
-                        }}
                       />
                     </FormControl>
                     <FormDescription>
@@ -294,11 +290,6 @@ export const KpiMappingForm: React.FC<KpiMappingFormProps> = ({
                       <Input 
                         {...field} 
                         placeholder="e.g., Sales Orders" 
-                        onChange={(e) => {
-                          field.onChange(e);
-                          // Log for debugging
-                          console.log("Calculation base changed:", e.target.value);
-                        }}
                       />
                     </FormControl>
                     <FormDescription>

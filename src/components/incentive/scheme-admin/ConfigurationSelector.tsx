@@ -66,7 +66,7 @@ const ConfigurationSelector: React.FC<ConfigurationSelectorProps> = ({
           disabled={loading}
         >
           <SelectTrigger className="w-full bg-white">
-            <SelectValue placeholder={selectedConfigId ? "Select a configuration" : "New Configuration"} />
+            <SelectValue placeholder="Select a configuration" />
           </SelectTrigger>
           <SelectContent className="bg-white">
             {configs.map((config) => (
