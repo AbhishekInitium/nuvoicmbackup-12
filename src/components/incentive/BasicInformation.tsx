@@ -30,6 +30,15 @@ const BasicInformation: React.FC<BasicInformationProps> = ({
     }
   };
 
+  const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = parseFloat(e.target.value);
+    if (!isNaN(value)) {
+      updatePlan('salesQuota', value);
+    } else {
+      updatePlan('salesQuota', 0);
+    }
+  };
+
   const selectedCurrency = CURRENCIES.find(c => c.code === plan.currency) || CURRENCIES[0];
 
   return (
@@ -85,6 +94,31 @@ const BasicInformation: React.FC<BasicInformationProps> = ({
                 Unique identifier for this scheme
               </p>
             </div>
+
+            <div className="mb-4">
+              <Label htmlFor="salesQuota" className="text-sm font-medium text-app-gray-700 mb-2">
+                Sales Quota
+              </Label>
+              <div className="flex items-center space-x-2">
+                <div className="relative flex-1">
+                  <span className="absolute left-3 top-2.5 text-app-gray-500">
+                    {selectedCurrency?.symbol}
+                  </span>
+                  <Input
+                    id="salesQuota"
+                    type="number"
+                    min="0"
+                    value={plan.salesQuota || 0}
+                    onChange={handleNumberChange}
+                    className="w-full pl-7"
+                    placeholder="Enter target sales quota"
+                  />
+                </div>
+              </div>
+              <p className="mt-1 text-xs text-app-gray-500">
+                The target sales quota for this incentive scheme
+              </p>
+            </div>
           </div>
 
           <div>
@@ -123,7 +157,7 @@ const BasicInformation: React.FC<BasicInformationProps> = ({
                 <SelectTrigger id="currency">
                   <SelectValue placeholder="Select currency" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-white">
                   {CURRENCIES.map((currency) => (
                     <SelectItem key={currency.code} value={currency.code}>
                       {currency.label}
@@ -140,4 +174,3 @@ const BasicInformation: React.FC<BasicInformationProps> = ({
 };
 
 export default BasicInformation;
-

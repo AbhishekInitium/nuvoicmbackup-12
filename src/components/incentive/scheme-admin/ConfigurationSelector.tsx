@@ -68,7 +68,7 @@ const ConfigurationSelector: React.FC<ConfigurationSelectorProps> = ({
           <SelectTrigger className="w-full bg-white">
             <SelectValue placeholder="Select a configuration" />
           </SelectTrigger>
-          <SelectContent className="bg-white">
+          <SelectContent className="bg-white z-50">
             {configs.map((config) => (
               <SelectItem key={config._id} value={config._id || ""}>
                 {config.adminName || "Unnamed Configuration"}

@@ -50,9 +50,7 @@ export const validatePlanFields = (plan: IncentivePlan): string[] => {
     });
   }
   
-  if (!plan.participants || plan.participants.length === 0) {
-    errors.push("At least one sales organization must be assigned");
-  }
+  // Removed validation for participants (sales organizations)
   
   if (!plan.creditRules.levels || plan.creditRules.levels.length === 0) {
     errors.push("At least one credit level is required");
