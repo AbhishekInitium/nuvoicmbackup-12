@@ -12,6 +12,7 @@ interface AdjustmentsListProps {
   onUpdateAdjustment: (index: number, field: keyof Adjustment, value: string | number) => void;
   onRemoveAdjustment: (index: number) => void;
   currencySymbol: string;
+  getFieldDataType?: (fieldName: string) => string;
 }
 
 const AdjustmentsList: React.FC<AdjustmentsListProps> = ({
@@ -20,7 +21,8 @@ const AdjustmentsList: React.FC<AdjustmentsListProps> = ({
   onAddAdjustment,
   onUpdateAdjustment,
   onRemoveAdjustment,
-  currencySymbol
+  currencySymbol,
+  getFieldDataType
 }) => {
   return (
     <>
@@ -57,6 +59,7 @@ const AdjustmentsList: React.FC<AdjustmentsListProps> = ({
               dbFields={dbFields}
               onUpdate={onUpdateAdjustment}
               onRemove={onRemoveAdjustment}
+              getFieldDataType={getFieldDataType}
             />
           ))}
         </div>

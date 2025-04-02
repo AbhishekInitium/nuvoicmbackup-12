@@ -91,22 +91,26 @@ const BasicInformation: React.FC<BasicInformationProps> = ({
 
       <div>
         <Label htmlFor="startDate">Start Date</Label>
-        <DatePicker
-          id="startDate"
-          date={startDate}
-          onSelect={(date) => handleDateChange('effectiveStart', date)}
-          className="mt-1"
-        />
+        <div className="mt-1">
+          <DatePicker
+            date={startDate}
+            setDate={(date) => handleDateChange('effectiveStart', date)}
+            placeholder="Select start date"
+            className="w-full"
+          />
+        </div>
       </div>
 
       <div>
         <Label htmlFor="endDate">End Date</Label>
-        <DatePicker
-          id="endDate"
-          date={endDate}
-          onSelect={(date) => handleDateChange('effectiveEnd', date)}
-          className="mt-1"
-        />
+        <div className="mt-1">
+          <DatePicker
+            date={endDate}
+            setDate={(date) => handleDateChange('effectiveEnd', date)}
+            placeholder="Select end date"
+            className="w-full"
+          />
+        </div>
       </div>
 
       <div>
