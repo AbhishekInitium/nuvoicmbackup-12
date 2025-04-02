@@ -33,6 +33,9 @@ export const KpiMappingForm: React.FC<KpiMappingFormProps> = ({
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [isEditMode, setIsEditMode] = useState<boolean>(false);
   const [configId, setConfigId] = useState<string>('');
+  const [adminName, setAdminName] = useState<string>('');
+  const [calculationBase, setCalculationBase] = useState<string>('');
+  const [baseField, setBaseField] = useState<string>('');
 
   useEffect(() => {
     if (initialConfig && Object.keys(initialConfig).length > 0) {
@@ -42,6 +45,9 @@ export const KpiMappingForm: React.FC<KpiMappingFormProps> = ({
       setDescription(initialConfig.description || '');
       setKpis(initialConfig.kpis || []);
       setDataSources(initialConfig.dataSources || []);
+      setAdminName(initialConfig.adminName || '');
+      setCalculationBase(initialConfig.calculationBase || '');
+      setBaseField(initialConfig.baseField || '');
       
       // Set edit mode if we have an ID
       if (initialConfig._id) {
@@ -57,6 +63,9 @@ export const KpiMappingForm: React.FC<KpiMappingFormProps> = ({
       setDescription('');
       setKpis([]);
       setDataSources([]);
+      setAdminName('');
+      setCalculationBase('');
+      setBaseField('');
       setIsEditMode(false);
       setConfigId('');
     }
@@ -67,6 +76,9 @@ export const KpiMappingForm: React.FC<KpiMappingFormProps> = ({
     setDescription('');
     setKpis([]);
     setDataSources([]);
+    setAdminName('');
+    setCalculationBase('');
+    setBaseField('');
   };
 
   const handleSave = async () => {
@@ -88,7 +100,12 @@ export const KpiMappingForm: React.FC<KpiMappingFormProps> = ({
         description,
         kpis,
         dataSources,
-        updatedAt: new Date().toISOString()
+        adminName,
+        calculationBase,
+        baseField,
+        updatedAt: new Date().toISOString(),
+        // Ensure an adminId is set even if it's just a placeholder
+        adminId: initialConfig?.adminId || 'admin-user'
       };
       
       if (isEditMode && configId) {
@@ -127,9 +144,12 @@ export const KpiMappingForm: React.FC<KpiMappingFormProps> = ({
       description,
       kpis,
       dataSources,
+      adminName,
+      calculationBase,
+      baseField,
       _id: configId
     });
-  }, [name, description, kpis, dataSources, configId, onConfigUpdate]);
+  }, [name, description, kpis, dataSources, adminName, calculationBase, baseField, configId, onConfigUpdate]);
 
   if (isLoading) {
     return (
@@ -159,12 +179,42 @@ export const KpiMappingForm: React.FC<KpiMappingFormProps> = ({
             />
           </div>
           <div className="grid gap-2">
+            <Label htmlFor="adminName">Administrator Name</Label>
+            <Input 
+              type="text" 
+              id="adminName" 
+              placeholder="Administrator Name" 
+              value={adminName}
+              onChange={(e) => setAdminName(e.target.value)}
+            />
+          </div>
+          <div className="grid gap-2">
             <Label htmlFor="description">Description</Label>
             <Textarea
               id="description"
               placeholder="Scheme Description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
+            />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="calculationBase">Calculation Base</Label>
+            <Input 
+              type="text" 
+              id="calculationBase" 
+              placeholder="e.g., Revenue, Units, etc." 
+              value={calculationBase}
+              onChange={(e) => setCalculationBase(e.target.value)}
+            />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="baseField">Base Field</Label>
+            <Input 
+              type="text" 
+              id="baseField" 
+              placeholder="Field in source system" 
+              value={baseField}
+              onChange={(e) => setBaseField(e.target.value)}
             />
           </div>
         </CardContent>

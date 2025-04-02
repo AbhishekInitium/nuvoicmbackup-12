@@ -121,7 +121,7 @@ export const getSchemeAdminConfigs = async (): Promise<SchemeAdminConfig[]> => {
     // Ensure all configs have required fields
     const configs = response.data.map((config: any) => ({
       ...config,
-      name: config.name || `Configuration ${config._id.substring(0, 8)}`,
+      name: config.name || config.adminName || `Configuration ${config._id.substring(0, 8)}`,
       description: config.description || '',
       kpis: config.kpis || [],
       dataSources: config.dataSources || []
@@ -142,9 +142,13 @@ export const saveSchemeAdmin = async (config: SchemeAdminConfig): Promise<string
     console.log('Saving scheme admin configuration to MongoDB...');
     console.log('Config data:', JSON.stringify(config, null, 2));
     
-    // Ensure we have a name
+    // Ensure we have a name and adminId
     if (!config.name) {
       throw new Error('Configuration name is required');
+    }
+    
+    if (!config.adminId) {
+      config.adminId = 'admin-user'; // Default value if not provided
     }
     
     // Ensure updated timestamp is set
