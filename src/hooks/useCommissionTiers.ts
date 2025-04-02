@@ -20,11 +20,16 @@ export const useCommissionTiers = (
 
   // Add new tier
   const addTier = () => {
+    const lastTier = tiers.length > 0 ? tiers[tiers.length - 1] : null;
+    const newFrom = lastTier ? lastTier.to : 0;
+    const newTo = newFrom + 100000;
+    const newRate = 0.05;
+
     const newTier: Tier = {
-      from: 0,
-      to: 0,
-      rate: 0.05,
-      description: "New tier"
+      from: newFrom,
+      to: newTo,
+      rate: newRate,
+      description: `${newFrom} - ${newTo}`
     };
 
     const newTiers = [...tiers, newTier];
@@ -33,13 +38,22 @@ export const useCommissionTiers = (
     
     toast({
       title: "Tier Added",
-      description: "Please define the tier range and commission rate",
+      description: `Added tier for ${newFrom} - ${newTo}`,
       variant: "default"
     });
   };
 
   // Remove tier
   const removeTier = (index: number) => {
+    if (tiers.length <= 1) {
+      toast({
+        title: "Cannot Remove Tier",
+        description: "You must have at least one tier in the commission structure.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     const newTiers = [...tiers];
     newTiers.splice(index, 1);
     setTiers(newTiers);
@@ -52,44 +66,37 @@ export const useCommissionTiers = (
     });
   };
 
-  // Check for tier overlaps
-  const checkTierOverlap = (tiers: Tier[]): boolean => {
-    // Sort tiers by the 'from' value
-    const sortedTiers = [...tiers].sort((a, b) => a.from - b.from);
-    
-    for (let i = 0; i < sortedTiers.length - 1; i++) {
-      const currentTier = sortedTiers[i];
-      const nextTier = sortedTiers[i + 1];
-      
-      // Check if the current tier's 'to' overlaps with the next tier's 'from'
-      // Special case: -1 is used to represent "unlimited" or "no upper bound"
-      if (currentTier.to !== -1 && currentTier.to >= nextTier.from) {
-        return true;
-      }
-    }
-    
-    return false;
-  };
-
   // Update tier
   const updateTier = (index: number, field: keyof Tier, value: number) => {
     const newTiers = [...tiers];
     newTiers[index] = { ...newTiers[index], [field]: value };
     
-    // Update description if both from and to are set
-    if (newTiers[index].from !== undefined && newTiers[index].to !== undefined) {
-      const toValue = newTiers[index].to === -1 ? "∞" : newTiers[index].to;
-      newTiers[index].description = `${newTiers[index].from} - ${toValue}`;
+    // Update description
+    newTiers[index].description = `${newTiers[index].from} - ${newTiers[index].to}`;
+    
+    // Validate
+    if (field === 'from' && index > 0) {
+      const prevTier = newTiers[index - 1];
+      if (value < prevTier.to) {
+        toast({
+          title: "Invalid Range",
+          description: "From value must be greater than or equal to previous tier's To value.",
+          variant: "destructive"
+        });
+        return;
+      }
     }
     
-    // Check for tier overlaps
-    if (checkTierOverlap(newTiers)) {
-      toast({
-        title: "Tier Overlap Detected",
-        description: "Tiers cannot overlap. Please adjust the tier ranges.",
-        variant: "destructive"
-      });
-      return;
+    if (field === 'to' && index < newTiers.length - 1) {
+      const nextTier = newTiers[index + 1];
+      if (value > nextTier.from) {
+        toast({
+          title: "Invalid Range",
+          description: "To value must be less than or equal to next tier's From value.",
+          variant: "destructive"
+        });
+        return;
+      }
     }
     
     setTiers(newTiers);

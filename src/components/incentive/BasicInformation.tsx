@@ -1,16 +1,19 @@
 
 import React from 'react';
-import { Input } from '@/components/ui/input';
-import { DatePicker } from '@/components/ui/date-picker';
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import GlassCard from '../ui-custom/GlassCard';
 import { IncentivePlan } from '@/types/incentiveTypes';
-import { Label } from '@/components/ui/label';
+import { Badge } from '../ui/badge';
+import { CURRENCIES } from '@/constants/incentiveConstants';
 
 interface BasicInformationProps {
   plan: IncentivePlan;
-  updatePlan: (section: string, value: any) => void;
+  updatePlan: <K extends keyof IncentivePlan>(field: K, value: IncentivePlan[K]) => void;
   schemeId: string;
-  version: number;
+  version?: number;
   isEditMode?: boolean;
 }
 
@@ -18,135 +21,123 @@ const BasicInformation: React.FC<BasicInformationProps> = ({
   plan,
   updatePlan,
   schemeId,
-  version,
+  version = 1,
   isEditMode = false
 }) => {
-  const handleDateChange = (key: 'effectiveStart' | 'effectiveEnd', date?: Date | null) => {
+  const handleDateChange = (field: 'effectiveStart' | 'effectiveEnd') => (date: Date | undefined) => {
     if (date) {
-      updatePlan(key, date.toISOString().split('T')[0]);
+      updatePlan(field, date.toISOString());
     }
   };
 
-  // Parse dates from ISO strings to Date objects
-  const startDate = plan.effectiveStart ? new Date(plan.effectiveStart) : undefined;
-  const endDate = plan.effectiveEnd ? new Date(plan.effectiveEnd) : undefined;
-
-  // Format sales quota for display
-  const formatSalesQuota = (value: number | string | undefined): string => {
-    if (value === undefined) return '';
-    return typeof value === 'string' ? value : value.toString();
-  };
+  const selectedCurrency = CURRENCIES.find(c => c.code === plan.currency) || CURRENCIES[0];
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
-      <div>
-        <Label htmlFor="name">Plan Name</Label>
-        <Input
-          id="name"
-          placeholder="Enter plan name"
-          value={plan.name || ''}
-          onChange={(e) => updatePlan('name', e.target.value)}
-          className="mt-1"
-        />
-      </div>
+    <div className="space-y-6">
+      <GlassCard variant="default" className="p-5">
+        <div className="grid md:grid-cols-2 gap-6">
+          <div>
+            <div className="mb-4">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="name" className="text-sm font-medium text-app-gray-700 mb-2">
+                  Scheme Name
+                </Label>
+                {isEditMode && (
+                  <Badge variant="outline" className="ml-2">
+                    Version {version}
+                  </Badge>
+                )}
+              </div>
+              <Input
+                id="name"
+                value={plan.name}
+                onChange={(e) => updatePlan('name', e.target.value)}
+                placeholder="Enter scheme name"
+                className="w-full"
+              />
+            </div>
 
-      <div>
-        <Label htmlFor="schemeId">Scheme ID</Label>
-        <Input
-          id="schemeId"
-          value={schemeId}
-          disabled
-          className="mt-1 bg-app-gray-50"
-        />
-      </div>
+            <div className="mb-4">
+              <Label htmlFor="description" className="text-sm font-medium text-app-gray-700 mb-2">
+                Description
+              </Label>
+              <Input
+                id="description"
+                value={plan.description}
+                onChange={(e) => updatePlan('description', e.target.value)}
+                placeholder="Brief description of this incentive scheme"
+                className="w-full"
+              />
+            </div>
 
-      <div>
-        <Label htmlFor="version">Version</Label>
-        <Input
-          id="version"
-          value={version}
-          disabled
-          className="mt-1 bg-app-gray-50"
-        />
-      </div>
-
-      <div>
-        <Label htmlFor="currency">Currency</Label>
-        <Select
-          value={plan.currency || 'USD'}
-          onValueChange={(value) => updatePlan('currency', value)}
-        >
-          <SelectTrigger id="currency" className="mt-1">
-            <SelectValue placeholder="Select currency" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="USD">USD - US Dollar</SelectItem>
-            <SelectItem value="EUR">EUR - Euro</SelectItem>
-            <SelectItem value="GBP">GBP - British Pound</SelectItem>
-            <SelectItem value="JPY">JPY - Japanese Yen</SelectItem>
-            <SelectItem value="CAD">CAD - Canadian Dollar</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
-      <div>
-        <Label htmlFor="startDate">Start Date</Label>
-        <div className="mt-1">
-          <DatePicker
-            date={startDate}
-            setDate={(date) => handleDateChange('effectiveStart', date)}
-            placeholder="Select start date"
-            className="w-full"
-          />
-        </div>
-      </div>
-
-      <div>
-        <Label htmlFor="endDate">End Date</Label>
-        <div className="mt-1">
-          <DatePicker
-            date={endDate}
-            setDate={(date) => handleDateChange('effectiveEnd', date)}
-            placeholder="Select end date"
-            className="w-full"
-          />
-        </div>
-      </div>
-
-      <div>
-        <Label htmlFor="salesQuota">Sales Quota</Label>
-        <div className="relative mt-1">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <span className="text-app-gray-500">
-              {plan.currency === 'USD' ? '$' : plan.currency === 'EUR' ? '€' : plan.currency === 'GBP' ? '£' : ''}
-            </span>
+            <div className="mb-4">
+              <Label className="text-sm font-medium text-app-gray-700 mb-2">
+                Scheme ID
+              </Label>
+              <div className="flex items-center space-x-2">
+                <Input
+                  value={schemeId}
+                  readOnly
+                  className="w-full bg-app-gray-100"
+                />
+              </div>
+              <p className="mt-1 text-xs text-app-gray-500">
+                Unique identifier for this scheme
+              </p>
+            </div>
           </div>
-          <Input
-            id="salesQuota"
-            type="text"
-            placeholder="100,000"
-            value={formatSalesQuota(plan.salesQuota)}
-            onChange={(e) => {
-              const value = e.target.value.replace(/[^0-9]/g, '');
-              updatePlan('salesQuota', value ? parseInt(value) : 0);
-            }}
-            className="pl-8"
-          />
-        </div>
-      </div>
 
-      <div className="md:col-span-2">
-        <Label htmlFor="description">Description</Label>
-        <Input
-          id="description"
-          placeholder="Enter plan description"
-          value={plan.description || ''}
-          onChange={(e) => updatePlan('description', e.target.value)}
-          className="mt-1"
-        />
-      </div>
+          <div>
+            <div className="flex flex-col mb-4">
+              <Label htmlFor="effectiveStart" className="text-sm font-medium text-app-gray-700 mb-2">
+                Effective Period
+              </Label>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="effectiveStart" className="text-xs text-app-gray-600 mb-1">Start Date</Label>
+                  <DatePicker
+                    date={plan.effectiveStart ? new Date(plan.effectiveStart) : undefined}
+                    setDate={handleDateChange('effectiveStart')}
+                    placeholder="Select start date"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="effectiveEnd" className="text-xs text-app-gray-600 mb-1">End Date</Label>
+                  <DatePicker
+                    date={plan.effectiveEnd ? new Date(plan.effectiveEnd) : undefined}
+                    setDate={handleDateChange('effectiveEnd')}
+                    placeholder="Select end date"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="mb-4">
+              <Label htmlFor="currency" className="text-sm font-medium text-app-gray-700 mb-2">
+                Currency
+              </Label>
+              <Select
+                value={plan.currency}
+                onValueChange={(value) => updatePlan('currency', value)}
+              >
+                <SelectTrigger id="currency">
+                  <SelectValue placeholder="Select currency" />
+                </SelectTrigger>
+                <SelectContent>
+                  {CURRENCIES.map((currency) => (
+                    <SelectItem key={currency.code} value={currency.code}>
+                      {currency.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </div>
+      </GlassCard>
     </div>
   );
 };
 
 export default BasicInformation;
+

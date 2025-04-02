@@ -11,7 +11,6 @@ interface ExclusionsListProps {
   onAddExclusion: () => void;
   onUpdateExclusion: (index: number, field: keyof Exclusion, value: string | number) => void;
   onRemoveExclusion: (index: number) => void;
-  getFieldDataType?: (fieldName: string) => string;
 }
 
 const ExclusionsList: React.FC<ExclusionsListProps> = ({
@@ -19,8 +18,7 @@ const ExclusionsList: React.FC<ExclusionsListProps> = ({
   dbFields,
   onAddExclusion,
   onUpdateExclusion,
-  onRemoveExclusion,
-  getFieldDataType
+  onRemoveExclusion
 }) => {
   return (
     <>
@@ -57,7 +55,6 @@ const ExclusionsList: React.FC<ExclusionsListProps> = ({
               dbFields={dbFields}
               onUpdate={onUpdateExclusion}
               onRemove={onRemoveExclusion}
-              getFieldDataType={getFieldDataType}
             />
           ))}
         </div>

@@ -2,17 +2,19 @@
 import React, { useState } from 'react';
 import NavBar from '@/components/layout/NavBar';
 import Container from '@/components/layout/Container';
+import IncentivePlanDesigner from '@/components/IncentivePlanDesigner';
 import { useToast } from "@/hooks/use-toast";
-import { IncentivePlan } from '@/types/incentiveTypes';
 import { IncentivePlanWithStatus } from '@/services/incentive/types/incentiveServiceTypes';
+import { DEFAULT_PLAN } from '@/constants/incentiveConstants';
+import { IncentivePlan } from '@/types/incentiveTypes';
 
+import SchemeOptionsScreen from '@/components/incentive/SchemeOptionsScreen';
+import SchemeAdministratorScreen from '@/components/incentive/scheme-admin/SchemeAdministratorScreen';
 import DesignerNavigation from '@/components/incentive/DesignerNavigation';
-import SchemeDialogs from '@/components/incentive/designer/SchemeDialogs';
-import DesignerContent from '@/components/incentive/designer/DesignerContent';
-import { useSchemeCreationOptions } from '@/components/incentive/designer/SchemeCreationOptions';
-import { useDesignerNavigationOptions } from '@/components/incentive/designer/DesignerNavigationOptions';
+import SchemeSelectionDialog from '@/components/incentive/SchemeSelectionDialog';
 
 const IncentiveDesigner = () => {
+  const { toast } = useToast();
   const [showInitialOptions, setShowInitialOptions] = useState(true);
   const [showAdministratorScreen, setShowAdministratorScreen] = useState(false);
   const [showExistingSchemes, setShowExistingSchemes] = useState(false);
@@ -20,22 +22,132 @@ const IncentiveDesigner = () => {
   const [planTemplate, setPlanTemplate] = useState<IncentivePlan | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
 
-  // Initialize the scheme creation options
-  const schemeOptions = useSchemeCreationOptions({
-    setPlanTemplate,
-    setShowExistingSchemes,
-    setShowEditSchemes,
-    setIsEditMode,
-    setShowInitialOptions
-  });
+  const generateTimestampId = () => {
+    const now = new Date();
+    
+    const day = String(now.getDate()).padStart(2, '0');
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const year = String(now.getFullYear()).substring(2);
+    
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const seconds = String(now.getSeconds()).padStart(2, '0');
+    
+    return `ICM_${day}${month}${year}_${hours}${minutes}${seconds}`;
+  };
 
-  // Initialize the navigation options
-  const navigationOptions = useDesignerNavigationOptions({
-    setShowInitialOptions,
-    setShowAdministratorScreen
-  });
+  const handleCreateNewScheme = () => {
+    // Initialize with empty data - no prefilled fields
+    setPlanTemplate({
+      ...DEFAULT_PLAN,
+      participants: [],
+      salesQuota: 0,
+      name: '', // Empty name for user to fill in
+      schemeId: generateTimestampId(), // Generate a new scheme ID
+      description: '',
+      commissionStructure: {
+        tiers: []
+      },
+      measurementRules: {
+        primaryMetrics: [], // No prefilled metrics
+        minQualification: 0,
+        adjustments: [],
+        exclusions: []
+      },
+      creditRules: {
+        levels: []
+      },
+      customRules: []
+    });
+    setIsEditMode(false);
+    setShowInitialOptions(false);
+  };
 
-  const handleBackToOptions = () => setShowInitialOptions(true);
+  const handleCopyExistingScheme = (scheme: IncentivePlanWithStatus) => {
+    // Keep the _id field from MongoDB for reference
+    const planData: IncentivePlan = {
+      _id: scheme._id, // MongoDB document ID
+      name: `Copy of ${scheme.name}`, // Suggest a name, but user can change it
+      schemeId: generateTimestampId(), // Generate a new scheme ID for the copy
+      description: `Copy of ${scheme.name}`,
+      effectiveStart: scheme.effectiveStart,
+      effectiveEnd: scheme.effectiveEnd,
+      currency: scheme.currency,
+      revenueBase: scheme.revenueBase,
+      participants: Array.isArray(scheme.participants) ? [...scheme.participants] : [],
+      commissionStructure: {
+        tiers: Array.isArray(scheme.commissionStructure?.tiers) ? [...scheme.commissionStructure.tiers] : []
+      },
+      measurementRules: {
+        primaryMetrics: Array.isArray(scheme.measurementRules?.primaryMetrics) 
+          ? [...scheme.measurementRules.primaryMetrics] 
+          : [],
+        minQualification: scheme.measurementRules?.minQualification || 0,
+        adjustments: Array.isArray(scheme.measurementRules?.adjustments) 
+          ? [...scheme.measurementRules.adjustments] 
+          : [],
+        exclusions: Array.isArray(scheme.measurementRules?.exclusions) 
+          ? [...scheme.measurementRules.exclusions] 
+          : []
+      },
+      creditRules: {
+        levels: Array.isArray(scheme.creditRules?.levels) ? [...scheme.creditRules.levels] : []
+      },
+      customRules: Array.isArray(scheme.customRules) ? [...scheme.customRules] : [],
+      salesQuota: typeof scheme.salesQuota === 'string' ? parseInt(scheme.salesQuota) || 0 : scheme.salesQuota
+    };
+    
+    setPlanTemplate(planData);
+    setShowExistingSchemes(false);
+    setIsEditMode(false);
+    setShowInitialOptions(false);
+    
+    toast({
+      title: "Plan Loaded",
+      description: `Loaded plan: ${scheme.name}`,
+      variant: "default"
+    });
+  };
+
+  const handleEditExistingScheme = (scheme: IncentivePlanWithStatus) => {
+    // Include all fields from MongoDB including _id
+    const planData: IncentivePlan = {
+      _id: scheme._id, // MongoDB document ID 
+      ...scheme,
+      // Don't modify version here, IncentivePlanDesigner will handle it
+      metadata: {
+        ...scheme.metadata,
+        updatedAt: new Date().toISOString()
+      }
+    };
+    
+    setPlanTemplate(planData);
+    setShowEditSchemes(false);
+    setIsEditMode(true);
+    setShowInitialOptions(false);
+    
+    toast({
+      title: "Plan Loaded for Editing",
+      description: `Editing plan: ${scheme.name} (Version ${scheme.metadata?.version || 1})`,
+      variant: "default"
+    });
+  };
+
+  const handleAdminOption = () => {
+    setShowInitialOptions(false);
+    setShowAdministratorScreen(true);
+  };
+
+  const handleDesignerOption = () => {
+    // Show designer options instead of staying on the main options screen
+    setShowAdministratorScreen(false);
+    setShowInitialOptions(false);
+  };
+
+  const handleBackFromAdminScreen = () => {
+    setShowAdministratorScreen(false);
+    setShowInitialOptions(true);
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-app-gray-50 to-white">
@@ -44,35 +156,48 @@ const IncentiveDesigner = () => {
         <DesignerNavigation 
           onBack={
             showAdministratorScreen 
-              ? navigationOptions.handleBackFromAdminScreen
+              ? handleBackFromAdminScreen
               : !showInitialOptions 
-                ? handleBackToOptions 
+                ? () => setShowInitialOptions(true) 
                 : undefined
           }
           showBackToDashboard={showInitialOptions && !showAdministratorScreen}
         />
         
-        <DesignerContent 
-          showInitialOptions={showInitialOptions}
-          showAdministratorScreen={showAdministratorScreen}
-          onCreateNewScheme={schemeOptions.handleCreateNewScheme}
-          onOpenExistingSchemes={() => setShowExistingSchemes(true)}
-          onEditExistingScheme={() => setShowEditSchemes(true)}
-          onAdminOption={navigationOptions.handleAdminOption}
-          onDesignerOption={navigationOptions.handleDesignerOption}
-          onBackFromAdminScreen={navigationOptions.handleBackFromAdminScreen}
-          planTemplate={planTemplate}
-          isEditMode={isEditMode}
-          handleBackToOptions={handleBackToOptions}
-        />
+        {showInitialOptions ? (
+          <SchemeOptionsScreen 
+            onCreateNewScheme={handleCreateNewScheme}
+            onOpenExistingSchemes={() => setShowExistingSchemes(true)}
+            onEditExistingScheme={() => setShowEditSchemes(true)}
+            onAdminOption={handleAdminOption}
+            onDesignerOption={handleDesignerOption}
+            showMainOptions={true}
+          />
+        ) : showAdministratorScreen ? (
+          <SchemeAdministratorScreen onBack={handleBackFromAdminScreen} />
+        ) : (
+          <IncentivePlanDesigner 
+            initialPlan={planTemplate} 
+            isEditMode={isEditMode}
+            onBack={() => setShowInitialOptions(true)}
+          />
+        )}
         
-        <SchemeDialogs 
-          showExistingSchemes={showExistingSchemes}
-          setShowExistingSchemes={setShowExistingSchemes}
-          showEditSchemes={showEditSchemes}
-          setShowEditSchemes={setShowEditSchemes}
-          onCopyScheme={schemeOptions.handleCopyExistingScheme}
-          onEditScheme={schemeOptions.handleEditExistingScheme}
+        <SchemeSelectionDialog 
+          open={showExistingSchemes}
+          setOpen={setShowExistingSchemes}
+          onSchemeCopy={handleCopyExistingScheme}
+          title="Copy Existing Scheme"
+          description="Select a scheme to use as a template for a new scheme"
+        />
+
+        <SchemeSelectionDialog 
+          open={showEditSchemes}
+          setOpen={setShowEditSchemes}
+          onSchemeCopy={handleEditExistingScheme}
+          title="Edit Existing Scheme"
+          description="Select a scheme to edit. A new version will be created."
+          editMode={true}
         />
       </Container>
     </div>

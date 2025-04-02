@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Trash2 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
@@ -13,7 +13,6 @@ interface AdjustmentFormProps {
   dbFields: string[];
   onUpdate: (index: number, field: keyof Adjustment, value: string | number) => void;
   onRemove: (index: number) => void;
-  getFieldDataType?: (fieldName: string) => string;
 }
 
 const AdjustmentForm: React.FC<AdjustmentFormProps> = ({
@@ -21,37 +20,8 @@ const AdjustmentForm: React.FC<AdjustmentFormProps> = ({
   index,
   dbFields,
   onUpdate,
-  onRemove,
-  getFieldDataType
+  onRemove
 }) => {
-  const [dataType, setDataType] = useState<string>('Decimal');
-  
-  // Update data type when field changes
-  useEffect(() => {
-    if (getFieldDataType && adjustment.field) {
-      setDataType(getFieldDataType(adjustment.field));
-    }
-  }, [adjustment.field, getFieldDataType]);
-
-  // Format value based on data type
-  const formatValue = (value: any): string | number => {
-    if (value === undefined || value === null) return '';
-    return String(value);
-  };
-
-  const handleValueChange = (value: string) => {
-    let processedValue: string | number = value;
-
-    if (dataType === 'Int8' || dataType === 'Decimal') {
-      const numValue = value === '' ? 0 : parseFloat(value);
-      if (!isNaN(numValue)) {
-        processedValue = numValue;
-      }
-    }
-
-    onUpdate(index, 'value', processedValue);
-  };
-
   return (
     <GlassCard key={index} variant="outlined" className="p-4">
       <div className="flex justify-between items-start">
@@ -91,15 +61,12 @@ const AdjustmentForm: React.FC<AdjustmentFormProps> = ({
           </div>
           
           <div className="sm:col-span-2">
-            <label className="block text-sm font-medium text-app-gray-700 mb-2">
-              Value 
-              {dataType && <span className="ml-1 text-xs text-app-gray-400">({dataType})</span>}
-            </label>
+            <label className="block text-sm font-medium text-app-gray-700 mb-2">Value</label>
             <Input 
-              type={dataType === 'Decimal' || dataType === 'Int8' ? "number" : "text"}
-              value={formatValue(adjustment.value)}
-              onChange={(e) => handleValueChange(e.target.value)}
-              step={dataType === 'Decimal' ? "0.01" : "1"}
+              type="number" 
+              value={adjustment.value || 0}
+              onChange={(e) => onUpdate(index, 'value', parseFloat(e.target.value))}
+              step="0.01"
             />
           </div>
           

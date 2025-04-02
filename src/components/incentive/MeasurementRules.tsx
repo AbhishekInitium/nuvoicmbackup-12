@@ -9,7 +9,7 @@ import AdjustmentsList from './AdjustmentsList';
 import ExclusionsList from './ExclusionsList';
 import EmptyRulesState from './EmptyRulesState';
 import { getCurrencySymbol } from '@/utils/incentiveUtils';
-import { SchemeAdminConfig, KpiField } from '@/types/schemeAdminTypes';
+import { SchemeAdminConfig } from '@/types/schemeAdminTypes';
 
 interface MeasurementRulesProps {
   measurementRules: MeasurementRulesType;
@@ -44,42 +44,24 @@ const MeasurementRules: React.FC<MeasurementRulesProps> = ({
   // Get fields from the selected scheme configuration if available
   const getQualificationFields = () => {
     if (!selectedScheme?.qualificationFields?.length) return getDbFields();
+    
+    // Extract KPI names from qualification fields
     return selectedScheme.qualificationFields.map(field => field.kpi);
-  };
-
-  // Get data type for a specific field from the scheme configuration
-  const getFieldDataType = (fieldName: string, category: 'qualification' | 'adjustment' | 'exclusion' | 'custom'): string => {
-    if (!selectedScheme) return 'Decimal'; // Default data type
-    
-    let fields: KpiField[] = [];
-    switch(category) {
-      case 'qualification':
-        fields = selectedScheme.qualificationFields || [];
-        break;
-      case 'adjustment':
-        fields = selectedScheme.adjustmentFields || [];
-        break;
-      case 'exclusion':
-        fields = selectedScheme.exclusionFields || [];
-        break;
-      case 'custom':
-        fields = selectedScheme.customRules || [];
-        break;
-    }
-    
-    const matchingField = fields.find(f => f.kpi === fieldName);
-    return matchingField?.dataType || 'Decimal';
   };
 
   // Get fields for adjustments
   const getAdjustmentFields = () => {
     if (!selectedScheme?.adjustmentFields?.length) return getDbFields();
+    
+    // Use adjustment fields if available
     return selectedScheme.adjustmentFields.map(field => field.kpi);
   };
 
   // Get fields for exclusions
   const getExclusionFields = () => {
     if (!selectedScheme?.exclusionFields?.length) return getDbFields();
+    
+    // Use exclusion fields if available
     return selectedScheme.exclusionFields.map(field => field.kpi);
   };
 
@@ -118,7 +100,6 @@ const MeasurementRules: React.FC<MeasurementRulesProps> = ({
                 onAddMetric={() => {}}
                 onUpdateMetric={(field, value) => updatePrimaryMetric(index, field, value)}
                 onRemoveMetric={() => removePrimaryMetric(index)}
-                getFieldDataType={(fieldName) => getFieldDataType(fieldName, 'qualification')}
               />
             ))}
           </div>
@@ -133,7 +114,6 @@ const MeasurementRules: React.FC<MeasurementRulesProps> = ({
         onRemoveAdjustment={removeAdjustment}
         onAddAdjustment={addAdjustment}
         currencySymbol={currencySymbol}
-        getFieldDataType={(fieldName) => getFieldDataType(fieldName, 'adjustment')}
       />
 
       {/* Exclusions */}
@@ -143,7 +123,6 @@ const MeasurementRules: React.FC<MeasurementRulesProps> = ({
         onUpdateExclusion={updateExclusion}
         onRemoveExclusion={removeExclusion}
         onAddExclusion={addExclusion}
-        getFieldDataType={(fieldName) => getFieldDataType(fieldName, 'exclusion')}
       />
     </div>
   );

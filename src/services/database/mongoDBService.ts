@@ -1,3 +1,4 @@
+
 import { IncentivePlan } from '@/types/incentiveTypes';
 import { IncentivePlanWithStatus } from '@/services/incentive/types/incentiveServiceTypes';
 import { SchemeAdminConfig } from '@/types/schemeAdminTypes';
@@ -117,17 +118,7 @@ export const getSchemeAdminConfigs = async (): Promise<SchemeAdminConfig[]> => {
     console.log('Fetching scheme admin configurations from MongoDB...');
     const response = await axios.get(ADMIN_API_URL);
     console.log(`Fetched ${response.data.length} admin configurations from MongoDB`);
-    
-    // Ensure all configs have required fields
-    const configs = response.data.map((config: any) => ({
-      ...config,
-      name: config.name || config.adminName || `Configuration ${config._id.substring(0, 8)}`,
-      description: config.description || '',
-      kpis: config.kpis || [],
-      dataSources: config.dataSources || []
-    }));
-    
-    return configs;
+    return response.data;
   } catch (error) {
     console.error('Error fetching scheme admin configurations:', error);
     throw new Error(`Failed to fetch admin configurations: ${error instanceof Error ? error.message : String(error)}`);
@@ -142,20 +133,10 @@ export const saveSchemeAdmin = async (config: SchemeAdminConfig): Promise<string
     console.log('Saving scheme admin configuration to MongoDB...');
     console.log('Config data:', JSON.stringify(config, null, 2));
     
-    // Ensure we have a name and adminId
-    if (!config.name) {
-      throw new Error('Configuration name is required');
-    }
-    
-    if (!config.adminId) {
-      config.adminId = 'admin-user'; // Default value if not provided
-    }
-    
     // Ensure updated timestamp is set
     const configToSave = {
       ...config,
-      updatedAt: new Date().toISOString(),
-      createdAt: config.createdAt || new Date().toISOString()
+      updatedAt: new Date().toISOString()
     };
     
     const response = await axios.post(ADMIN_API_URL, configToSave);
@@ -180,23 +161,7 @@ export const getSchemeAdminConfig = async (configId: string): Promise<SchemeAdmi
   try {
     console.log(`Fetching scheme admin configuration with ID: ${configId}`);
     const response = await axios.get(`${ADMIN_API_URL}/${configId}`);
-    
-    if (!response.data) {
-      throw new Error(`No configuration found with ID: ${configId}`);
-    }
-    
-    console.log(`Successfully fetched admin config with ID: ${configId}`, response.data);
-    
-    // Ensure the config has required fields
-    const config = {
-      ...response.data,
-      name: response.data.name || response.data.adminName || `Configuration ${response.data._id?.substring(0, 8)}`,
-      description: response.data.description || '',
-      kpis: response.data.kpis || [],
-      dataSources: response.data.dataSources || []
-    };
-    
-    return config;
+    return response.data;
   } catch (error) {
     console.error(`Error fetching admin configuration ${configId}:`, error);
     throw new Error(`Failed to fetch admin configuration: ${error instanceof Error ? error.message : String(error)}`);
