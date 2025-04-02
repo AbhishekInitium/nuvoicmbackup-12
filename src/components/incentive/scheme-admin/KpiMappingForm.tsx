@@ -10,17 +10,20 @@ import { useToast } from '@/hooks/use-toast';
 import { saveSchemeAdmin } from '@/services/database/mongoDBService';
 import KpiList from './KpiList';
 import DataSourceList from './DataSourceList';
+import { Loader2 } from 'lucide-react';
 
 interface KpiMappingFormProps {
   onSaveSuccess: (id: string) => void;
   initialConfig?: Partial<SchemeAdminConfig>;
   onConfigUpdate: (config: Partial<SchemeAdminConfig>) => void;
+  isLoading?: boolean;
 }
 
 export const KpiMappingForm: React.FC<KpiMappingFormProps> = ({ 
   onSaveSuccess, 
   initialConfig, 
-  onConfigUpdate 
+  onConfigUpdate,
+  isLoading = false 
 }) => {
   const { toast } = useToast();
   const [name, setName] = useState<string>('');
@@ -127,6 +130,15 @@ export const KpiMappingForm: React.FC<KpiMappingFormProps> = ({
       _id: configId
     });
   }, [name, description, kpis, dataSources, configId, onConfigUpdate]);
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center py-12">
+        <Loader2 className="h-8 w-8 text-primary animate-spin" />
+        <span className="ml-2">Loading configuration details...</span>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">

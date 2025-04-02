@@ -12,7 +12,7 @@ import {
   SelectTrigger,
   SelectValue 
 } from "@/components/ui/select";
-import { getSchemeAdminConfigs } from '@/services/database/mongoDBService';
+import { getSchemeAdminConfigs, getSchemeAdminConfig } from '@/services/database/mongoDBService';
 import { PlusCircle } from 'lucide-react';
 import ActionButton from '../../ui-custom/ActionButton';
 
@@ -35,6 +35,7 @@ const SchemeAdministratorScreen: React.FC<SchemeAdministratorScreenProps> = ({ o
     try {
       setLoading(true);
       const configs = await getSchemeAdminConfigs();
+      console.log("Loaded configs:", configs);
       setSchemeConfigs(configs);
       setLoading(false);
     } catch (error) {
@@ -62,14 +63,34 @@ const SchemeAdministratorScreen: React.FC<SchemeAdministratorScreenProps> = ({ o
     setAdminConfig({});
   };
   
-  const handleSchemeChange = (configId: string) => {
+  const handleSchemeChange = async (configId: string) => {
     setSelectedSchemeId(configId);
     
     if (configId) {
-      const selectedConfig = schemeConfigs.find(config => config._id === configId);
-      if (selectedConfig) {
-        console.log("Selected config:", selectedConfig);
-        setAdminConfig(selectedConfig);
+      setLoading(true);
+      try {
+        // Fetch the detailed configuration by ID
+        const selectedConfig = await getSchemeAdminConfig(configId);
+        console.log("Selected config details:", selectedConfig);
+        
+        if (selectedConfig) {
+          setAdminConfig(selectedConfig);
+        } else {
+          toast({
+            title: "Error",
+            description: "Could not find the selected configuration details.",
+            variant: "destructive"
+          });
+        }
+      } catch (error) {
+        console.error("Error fetching config details:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load configuration details.",
+          variant: "destructive"
+        });
+      } finally {
+        setLoading(false);
       }
     } else {
       // New scheme
@@ -130,6 +151,7 @@ const SchemeAdministratorScreen: React.FC<SchemeAdministratorScreenProps> = ({ o
           onSaveSuccess={handleSaveSuccess} 
           initialConfig={adminConfig} 
           onConfigUpdate={setAdminConfig}
+          isLoading={loading}
         />
       </div>
     </div>

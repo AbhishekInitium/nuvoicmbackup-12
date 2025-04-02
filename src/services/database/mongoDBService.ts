@@ -118,7 +118,17 @@ export const getSchemeAdminConfigs = async (): Promise<SchemeAdminConfig[]> => {
     console.log('Fetching scheme admin configurations from MongoDB...');
     const response = await axios.get(ADMIN_API_URL);
     console.log(`Fetched ${response.data.length} admin configurations from MongoDB`);
-    return response.data;
+    
+    // Ensure all configs have required fields
+    const configs = response.data.map((config: any) => ({
+      ...config,
+      name: config.name || `Configuration ${config._id.substring(0, 8)}`,
+      description: config.description || '',
+      kpis: config.kpis || [],
+      dataSources: config.dataSources || []
+    }));
+    
+    return configs;
   } catch (error) {
     console.error('Error fetching scheme admin configurations:', error);
     throw new Error(`Failed to fetch admin configurations: ${error instanceof Error ? error.message : String(error)}`);
@@ -167,7 +177,17 @@ export const getSchemeAdminConfig = async (configId: string): Promise<SchemeAdmi
   try {
     console.log(`Fetching scheme admin configuration with ID: ${configId}`);
     const response = await axios.get(`${ADMIN_API_URL}/${configId}`);
-    return response.data;
+    
+    // Ensure the config has required fields
+    const config = {
+      ...response.data,
+      name: response.data.name || `Configuration ${response.data._id.substring(0, 8)}`,
+      description: response.data.description || '',
+      kpis: response.data.kpis || [],
+      dataSources: response.data.dataSources || []
+    };
+    
+    return config;
   } catch (error) {
     console.error(`Error fetching admin configuration ${configId}:`, error);
     throw new Error(`Failed to fetch admin configuration: ${error instanceof Error ? error.message : String(error)}`);
