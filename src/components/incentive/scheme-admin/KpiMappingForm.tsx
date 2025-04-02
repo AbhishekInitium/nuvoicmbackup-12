@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Trash2, PlusCircle } from 'lucide-react';
 import { useForm, Controller, useFieldArray } from 'react-hook-form';
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -64,6 +64,7 @@ export const KpiMappingForm: React.FC<KpiMappingFormProps> = ({ onSaveSuccess, i
 
   useEffect(() => {
     if (initialConfig && Object.keys(initialConfig).length > 0) {
+      console.log("Loading initial config:", initialConfig);
       // Initialize form state from initialConfig
       setName(initialConfig.name || '');
       setDescription(initialConfig.description || '');
@@ -98,6 +99,16 @@ export const KpiMappingForm: React.FC<KpiMappingFormProps> = ({ onSaveSuccess, i
 
   const handleSave = async () => {
     try {
+      // Validate form - at minimum, name is required
+      if (!name.trim()) {
+        toast({
+          title: "Validation Error",
+          description: "Scheme name is required",
+          variant: "destructive"
+        });
+        return;
+      }
+      
       setIsSaving(true);
       
       const configToSave: Partial<SchemeAdminConfig> = {
@@ -112,6 +123,8 @@ export const KpiMappingForm: React.FC<KpiMappingFormProps> = ({ onSaveSuccess, i
         // Update existing config
         configToSave._id = configId;
       }
+      
+      console.log("Saving config:", configToSave);
       
       const savedConfigId = await saveSchemeAdmin(configToSave as SchemeAdminConfig);
       
@@ -134,6 +147,17 @@ export const KpiMappingForm: React.FC<KpiMappingFormProps> = ({ onSaveSuccess, i
       });
     }
   };
+
+  // Update parent component with form data changes
+  useEffect(() => {
+    onConfigUpdate({
+      name,
+      description,
+      kpis,
+      dataSources,
+      _id: configId
+    });
+  }, [name, description, kpis, dataSources, configId, onConfigUpdate]);
 
   return (
     <div className="space-y-4">
@@ -187,7 +211,7 @@ export const KpiMappingForm: React.FC<KpiMappingFormProps> = ({ onSaveSuccess, i
 
       <div className="flex justify-end">
         <Button onClick={handleSave} disabled={isSaving}>
-          {isSaving ? "Saving..." : "Save Configuration"}
+          {isSaving ? "Saving..." : isEditMode ? "Update Configuration" : "Save Configuration"}
         </Button>
       </div>
     </div>

@@ -56,6 +56,10 @@ const SchemeAdministratorScreen: React.FC<SchemeAdministratorScreenProps> = ({ o
     
     // Reload the configs after saving
     loadSchemeConfigs();
+    
+    // Clear the selected scheme to show the changes are applied
+    setSelectedSchemeId('');
+    setAdminConfig({});
   };
   
   const handleSchemeChange = (configId: string) => {
@@ -64,6 +68,7 @@ const SchemeAdministratorScreen: React.FC<SchemeAdministratorScreenProps> = ({ o
     if (configId) {
       const selectedConfig = schemeConfigs.find(config => config._id === configId);
       if (selectedConfig) {
+        console.log("Selected config:", selectedConfig);
         setAdminConfig(selectedConfig);
       }
     } else {

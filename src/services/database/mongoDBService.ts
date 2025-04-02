@@ -133,10 +133,16 @@ export const saveSchemeAdmin = async (config: SchemeAdminConfig): Promise<string
     console.log('Saving scheme admin configuration to MongoDB...');
     console.log('Config data:', JSON.stringify(config, null, 2));
     
+    // Ensure we have a name
+    if (!config.name) {
+      throw new Error('Configuration name is required');
+    }
+    
     // Ensure updated timestamp is set
     const configToSave = {
       ...config,
-      updatedAt: new Date().toISOString()
+      updatedAt: new Date().toISOString(),
+      createdAt: config.createdAt || new Date().toISOString()
     };
     
     const response = await axios.post(ADMIN_API_URL, configToSave);
