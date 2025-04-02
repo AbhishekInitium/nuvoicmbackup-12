@@ -9,8 +9,8 @@ import { IncentivePlanWithStatus } from '@/services/incentive/types/incentiveSer
 import DesignerNavigation from '@/components/incentive/DesignerNavigation';
 import SchemeDialogs from '@/components/incentive/designer/SchemeDialogs';
 import DesignerContent from '@/components/incentive/designer/DesignerContent';
-import { SchemeCreationOptions } from '@/components/incentive/designer/SchemeCreationOptions';
-import { DesignerNavigationOptions } from '@/components/incentive/designer/DesignerNavigationOptions';
+import { useSchemeCreationOptions } from '@/components/incentive/designer/SchemeCreationOptions';
+import { useDesignerNavigationOptions } from '@/components/incentive/designer/DesignerNavigationOptions';
 
 const IncentiveDesigner = () => {
   const [showInitialOptions, setShowInitialOptions] = useState(true);
@@ -21,7 +21,7 @@ const IncentiveDesigner = () => {
   const [isEditMode, setIsEditMode] = useState(false);
 
   // Initialize the scheme creation options
-  const schemeOptions = SchemeCreationOptions({
+  const schemeOptions = useSchemeCreationOptions({
     setPlanTemplate,
     setShowExistingSchemes,
     setShowEditSchemes,
@@ -30,7 +30,7 @@ const IncentiveDesigner = () => {
   });
 
   // Initialize the navigation options
-  const navigationOptions = DesignerNavigationOptions({
+  const navigationOptions = useDesignerNavigationOptions({
     setShowInitialOptions,
     setShowAdministratorScreen
   });

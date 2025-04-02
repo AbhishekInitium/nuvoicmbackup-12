@@ -6,10 +6,10 @@ interface DesignerNavigationOptionsProps {
   setShowAdministratorScreen: (show: boolean) => void;
 }
 
-export const DesignerNavigationOptions: React.FC<DesignerNavigationOptionsProps> = ({
+export const useDesignerNavigationOptions = ({
   setShowInitialOptions,
   setShowAdministratorScreen
-}) => {
+}: DesignerNavigationOptionsProps) => {
   const handleAdminOption = () => {
     setShowInitialOptions(false);
     setShowAdministratorScreen(true);

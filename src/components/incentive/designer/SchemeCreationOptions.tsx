@@ -12,13 +12,13 @@ interface SchemeCreationOptionsProps {
   setShowInitialOptions: (show: boolean) => void;
 }
 
-export const SchemeCreationOptions: React.FC<SchemeCreationOptionsProps> = ({
+export const useSchemeCreationOptions = ({
   setPlanTemplate,
   setShowExistingSchemes,
   setShowEditSchemes,
   setIsEditMode,
   setShowInitialOptions
-}) => {
+}: SchemeCreationOptionsProps) => {
   const { toast } = useToast();
 
   const generateTimestampId = () => {
