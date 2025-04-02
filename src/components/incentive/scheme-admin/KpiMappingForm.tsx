@@ -1,386 +1,350 @@
+import React, { useState, useEffect, useCallback } from 'react';
+import { Trash2, PlusCircle } from 'lucide-react';
+import { useForm, Controller, useFieldArray } from 'react-hook-form';
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
 
-import React, { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel
-} from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import { KpiField, SchemeAdminConfig } from '@/types/schemeAdminTypes';
-import { KpiMappingCard } from './KpiMappingCard';
-import { JsonPreview } from './JsonPreview';
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import ActionButton from '../../ui-custom/ActionButton';
+import { Kpi, SchemeAdminConfig } from '@/types/schemeAdminTypes';
+import { useToast } from '@/hooks/use-toast';
 import { saveSchemeAdmin } from '@/services/database/mongoDBService';
-import { useForm } from 'react-hook-form';
-import { v4 as uuidv4 } from 'uuid';
-import { useToast } from "@/hooks/use-toast";
+
+const formSchema = z.object({
+  name: z.string().min(2, {
+    message: "Scheme name must be at least 2 characters.",
+  }),
+  description: z.string().optional(),
+  kpis: z.array(
+    z.object({
+      name: z.string().min(2, {
+        message: "KPI name must be at least 2 characters.",
+      }),
+      description: z.string().optional(),
+      dataSource: z.string().min(2, {
+        message: "Data source must be selected.",
+      }),
+      calculation: z.string().optional(),
+    })
+  ).optional(),
+  dataSources: z.array(
+    z.object({
+      name: z.string().min(2, {
+        message: "Data source name must be at least 2 characters.",
+      }),
+      description: z.string().optional(),
+      connectionDetails: z.string().optional(),
+    })
+  ).optional(),
+});
 
 interface KpiMappingFormProps {
   onSaveSuccess: (id: string) => void;
   initialConfig?: Partial<SchemeAdminConfig>;
-  onConfigUpdate?: (config: Partial<SchemeAdminConfig>) => void;
+  onConfigUpdate: (config: Partial<SchemeAdminConfig>) => void;
 }
 
-export const KpiMappingForm: React.FC<KpiMappingFormProps> = ({ 
-  onSaveSuccess,
-  initialConfig = {},
-  onConfigUpdate
-}) => {
+export const KpiMappingForm: React.FC<KpiMappingFormProps> = ({ onSaveSuccess, initialConfig, onConfigUpdate }) => {
   const { toast } = useToast();
-  const [isSaving, setIsSaving] = useState(false);
-  const [kpiData, setKpiData] = useState<{
-    qualificationFields: KpiField[];
-    adjustmentFields: KpiField[];
-    exclusionFields: KpiField[];
-    customRules: KpiField[];
-  }>({
-    qualificationFields: [],
-    adjustmentFields: [],
-    exclusionFields: [],
-    customRules: []
-  });
-  
-  const form = useForm({
-    defaultValues: {
-      adminId: initialConfig.adminId || uuidv4(),
-      adminName: initialConfig.adminName || "NorthAmerica_Orders_2024",
-      calculationBase: initialConfig.calculationBase || "Sales Orders"
-    }
-  });
+  const [name, setName] = useState<string>('');
+  const [description, setDescription] = useState<string>('');
+  const [kpis, setKpis] = useState<Kpi[]>([]);
+  const [dataSources, setDataSources] = useState<any[]>([]);
+  const [isSaving, setIsSaving] = useState<boolean>(false);
+  const [isEditMode, setIsEditMode] = useState<boolean>(false);
+  const [configId, setConfigId] = useState<string>('');
 
   useEffect(() => {
-    if (onConfigUpdate) {
-      const updatedConfig: Partial<SchemeAdminConfig> = {
-        adminId: form.getValues().adminId,
-        adminName: form.getValues().adminName,
-        calculationBase: form.getValues().calculationBase,
-        qualificationFields: kpiData.qualificationFields,
-        adjustmentFields: kpiData.adjustmentFields,
-        exclusionFields: kpiData.exclusionFields,
-        customRules: kpiData.customRules,
-        createdAt: new Date().toISOString()
-      };
+    if (initialConfig && Object.keys(initialConfig).length > 0) {
+      // Initialize form state from initialConfig
+      setName(initialConfig.name || '');
+      setDescription(initialConfig.description || '');
+      setKpis(initialConfig.kpis || []);
+      setDataSources(initialConfig.dataSources || []);
       
-      onConfigUpdate(updatedConfig);
+      // Set edit mode if we have an ID
+      if (initialConfig._id) {
+        setIsEditMode(true);
+        setConfigId(initialConfig._id);
+      } else {
+        setIsEditMode(false);
+        setConfigId('');
+      }
+    } else {
+      // Clear form for new configuration
+      setName('');
+      setDescription('');
+      setKpis([]);
+      setDataSources([]);
+      setIsEditMode(false);
+      setConfigId('');
     }
-  }, [kpiData, form.getValues, onConfigUpdate]);
+  }, [initialConfig]);
 
-  const handleAddKpi = (category: 'qualification' | 'adjustment' | 'exclusion' | 'custom') => {
-    const newKpi: KpiField = {
-      id: uuidv4(),
-      kpi: "",
-      description: "",
-      dataType: "Char10",
-      sourceField: "",
-      sourceType: "Excel",
-      category
-    };
-
-    setKpiData(prev => {
-      const newData = { ...prev };
-      
-      switch(category) {
-        case 'qualification':
-          newData.qualificationFields = [...prev.qualificationFields, newKpi];
-          break;
-        case 'adjustment':
-          newData.adjustmentFields = [...prev.adjustmentFields, newKpi];
-          break;
-        case 'exclusion':
-          newData.exclusionFields = [...prev.exclusionFields, newKpi];
-          break;
-        case 'custom':
-          newData.customRules = [...prev.customRules, newKpi];
-          break;
-      }
-      
-      return newData;
-    });
+  const resetForm = () => {
+    setName('');
+    setDescription('');
+    setKpis([]);
+    setDataSources([]);
   };
 
-  const handleUpdateKpi = (updatedKpi: KpiField) => {
-    setKpiData(prev => {
-      const newData = { ...prev };
-      
-      switch(updatedKpi.category) {
-        case 'qualification':
-          newData.qualificationFields = prev.qualificationFields.map(k => 
-            k.id === updatedKpi.id ? updatedKpi : k
-          );
-          break;
-        case 'adjustment':
-          newData.adjustmentFields = prev.adjustmentFields.map(k => 
-            k.id === updatedKpi.id ? updatedKpi : k
-          );
-          break;
-        case 'exclusion':
-          newData.exclusionFields = prev.exclusionFields.map(k => 
-            k.id === updatedKpi.id ? updatedKpi : k
-          );
-          break;
-        case 'custom':
-          newData.customRules = prev.customRules.map(k => 
-            k.id === updatedKpi.id ? updatedKpi : k
-          );
-          break;
-      }
-      
-      return newData;
-    });
-  };
-
-  const handleRemoveKpi = (id: string, category: 'qualification' | 'adjustment' | 'exclusion' | 'custom') => {
-    setKpiData(prev => {
-      const newData = { ...prev };
-      
-      switch(category) {
-        case 'qualification':
-          newData.qualificationFields = prev.qualificationFields.filter(k => k.id !== id);
-          break;
-        case 'adjustment':
-          newData.adjustmentFields = prev.adjustmentFields.filter(k => k.id !== id);
-          break;
-        case 'exclusion':
-          newData.exclusionFields = prev.exclusionFields.filter(k => k.id !== id);
-          break;
-        case 'custom':
-          newData.customRules = prev.customRules.filter(k => k.id !== id);
-          break;
-      }
-      
-      return newData;
-    });
-  };
-
-  const handleSaveConfig = async (formValues: any) => {
-    // Create the complete config object with all required fields
-    const adminConfig: SchemeAdminConfig = {
-      adminId: formValues.adminId,
-      adminName: formValues.adminName,
-      createdAt: new Date().toISOString(),
-      calculationBase: formValues.calculationBase,
-      baseField: "",
-      baseData: {
-        source: "Excel" 
-      },
-      qualificationFields: kpiData.qualificationFields,
-      adjustmentFields: kpiData.adjustmentFields,
-      exclusionFields: kpiData.exclusionFields,
-      customRules: kpiData.customRules
-    };
-    
+  const handleSave = async () => {
     try {
       setIsSaving(true);
-      console.log("Saving admin config to MongoDB:", adminConfig);
-      const id = await saveSchemeAdmin(adminConfig);
       
-      toast({
-        title: "Configuration Saved",
-        description: `Scheme configuration "${formValues.adminName}" saved successfully`,
-        variant: "default"
-      });
+      const configToSave: SchemeAdminConfig = {
+        name,
+        description,
+        kpis,
+        dataSources,
+        updatedAt: new Date().toISOString()
+      };
       
-      onSaveSuccess(id);
+      if (isEditMode && configId) {
+        // Update existing config
+        configToSave._id = configId;
+      }
+      
+      const savedConfigId = await saveSchemeAdmin(configToSave);
+      
+      setIsSaving(false);
+      if (onSaveSuccess) {
+        onSaveSuccess(savedConfigId);
+      }
+      
+      // Only reset if not editing
+      if (!isEditMode) {
+        resetForm();
+      }
+      
     } catch (error) {
-      console.error("Error saving admin config:", error);
-      
+      setIsSaving(false);
       toast({
-        title: "Save Error",
-        description: error instanceof Error ? error.message : "Failed to save configuration",
+        title: "Error Saving Configuration",
+        description: `Failed to save: ${error instanceof Error ? error.message : 'Unknown error'}`,
         variant: "destructive"
       });
-    } finally {
-      setIsSaving(false);
     }
   };
 
   return (
-    <div className="space-y-8">
-      <h2 className="text-xl font-semibold">Configure KPI Mappings</h2>
-      
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(handleSaveConfig)} className="space-y-6">
-          <Card className="p-4">
-            <h3 className="text-lg font-medium mb-4">Scheme Configuration</h3>
-            
-            <div className="space-y-4">
-              <FormField
-                control={form.control}
-                name="adminName"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Configuration Name</FormLabel>
-                    <FormControl>
-                      <Input {...field} placeholder="e.g., NorthAmerica_Orders_2024" />
-                    </FormControl>
-                    <FormDescription>
-                      A descriptive name for this scheme configuration
-                    </FormDescription>
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="calculationBase"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Calculation Base</FormLabel>
-                    <FormControl>
-                      <Input {...field} placeholder="e.g., Sales Orders" />
-                    </FormControl>
-                    <FormDescription>
-                      The primary metric used for calculations
-                    </FormDescription>
-                  </FormItem>
-                )}
-              />
-            </div>
-          </Card>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <JsonPreview data={kpiData} title="KPI Configuration Preview" height="300px" />
-            </div>
+    <div className="space-y-4">
+      <Card>
+        <CardHeader>
+          <CardTitle>Scheme Configuration</CardTitle>
+          <CardDescription>Define the basic information for the incentive scheme.</CardDescription>
+        </CardHeader>
+        <CardContent className="grid gap-4">
+          <div className="grid gap-2">
+            <Label htmlFor="name">Scheme Name</Label>
+            <Input 
+              type="text" 
+              id="name" 
+              placeholder="Incentive Scheme Name" 
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+            />
           </div>
-          
-          <div className="space-y-6">
-            <div>
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-medium">Qualification KPIs</h3>
-                <Button 
-                  type="button"
-                  onClick={() => handleAddKpi('qualification')}
-                  size="sm"
-                  variant="outline"
-                >
-                  Add Qualification KPI
-                </Button>
-              </div>
-              
-              <div className="space-y-4">
-                {kpiData.qualificationFields.length === 0 ? (
-                  <p className="text-gray-500 italic text-sm">
-                    No qualification KPIs defined yet. Click the button above to add one.
-                  </p>
-                ) : (
-                  kpiData.qualificationFields.map(kpi => (
-                    <KpiMappingCard 
-                      key={kpi.id} 
-                      kpi={kpi} 
-                      onUpdate={handleUpdateKpi} 
-                      onRemove={handleRemoveKpi} 
-                    />
-                  ))
-                )}
-              </div>
-            </div>
-            
-            <div>
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-medium">Adjustment KPIs</h3>
-                <Button 
-                  type="button"
-                  onClick={() => handleAddKpi('adjustment')}
-                  size="sm"
-                  variant="outline"
-                >
-                  Add Adjustment KPI
-                </Button>
-              </div>
-              
-              <div className="space-y-4">
-                {kpiData.adjustmentFields.length === 0 ? (
-                  <p className="text-gray-500 italic text-sm">
-                    No adjustment KPIs defined yet. Click the button above to add one.
-                  </p>
-                ) : (
-                  kpiData.adjustmentFields.map(kpi => (
-                    <KpiMappingCard 
-                      key={kpi.id} 
-                      kpi={kpi} 
-                      onUpdate={handleUpdateKpi} 
-                      onRemove={handleRemoveKpi} 
-                    />
-                  ))
-                )}
-              </div>
-            </div>
-            
-            <div>
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-medium">Exclusion KPIs</h3>
-                <Button 
-                  type="button"
-                  onClick={() => handleAddKpi('exclusion')}
-                  size="sm"
-                  variant="outline"
-                >
-                  Add Exclusion KPI
-                </Button>
-              </div>
-              
-              <div className="space-y-4">
-                {kpiData.exclusionFields.length === 0 ? (
-                  <p className="text-gray-500 italic text-sm">
-                    No exclusion KPIs defined yet. Click the button above to add one.
-                  </p>
-                ) : (
-                  kpiData.exclusionFields.map(kpi => (
-                    <KpiMappingCard 
-                      key={kpi.id} 
-                      kpi={kpi} 
-                      onUpdate={handleUpdateKpi} 
-                      onRemove={handleRemoveKpi} 
-                    />
-                  ))
-                )}
-              </div>
-            </div>
-            
-            <div>
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-medium">Custom Rule KPIs</h3>
-                <Button 
-                  type="button"
-                  onClick={() => handleAddKpi('custom')}
-                  size="sm"
-                  variant="outline"
-                >
-                  Add Custom KPI
-                </Button>
-              </div>
-              
-              <div className="space-y-4">
-                {kpiData.customRules.length === 0 ? (
-                  <p className="text-gray-500 italic text-sm">
-                    No custom KPIs defined yet. Click the button above to add one.
-                  </p>
-                ) : (
-                  kpiData.customRules.map(kpi => (
-                    <KpiMappingCard 
-                      key={kpi.id} 
-                      kpi={kpi} 
-                      onUpdate={handleUpdateKpi} 
-                      onRemove={handleRemoveKpi} 
-                    />
-                  ))
-                )}
-              </div>
-            </div>
+          <div className="grid gap-2">
+            <Label htmlFor="description">Description</Label>
+            <Textarea
+              id="description"
+              placeholder="Scheme Description"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+            />
           </div>
-          
-          <div className="flex justify-end pt-6 border-t">
-            <Button type="submit" className="w-40" disabled={isSaving}>
-              {isSaving ? "Saving..." : "Save Configuration"}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>KPI Definitions</CardTitle>
+          <CardDescription>Define the Key Performance Indicators (KPIs) for this scheme.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <KPIList kpis={kpis} setKpis={setKpis} />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Data Sources</CardTitle>
+          <CardDescription>Manage the data sources used to calculate KPIs.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <DataSourceList dataSources={dataSources} setDataSources={setDataSources} />
+        </CardContent>
+      </Card>
+
+      <div className="flex justify-end">
+        <Button onClick={handleSave} disabled={isSaving}>
+          {isSaving ? "Saving..." : "Save Configuration"}
+        </Button>
+      </div>
+    </div>
+  );
+};
+
+interface KPIListProps {
+  kpis: Kpi[];
+  setKpis: (kpis: Kpi[]) => void;
+}
+
+const KPIList: React.FC<KPIListProps> = ({ kpis, setKpis }) => {
+  const addKPI = () => {
+    setKpis([...kpis, { name: '', description: '', dataSource: '', calculation: '' }]);
+  };
+
+  const updateKPI = (index: number, field: string, value: string) => {
+    const updatedKPIs = [...kpis];
+    updatedKPIs[index][field] = value;
+    setKpis(updatedKPIs);
+  };
+
+  const removeKPI = (index: number) => {
+    const updatedKPIs = [...kpis];
+    updatedKPIs.splice(index, 1);
+    setKpis(updatedKPIs);
+  };
+
+  return (
+    <div className="space-y-4">
+      {kpis.map((kpi, index) => (
+        <Card key={index}>
+          <CardHeader>
+            <CardTitle>KPI {index + 1}</CardTitle>
+          </CardHeader>
+          <CardContent className="grid gap-4">
+            <div className="grid gap-2">
+              <Label htmlFor={`kpi-${index}-name`}>Name</Label>
+              <Input
+                type="text"
+                id={`kpi-${index}-name`}
+                placeholder="KPI Name"
+                value={kpi.name}
+                onChange={(e) => updateKPI(index, 'name', e.target.value)}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor={`kpi-${index}-description`}>Description</Label>
+              <Textarea
+                id={`kpi-${index}-description`}
+                placeholder="KPI Description"
+                value={kpi.description}
+                onChange={(e) => updateKPI(index, 'description', e.target.value)}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor={`kpi-${index}-dataSource`}>Data Source</Label>
+              <Input
+                type="text"
+                id={`kpi-${index}-dataSource`}
+                placeholder="Data Source"
+                value={kpi.dataSource}
+                onChange={(e) => updateKPI(index, 'dataSource', e.target.value)}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor={`kpi-${index}-calculation`}>Calculation</Label>
+              <Textarea
+                id={`kpi-${index}-calculation`}
+                placeholder="Calculation"
+                value={kpi.calculation}
+                onChange={(e) => updateKPI(index, 'calculation', e.target.value)}
+              />
+            </div>
+            <Button variant="destructive" size="sm" onClick={() => removeKPI(index)}>
+              <Trash2 className="h-4 w-4 mr-2" />
+              Remove
             </Button>
-          </div>
-        </form>
-      </Form>
+          </CardContent>
+        </Card>
+      ))}
+      <Button variant="outline" onClick={addKPI}>
+        <PlusCircle className="h-4 w-4 mr-2" />
+        Add KPI
+      </Button>
+    </div>
+  );
+};
+
+interface DataSourceListProps {
+  dataSources: any[];
+  setDataSources: (dataSources: any[]) => void;
+}
+
+const DataSourceList: React.FC<DataSourceListProps> = ({ dataSources, setDataSources }) => {
+  const addDataSource = () => {
+    setDataSources([...dataSources, { name: '', description: '', connectionDetails: '' }]);
+  };
+
+  const updateDataSource = (index: number, field: string, value: string) => {
+    const updatedDataSources = [...dataSources];
+    updatedDataSources[index][field] = value;
+    setDataSources(updatedDataSources);
+  };
+
+  const removeDataSource = (index: number) => {
+    const updatedDataSources = [...dataSources];
+    updatedDataSources.splice(index, 1);
+    setDataSources(updatedDataSources);
+  };
+
+  return (
+    <div className="space-y-4">
+      {dataSources.map((dataSource, index) => (
+        <Card key={index}>
+          <CardHeader>
+            <CardTitle>Data Source {index + 1}</CardTitle>
+          </CardHeader>
+          <CardContent className="grid gap-4">
+            <div className="grid gap-2">
+              <Label htmlFor={`dataSource-${index}-name`}>Name</Label>
+              <Input
+                type="text"
+                id={`dataSource-${index}-name`}
+                placeholder="Data Source Name"
+                value={dataSource.name}
+                onChange={(e) => updateDataSource(index, 'name', e.target.value)}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor={`dataSource-${index}-description`}>Description</Label>
+              <Textarea
+                id={`dataSource-${index}-description`}
+                placeholder="Data Source Description"
+                value={dataSource.description}
+                onChange={(e) => updateDataSource(index, 'description', e.target.value)}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor={`dataSource-${index}-connectionDetails`}>Connection Details</Label>
+              <Textarea
+                id={`dataSource-${index}-connectionDetails`}
+                placeholder="Connection Details"
+                value={dataSource.connectionDetails}
+                onChange={(e) => updateDataSource(index, 'connectionDetails', e.target.value)}
+              />
+            </div>
+            <Button variant="destructive" size="sm" onClick={() => removeDataSource(index)}>
+              <Trash2 className="h-4 w-4 mr-2" />
+              Remove
+            </Button>
+          </CardContent>
+        </Card>
+      ))}
+      <Button variant="outline" onClick={addDataSource}>
+        <PlusCircle className="h-4 w-4 mr-2" />
+        Add Data Source
+      </Button>
     </div>
   );
 };
