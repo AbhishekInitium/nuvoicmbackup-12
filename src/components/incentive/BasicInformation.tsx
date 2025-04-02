@@ -108,10 +108,11 @@ const BasicInformation: React.FC<BasicInformationProps> = ({
                     id="salesQuota"
                     type="number"
                     min="0"
-                    value={plan.salesQuota || 0}
+                    value={plan.salesQuota || ''}
                     onChange={handleNumberChange}
                     className="w-full pl-7"
                     placeholder="Enter target sales quota"
+                    style={{ appearance: 'textfield' }}
                   />
                 </div>
               </div>

@@ -30,8 +30,6 @@ export const useCommissionTiers = (
     const newTiers = [...tiers, newTier];
     setTiers(newTiers);
     onUpdateCommissionStructure({ tiers: newTiers });
-    
-    // Toast notification removed
   };
 
   // Remove tier

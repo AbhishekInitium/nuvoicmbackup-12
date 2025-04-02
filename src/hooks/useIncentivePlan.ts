@@ -76,6 +76,7 @@ export const useIncentivePlan = (
   };
 
   const copyExistingScheme = (scheme: IncentivePlanWithStatus | IncentivePlan) => {
+    
     const {
       name,
       description,
@@ -148,12 +149,14 @@ export const useIncentivePlan = (
     if (!plan.name) errors.push("Plan Name is required");
     if (!plan.effectiveStart) errors.push("Start Date is required");
     if (!plan.effectiveEnd) errors.push("End Date is required");
-    
     if (!plan.revenueBase) errors.push("Revenue Base is required");
     
-    if (!plan.participants || plan.participants.length === 0) {
-      errors.push("At least one participant must be assigned");
+    // Validate sales quota is a positive value
+    if (typeof plan.salesQuota !== 'number' || plan.salesQuota <= 0) {
+      errors.push("Sales Quota must be a positive value");
     }
+    
+    // Removed the participants validation check since that field has been removed
     
     if (!plan.creditRules.levels || plan.creditRules.levels.length === 0) {
       errors.push("At least one Credit Level is required");
