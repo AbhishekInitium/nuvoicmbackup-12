@@ -36,10 +36,13 @@ export const KpiMappingForm: React.FC<KpiMappingFormProps> = ({
   const [adminName, setAdminName] = useState<string>('');
   const [calculationBase, setCalculationBase] = useState<string>('');
   const [baseField, setBaseField] = useState<string>('');
+  const [initialized, setInitialized] = useState<boolean>(false);
 
+  // Initialize form with initialConfig values only once when the component mounts or initialConfig changes
   useEffect(() => {
-    if (initialConfig && Object.keys(initialConfig).length > 0) {
+    if (!initialized && initialConfig && Object.keys(initialConfig).length > 0) {
       console.log("Loading initial config:", initialConfig);
+      
       // Initialize form state from initialConfig
       setName(initialConfig.name || '');
       setDescription(initialConfig.description || '');
@@ -57,19 +60,14 @@ export const KpiMappingForm: React.FC<KpiMappingFormProps> = ({
         setIsEditMode(false);
         setConfigId('');
       }
-    } else {
+      
+      setInitialized(true);
+    } else if (!initialConfig || Object.keys(initialConfig).length === 0) {
       // Clear form for new configuration
-      setName('');
-      setDescription('');
-      setKpis([]);
-      setDataSources([]);
-      setAdminName('');
-      setCalculationBase('');
-      setBaseField('');
-      setIsEditMode(false);
-      setConfigId('');
+      resetForm();
+      setInitialized(true);
     }
-  }, [initialConfig]);
+  }, [initialConfig, initialized]);
 
   const resetForm = () => {
     setName('');
@@ -79,6 +77,9 @@ export const KpiMappingForm: React.FC<KpiMappingFormProps> = ({
     setAdminName('');
     setCalculationBase('');
     setBaseField('');
+    setIsEditMode(false);
+    setConfigId('');
+    setInitialized(false);
   };
 
   const handleSave = async () => {
@@ -137,18 +138,22 @@ export const KpiMappingForm: React.FC<KpiMappingFormProps> = ({
     }
   };
 
-  // Update parent component with form data changes
+  // Update parent component with form data changes, but do it less frequently
   useEffect(() => {
-    onConfigUpdate({
-      name,
-      description,
-      kpis,
-      dataSources,
-      adminName,
-      calculationBase,
-      baseField,
-      _id: configId
-    });
+    const updateTimeout = setTimeout(() => {
+      onConfigUpdate({
+        name,
+        description,
+        kpis,
+        dataSources,
+        adminName,
+        calculationBase,
+        baseField,
+        _id: configId
+      });
+    }, 300); // Add a small delay to prevent too many updates
+    
+    return () => clearTimeout(updateTimeout);
   }, [name, description, kpis, dataSources, adminName, calculationBase, baseField, configId, onConfigUpdate]);
 
   if (isLoading) {

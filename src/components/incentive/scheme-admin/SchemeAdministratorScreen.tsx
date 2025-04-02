@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { KpiMappingForm } from './KpiMappingForm';
 import { SchemeHeader } from './SchemeHeader';
@@ -27,10 +27,12 @@ const SchemeAdministratorScreen: React.FC<SchemeAdministratorScreenProps> = ({ o
   const [selectedSchemeId, setSelectedSchemeId] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
   
+  // Load configurations only once on component mount
   useEffect(() => {
     loadSchemeConfigs();
   }, []);
   
+  // Load scheme configurations
   const loadSchemeConfigs = async () => {
     try {
       setLoading(true);
@@ -49,7 +51,8 @@ const SchemeAdministratorScreen: React.FC<SchemeAdministratorScreenProps> = ({ o
     }
   };
   
-  const handleSaveSuccess = (id: string) => {
+  // Handle successful save with memoized callback to prevent unnecessary re-renders
+  const handleSaveSuccess = useCallback((id: string) => {
     toast({
       title: "Configuration Saved",
       description: `Successfully saved KPI configuration with ID: ${id.substring(0, 8)}...`,
@@ -61,9 +64,12 @@ const SchemeAdministratorScreen: React.FC<SchemeAdministratorScreenProps> = ({ o
     // Clear the selected scheme to show the changes are applied
     setSelectedSchemeId('');
     setAdminConfig({});
-  };
+  }, [toast]);
   
+  // Handle scheme selection change
   const handleSchemeChange = async (configId: string) => {
+    if (configId === selectedSchemeId) return; // Avoid unnecessary fetches
+    
     setSelectedSchemeId(configId);
     
     if (configId) {
@@ -98,10 +104,22 @@ const SchemeAdministratorScreen: React.FC<SchemeAdministratorScreenProps> = ({ o
     }
   };
   
+  // Handle creating a new scheme
   const handleCreateNew = () => {
     setSelectedSchemeId('');
     setAdminConfig({});
   };
+  
+  // Memoized config update handler to prevent unnecessary re-renders
+  const handleConfigUpdate = useCallback((config: Partial<SchemeAdminConfig>) => {
+    setAdminConfig(prevConfig => {
+      // Only update if there are actual changes
+      if (JSON.stringify(prevConfig) !== JSON.stringify(config)) {
+        return config;
+      }
+      return prevConfig;
+    });
+  }, []);
 
   return (
     <div className="max-w-6xl mx-auto px-4">
@@ -165,10 +183,11 @@ const SchemeAdministratorScreen: React.FC<SchemeAdministratorScreenProps> = ({ o
           </div>
         ) : (
           <KpiMappingForm 
+            key={selectedSchemeId || 'new-config'} // Add key to force remount when changing schemes
             onSaveSuccess={handleSaveSuccess} 
             initialConfig={adminConfig} 
-            onConfigUpdate={setAdminConfig}
-            isLoading={loading}
+            onConfigUpdate={handleConfigUpdate}
+            isLoading={false}
           />
         )}
       </div>
