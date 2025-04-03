@@ -29,6 +29,9 @@ const AdjustmentForm: React.FC<AdjustmentFormProps> = ({
   onRemoveAdjustment,
   isReadOnly = false
 }) => {
+  // Filter out empty string values
+  const filteredFields = dbFields.filter(field => field.trim() !== '');
+  
   // Determine input type based on field data type
   const getInputType = (): string => {
     if (adjustment.field && kpiMetadata && kpiMetadata[adjustment.field]) {
@@ -60,6 +63,9 @@ const AdjustmentForm: React.FC<AdjustmentFormProps> = ({
   };
 
   const inputType = getInputType();
+  
+  // Use a default field if current field is empty
+  const safeFieldValue = adjustment.field || 'default-field';
 
   return (
     <GlassCard className="p-4">
@@ -91,7 +97,7 @@ const AdjustmentForm: React.FC<AdjustmentFormProps> = ({
             </div>
           ) : (
             <Select 
-              value={adjustment.field}
+              value={safeFieldValue}
               onValueChange={(value) => onUpdateAdjustment(adjustmentIndex, 'field', value)}
               disabled={isReadOnly}
             >
@@ -99,7 +105,7 @@ const AdjustmentForm: React.FC<AdjustmentFormProps> = ({
                 <SelectValue placeholder="Select field" />
               </SelectTrigger>
               <SelectContent className="bg-white">
-                {dbFields.map(field => {
+                {filteredFields.map(field => {
                   // Get the display name from metadata if available
                   const displayName = kpiMetadata && kpiMetadata[field] 
                     ? kpiMetadata[field].description || field 
@@ -121,7 +127,7 @@ const AdjustmentForm: React.FC<AdjustmentFormProps> = ({
             </div>
           ) : (
             <Select 
-              value={adjustment.operator}
+              value={adjustment.operator || '>'}
               onValueChange={(value) => onUpdateAdjustment(adjustmentIndex, 'operator', value)}
               disabled={isReadOnly}
             >

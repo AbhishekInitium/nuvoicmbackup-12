@@ -36,7 +36,10 @@ const CustomRules: React.FC<CustomRulesProps> = ({
   // Get custom fields from the selected scheme if available
   const getCustomFields = () => {
     if (!selectedScheme?.customRules?.length) return [];
-    return selectedScheme.customRules.map(rule => rule.kpi);
+    // Filter out empty kpi fields
+    return selectedScheme.customRules
+      .filter(rule => rule.kpi.trim() !== '')
+      .map(rule => rule.kpi);
   };
 
   // Get custom fields metadata
@@ -48,14 +51,16 @@ const CustomRules: React.FC<CustomRulesProps> = ({
     // Add custom rules KPIs
     if (selectedScheme.customRules?.length) {
       selectedScheme.customRules.forEach(rule => {
-        metadata[rule.kpi] = rule;
+        if (rule.kpi.trim() !== '') {
+          metadata[rule.kpi] = rule;
+        }
       });
     }
     
     // Also include other KPIs for reference, in case they're used in conditions
     if (selectedScheme.qualificationFields?.length) {
       selectedScheme.qualificationFields.forEach(field => {
-        if (!metadata[field.kpi]) {
+        if (field.kpi.trim() !== '' && !metadata[field.kpi]) {
           metadata[field.kpi] = field;
         }
       });
@@ -63,7 +68,7 @@ const CustomRules: React.FC<CustomRulesProps> = ({
     
     if (selectedScheme.adjustmentFields?.length) {
       selectedScheme.adjustmentFields.forEach(field => {
-        if (!metadata[field.kpi]) {
+        if (field.kpi.trim() !== '' && !metadata[field.kpi]) {
           metadata[field.kpi] = field;
         }
       });
@@ -71,7 +76,7 @@ const CustomRules: React.FC<CustomRulesProps> = ({
     
     if (selectedScheme.exclusionFields?.length) {
       selectedScheme.exclusionFields.forEach(field => {
-        if (!metadata[field.kpi]) {
+        if (field.kpi.trim() !== '' && !metadata[field.kpi]) {
           metadata[field.kpi] = field;
         }
       });
@@ -87,6 +92,13 @@ const CustomRules: React.FC<CustomRulesProps> = ({
   console.log("Selected scheme in CustomRules:", selectedScheme);
   console.log("Available custom fields:", customFields);
   console.log("Custom metadata:", customMetadata);
+
+  // Ensure we have at least one field to avoid errors
+  const availableFields = customFields.length > 0 ? 
+    customFields : 
+    Object.keys(customMetadata).length > 0 ? 
+      Object.keys(customMetadata) : 
+      ['default-field']; 
 
   return (
     <div className="space-y-6">
@@ -116,7 +128,7 @@ const CustomRules: React.FC<CustomRulesProps> = ({
               rule={rule}
               ruleIndex={index}
               currencySymbol={currencySymbol}
-              availableFields={customFields.length > 0 ? customFields : Object.keys(customMetadata)}
+              availableFields={availableFields}
               kpiMetadata={customMetadata}
               onUpdateRule={(field, value) => updateCustomRule(index, field, value)}
               onUpdateCondition={(conditionIndex, field, value) => updateCustomRuleCondition(index, conditionIndex, field, value)}

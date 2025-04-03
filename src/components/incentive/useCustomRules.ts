@@ -1,108 +1,125 @@
 
-import { useState } from 'react';
-import { useToast } from "@/hooks/use-toast";
+import { useState, useEffect } from 'react';
 import { CustomRule, RuleCondition } from '@/types/incentiveTypes';
 
 export const useCustomRules = (
-  initialRules: CustomRule[],
+  initialRules: CustomRule[] = [],
   onUpdateRules: (rules: CustomRule[]) => void
 ) => {
-  const { toast } = useToast();
   const [rules, setRules] = useState<CustomRule[]>(initialRules);
 
-  // Custom rules management
+  // Update rules when initialRules changes
+  useEffect(() => {
+    setRules(initialRules);
+  }, [initialRules]);
+
+  // Add a new custom rule
   const addCustomRule = () => {
-    const newRules = [...rules];
-    
-    newRules.push({
+    const newRule: CustomRule = {
       name: 'New Custom Rule',
-      description: 'Define criteria for this rule',
-      conditions: [
-        { operator: '>=', value: 1000, metric: 'sales', period: 'current' }
-      ],
-      action: 'qualify',
-      active: true
-    });
-    
-    setRules(newRules);
-    onUpdateRules(newRules);
+      description: 'Description of custom rule',
+      impactType: 'PERCENTAGE',
+      impactValue: 0.1,
+      conditions: [{
+        field: 'default-field', // Use a safe default
+        operator: '=',
+        value: ''
+      }]
+    };
+
+    const updatedRules = [...rules, newRule];
+    setRules(updatedRules);
+    onUpdateRules(updatedRules);
   };
 
-  const removeCustomRule = (index: number) => {
-    const newRules = [...rules];
-    newRules.splice(index, 1);
-    
-    setRules(newRules);
-    onUpdateRules(newRules);
+  // Update a custom rule field
+  const updateCustomRule = (ruleIndex: number, field: keyof CustomRule, value: any) => {
+    const updatedRules = [...rules];
+    updatedRules[ruleIndex] = {
+      ...updatedRules[ruleIndex],
+      [field]: value
+    };
+
+    setRules(updatedRules);
+    onUpdateRules(updatedRules);
   };
 
+  // Remove a custom rule
+  const removeCustomRule = (ruleIndex: number) => {
+    const updatedRules = [...rules];
+    updatedRules.splice(ruleIndex, 1);
+
+    setRules(updatedRules);
+    onUpdateRules(updatedRules);
+  };
+
+  // Add a condition to a custom rule
   const addCustomRuleCondition = (ruleIndex: number) => {
-    const newRules = [...rules];
+    const updatedRules = [...rules];
     
-    newRules[ruleIndex].conditions.push({
-      operator: '>=',
-      value: 1000,
-      metric: 'sales',
-      period: 'current'
-    });
-    
-    setRules(newRules);
-    onUpdateRules(newRules);
+    // Ensure the rule has a conditions array
+    if (!updatedRules[ruleIndex].conditions) {
+      updatedRules[ruleIndex].conditions = [];
+    }
+
+    const newCondition: RuleCondition = {
+      field: 'default-field', // Use a safe default
+      operator: '>',
+      value: 0
+    };
+
+    updatedRules[ruleIndex].conditions.push(newCondition);
+
+    setRules(updatedRules);
+    onUpdateRules(updatedRules);
   };
 
+  // Remove a condition from a custom rule
   const removeCustomRuleCondition = (ruleIndex: number, conditionIndex: number) => {
-    // Don't allow removing all conditions
-    if (rules[ruleIndex].conditions.length <= 1) {
-      toast({
-        title: "Cannot Remove Condition",
-        description: "A rule must have at least one condition.",
-        variant: "destructive"
-      });
+    const updatedRules = [...rules];
+    
+    // Ensure the rule has a conditions array
+    if (!updatedRules[ruleIndex].conditions) {
       return;
     }
-    
-    const newRules = [...rules];
-    newRules[ruleIndex].conditions.splice(conditionIndex, 1);
-    
-    setRules(newRules);
-    onUpdateRules(newRules);
+
+    updatedRules[ruleIndex].conditions.splice(conditionIndex, 1);
+
+    setRules(updatedRules);
+    onUpdateRules(updatedRules);
   };
 
-  const updateCustomRule = (ruleIndex: number, field: keyof CustomRule, value: string | boolean) => {
-    const newRules = [...rules];
+  // Update a condition in a custom rule
+  const updateCustomRuleCondition = (
+    ruleIndex: number, 
+    conditionIndex: number, 
+    field: keyof RuleCondition, 
+    value: any
+  ) => {
+    const updatedRules = [...rules];
     
-    // Type assertion to handle the specific field types
-    if (field === 'name' || field === 'description' || field === 'action') {
-      (newRules[ruleIndex][field] as string) = value as string;
-    } else if (field === 'active') {
-      (newRules[ruleIndex][field] as boolean) = value as boolean;
+    // Ensure the rule has a conditions array
+    if (!updatedRules[ruleIndex].conditions) {
+      updatedRules[ruleIndex].conditions = [];
+      return;
     }
-    
-    setRules(newRules);
-    onUpdateRules(newRules);
-  };
 
-  const updateCustomRuleCondition = (ruleIndex: number, conditionIndex: number, field: keyof RuleCondition, value: string | number) => {
-    const newRules = [...rules];
-    
-    // Handle all available fields in RuleCondition
-    if (field === 'metric' || field === 'field' || field === 'operator' || field === 'period') {
-      (newRules[ruleIndex].conditions[conditionIndex][field] as string) = value as string;
-    } else if (field === 'value') {
-      (newRules[ruleIndex].conditions[conditionIndex][field] as number) = value as number;
-    }
-    
-    setRules(newRules);
-    onUpdateRules(newRules);
+    updatedRules[ruleIndex].conditions[conditionIndex] = {
+      ...updatedRules[ruleIndex].conditions[conditionIndex],
+      [field]: value
+    };
+
+    setRules(updatedRules);
+    onUpdateRules(updatedRules);
   };
 
   return {
     rules,
     addCustomRule,
+    updateCustomRule,
     removeCustomRule,
     addCustomRuleCondition,
     removeCustomRuleCondition,
-    updateCustomRule,
     updateCustomRuleCondition
   };
 };

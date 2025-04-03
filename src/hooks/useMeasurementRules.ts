@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { DB_FIELDS } from '@/constants/incentiveConstants';
 import { MeasurementRules, Adjustment, Exclusion, PrimaryMetric } from '@/types/incentiveTypes';
@@ -81,7 +82,8 @@ export const useMeasurementRules = (
     }
     
     console.log(`Fields for category ${category}:`, fields);
-    return fields.map(field => field.kpi);
+    // Filter out fields with empty kpi values
+    return fields.filter(field => field.kpi.trim() !== '').map(field => field.kpi);
   };
 
   // Helper function to get KPI metadata from selected scheme
@@ -93,25 +95,33 @@ export const useMeasurementRules = (
     // Add all KPIs from all categories
     if (selectedScheme.qualificationFields?.length) {
       selectedScheme.qualificationFields.forEach((field: KpiField) => {
-        metadata[field.kpi] = field;
+        if (field.kpi.trim() !== '') {
+          metadata[field.kpi] = field;
+        }
       });
     }
     
     if (selectedScheme.adjustmentFields?.length) {
       selectedScheme.adjustmentFields.forEach((field: KpiField) => {
-        metadata[field.kpi] = field;
+        if (field.kpi.trim() !== '') {
+          metadata[field.kpi] = field;
+        }
       });
     }
     
     if (selectedScheme.exclusionFields?.length) {
       selectedScheme.exclusionFields.forEach((field: KpiField) => {
-        metadata[field.kpi] = field;
+        if (field.kpi.trim() !== '') {
+          metadata[field.kpi] = field;
+        }
       });
     }
     
     if (selectedScheme.customRules?.length) {
       selectedScheme.customRules.forEach((field: KpiField) => {
-        metadata[field.kpi] = field;
+        if (field.kpi.trim() !== '') {
+          metadata[field.kpi] = field;
+        }
       });
     }
     
@@ -137,7 +147,8 @@ export const useMeasurementRules = (
   // Primary Metric handlers
   const addPrimaryMetric = () => {
     const qualificationFields = getDbFields('qualification');
-    const defaultField = qualificationFields.length > 0 ? qualificationFields[0] : '';
+    // Use a safe default value - either the first valid field or a placeholder
+    const defaultField = qualificationFields.length > 0 ? qualificationFields[0] : 'default-field';
     
     const newMetric: PrimaryMetric = {
       field: defaultField,
@@ -202,7 +213,8 @@ export const useMeasurementRules = (
   // Adjustment handlers
   const addAdjustment = () => {
     const adjustmentFields = getDbFields('adjustment');
-    const defaultField = adjustmentFields.length > 0 ? adjustmentFields[0] : '';
+    // Use a safe default value - either the first valid field or a placeholder
+    const defaultField = adjustmentFields.length > 0 ? adjustmentFields[0] : 'default-field';
     
     const newAdjustment: Adjustment = {
       id: uuidv4(),
@@ -256,7 +268,8 @@ export const useMeasurementRules = (
   // Exclusion handlers
   const addExclusion = () => {
     const exclusionFields = getDbFields('exclusion');
-    const defaultField = exclusionFields.length > 0 ? exclusionFields[0] : '';
+    // Use a safe default value - either the first valid field or a placeholder
+    const defaultField = exclusionFields.length > 0 ? exclusionFields[0] : 'default-field';
     
     const newExclusion: Exclusion = {
       field: defaultField,

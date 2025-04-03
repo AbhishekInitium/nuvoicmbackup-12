@@ -27,6 +27,9 @@ const ExclusionForm: React.FC<ExclusionFormProps> = ({
   onRemoveExclusion,
   isReadOnly = false
 }) => {
+  // Filter out empty string values
+  const filteredFields = dbFields.filter(field => field.trim() !== '');
+  
   // Determine input type based on field data type
   const getInputType = (): string => {
     if (exclusion.field && kpiMetadata && kpiMetadata[exclusion.field]) {
@@ -60,8 +63,11 @@ const ExclusionForm: React.FC<ExclusionFormProps> = ({
   const inputType = getInputType();
   
   // Add logging to debug available fields
-  console.log(`Exclusion Form #${exclusionIndex} - Available fields:`, dbFields);
+  console.log(`Exclusion Form #${exclusionIndex} - Available fields:`, filteredFields);
   console.log(`Exclusion Form #${exclusionIndex} - KPI Metadata:`, kpiMetadata);
+  
+  // Use a default field if current field is empty
+  const safeFieldValue = exclusion.field || 'default-field';
 
   return (
     <GlassCard className="p-4">
@@ -93,7 +99,7 @@ const ExclusionForm: React.FC<ExclusionFormProps> = ({
             </div>
           ) : (
             <Select 
-              value={exclusion.field}
+              value={safeFieldValue}
               onValueChange={(value) => onUpdateExclusion(exclusionIndex, 'field', value)}
               disabled={isReadOnly}
             >
@@ -101,8 +107,8 @@ const ExclusionForm: React.FC<ExclusionFormProps> = ({
                 <SelectValue placeholder="Select field" />
               </SelectTrigger>
               <SelectContent className="bg-white">
-                {dbFields.length > 0 ? (
-                  dbFields.map(field => {
+                {filteredFields.length > 0 ? (
+                  filteredFields.map(field => {
                     // Get the display name from metadata if available
                     const displayName = kpiMetadata && kpiMetadata[field] 
                       ? kpiMetadata[field].description || field 

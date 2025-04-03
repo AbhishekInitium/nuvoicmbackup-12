@@ -29,7 +29,8 @@ const RuleConditionComponent: React.FC<RuleConditionComponentProps> = ({
   // Get field options from availableFields or fallback to DB_FIELDS
   const getFieldOptions = () => {
     if (availableFields && availableFields.length > 0) {
-      return availableFields;
+      // Filter out any empty string values before returning
+      return availableFields.filter(field => field.trim() !== '');
     }
     
     // Fallback to default fields from constant
@@ -80,7 +81,7 @@ const RuleConditionComponent: React.FC<RuleConditionComponentProps> = ({
   return (
     <div className="flex items-center space-x-3">
       <Select 
-        value={condition.field || ''}
+        value={condition.field || 'default-field'}
         onValueChange={(value) => onUpdate('field', value)}
       >
         <SelectTrigger className="w-36 bg-white">

@@ -30,6 +30,9 @@ const PrimaryMetricSelector: React.FC<PrimaryMetricSelectorProps> = ({
   // Since we're working with a single metric at a time
   const metric = primaryMetrics[0];
   
+  // Filter out empty strings from dbFields
+  const filteredFields = dbFields.filter(field => field.trim() !== '');
+  
   // Determine input type based on field data type
   const getInputType = (): string => {
     if (metric.field && kpiMetadata && kpiMetadata[metric.field]) {
@@ -64,10 +67,13 @@ const PrimaryMetricSelector: React.FC<PrimaryMetricSelectorProps> = ({
   const inputType = getInputType();
   
   // Debug logs
-  console.log("PrimaryMetricSelector - Available fields:", dbFields);
+  console.log("PrimaryMetricSelector - Available fields:", filteredFields);
   console.log("PrimaryMetricSelector - KPI Metadata:", kpiMetadata);
   console.log("PrimaryMetricSelector - Current metric:", metric);
   console.log("PrimaryMetricSelector - Input type:", inputType);
+
+  // Use a default field if the current field is empty
+  const safeFieldValue = metric.field || 'default-field';
 
   return (
     <GlassCard variant="outlined" className="p-4">
@@ -76,15 +82,15 @@ const PrimaryMetricSelector: React.FC<PrimaryMetricSelectorProps> = ({
           <div className="sm:col-span-3">
             <label className="block text-sm font-medium text-app-gray-700 mb-2">Field</label>
             <Select 
-              value={metric.field}
+              value={safeFieldValue}
               onValueChange={(value) => onUpdateMetric('field', value)}
             >
               <SelectTrigger className="w-full bg-white">
                 <SelectValue placeholder="Select field" />
               </SelectTrigger>
               <SelectContent className="bg-white z-50">
-                {dbFields.length > 0 ? (
-                  dbFields.map(field => {
+                {filteredFields.length > 0 ? (
+                  filteredFields.map(field => {
                     // Get the display name from metadata if available
                     const displayName = kpiMetadata && kpiMetadata[field] 
                       ? kpiMetadata[field].description || field 
