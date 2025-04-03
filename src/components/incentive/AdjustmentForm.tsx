@@ -126,7 +126,7 @@ const AdjustmentForm: React.FC<AdjustmentFormProps> = ({
                     ? kpiMetadata[field].description || field 
                     : field;
                   return (
-                    <SelectItem key={field} value={field}>{displayName}</SelectItem>
+                    <SelectItem key={field} value={field || "default-field"}>{displayName}</SelectItem>
                   );
                 })}
               </SelectContent>
@@ -151,7 +151,7 @@ const AdjustmentForm: React.FC<AdjustmentFormProps> = ({
               </SelectTrigger>
               <SelectContent className="bg-white">
                 {operators.map(op => (
-                  <SelectItem key={op.value} value={op.value}>{op.label}</SelectItem>
+                  <SelectItem key={op.value} value={op.value || "default-operator"}>{op.label}</SelectItem>
                 ))}
               </SelectContent>
             </Select>

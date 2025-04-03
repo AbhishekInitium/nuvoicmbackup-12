@@ -50,7 +50,7 @@ const RevenueBaseSelector: React.FC<RevenueBaseSelectorProps> = ({
                 </div>
               ) : (
                 schemeConfigs.map((config) => (
-                  <SelectItem key={config._id} value={config._id || ''}>
+                  <SelectItem key={config._id} value={config._id || 'default-config-id'}>
                     {config.adminName} - {config.calculationBase}
                   </SelectItem>
                 ))
