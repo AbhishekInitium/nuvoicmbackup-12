@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Trash2 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -83,7 +82,7 @@ const RuleConditionComponent: React.FC<RuleConditionComponentProps> = ({
     // First update the field name
     onUpdate('field', fieldName);
     
-    // If we have metadata for this field, copy all the relevant properties
+    /* // If we have metadata for this field, copy all the relevant properties
     if (kpiMetadata && kpiMetadata[fieldName]) {
       const metadata = kpiMetadata[fieldName];
       
@@ -104,7 +103,7 @@ const RuleConditionComponent: React.FC<RuleConditionComponentProps> = ({
       if (metadata.dataType) {
         onUpdate('dataType', metadata.dataType);
       }
-    }
+    } */
   };
 
   // Determine input type based on data type
