@@ -54,11 +54,16 @@ export const useSaveIncentivePlan = ({
         status: plan.metadata?.status || 'DRAFT'
       };
       
+      // Ensure the selectedSchemeConfig is properly included in the plan to save
       const schemeToSave: IncentivePlan = {
         ...plan,
         schemeId: schemeId,
-        metadata: metadata
+        metadata: metadata,
+        // Explicitly include the selectedSchemeConfig to ensure it gets saved
+        selectedSchemeConfig: plan.selectedSchemeConfig || null
       };
+      
+      console.log("Saving scheme with configuration:", schemeToSave.selectedSchemeConfig);
       
       let id: string | null = null;
       

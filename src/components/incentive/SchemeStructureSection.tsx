@@ -68,7 +68,10 @@ const SchemeStructureSection: React.FC<SchemeStructureSectionProps> = ({
     const selectedConfig = configOptions.find(config => config._id === configId);
     
     if (selectedConfig) {
+      console.log("Selected config:", selectedConfig);
       setSelectedConfig(selectedConfig);
+      
+      // Update the plan with the full config object
       updatePlan('selectedSchemeConfig', selectedConfig);
       
       // Also update the revenue base to match the config
@@ -133,7 +136,7 @@ const SchemeStructureSection: React.FC<SchemeStructureSectionProps> = ({
           </div>
         </div>
         
-        {/* New Base Field Input */}
+        {/* Base Field Input */}
         <div className="grid md:grid-cols-2 gap-6">
           <div>
             <Label className="text-sm font-medium text-app-gray-700 mb-2">

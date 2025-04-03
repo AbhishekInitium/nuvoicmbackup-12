@@ -87,6 +87,14 @@ const IncentivePlanDesigner: React.FC<IncentivePlanDesignerProps> = ({
     copyExistingScheme
   } = useIncentivePlan(initialPlan, undefined, refetchPlans);
 
+  // Update selectedSchemeConfig in plan whenever it changes
+  useEffect(() => {
+    if (selectedSchemeConfig && plan) {
+      updatePlan('selectedSchemeConfig', selectedSchemeConfig);
+      console.log("Updated plan with selected scheme config:", selectedSchemeConfig.adminName);
+    }
+  }, [selectedSchemeConfig]);
+
   // Update selected scheme config whenever plan changes
   useEffect(() => {
     if (plan?.selectedSchemeConfig) {
