@@ -18,7 +18,7 @@ export const useCommissionTiers = (
   const addTier = () => {
     // Get the highest 'to' value from existing tiers
     const highestTo = structure.tiers.reduce((max, tier) => Math.max(max, tier.to), 0);
-    const newFrom = highestTo > 0 ? highestTo : 0;
+    const newFrom = highestTo > 0 ? highestTo + 1 : 0; // Add 1 to the highest 'to' value
     const newTo = newFrom + 10000; // Add a reasonable gap
     
     const updatedStructure = {
@@ -33,6 +33,17 @@ export const useCommissionTiers = (
   const removeTier = (index: number) => {
     const updatedTiers = [...structure.tiers];
     updatedTiers.splice(index, 1);
+    
+    // After removing a tier, ensure progressive tiers for all subsequent tiers
+    for (let i = 1; i < updatedTiers.length; i++) {
+      if (i === 1) {
+        // First tier should start from 0
+        continue;
+      } else {
+        // Set the 'from' value to the previous tier's 'to' value + 1
+        updatedTiers[i].from = updatedTiers[i - 1].to + 1;
+      }
+    }
     
     const updatedStructure = {
       ...structure,
@@ -49,6 +60,11 @@ export const useCommissionTiers = (
       ...updatedTiers[index],
       [field]: value
     };
+
+    // If "to" value is updated, update the "from" value of the next tier
+    if (field === 'to' && index < updatedTiers.length - 1) {
+      updatedTiers[index + 1].from = value + 1;
+    }
     
     const updatedStructure = {
       ...structure,

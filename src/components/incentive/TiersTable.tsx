@@ -16,6 +16,20 @@ const TiersTable: React.FC<TiersTableProps> = ({
   updateTier,
   removeTier
 }) => {
+  // This function handles tier updates with progressive values
+  const handleTierUpdate = (index: number, field: keyof Tier, value: string | number) => {
+    // Convert value to number if it's a string
+    const numValue = typeof value === 'string' ? parseInt(value) || 0 : value;
+    
+    // If we're updating the "to" value of a tier, update the "from" value of the next tier
+    if (field === 'to' && index < tiers.length - 1) {
+      updateTier(index + 1, 'from', numValue + 1);
+    }
+    
+    // Update the current tier
+    updateTier(index, field, numValue);
+  };
+
   return (
     <div className="overflow-hidden rounded-xl border border-app-gray-200">
       <div className="overflow-x-auto">
@@ -36,7 +50,7 @@ const TiersTable: React.FC<TiersTableProps> = ({
                 tier={tier}
                 index={index}
                 currencySymbol={currencySymbol}
-                updateTier={updateTier}
+                updateTier={handleTierUpdate}
                 removeTier={removeTier}
               />
             ))}

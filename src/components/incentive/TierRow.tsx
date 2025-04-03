@@ -19,6 +19,11 @@ const TierRow: React.FC<TierRowProps> = ({
   updateTier,
   removeTier
 }) => {
+  // Format the displayed value
+  const formatValue = (value: number): string => {
+    return value === 0 ? '' : value.toString();
+  };
+
   return (
     <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-app-gray-50 bg-opacity-30'}>
       <td className="px-6 py-4 whitespace-nowrap">
@@ -29,12 +34,12 @@ const TierRow: React.FC<TierRowProps> = ({
           <input 
             type="text" 
             className="form-input pl-8 py-2"
-            value={tier.from === 0 && index > 0 ? '' : tier.from}
+            value={formatValue(tier.from)}
             onChange={(e) => {
               const value = e.target.value.replace(/[^0-9]/g, '');
               updateTier(index, 'from', value ? parseInt(value) : 0);
             }}
-            disabled={index > 0} 
+            disabled={index > 0} // Disable for non-first tiers
             placeholder="Enter amount"
           />
         </div>
@@ -47,7 +52,7 @@ const TierRow: React.FC<TierRowProps> = ({
           <input 
             type="text" 
             className="form-input pl-8 py-2"
-            value={tier.to === 0 ? '' : tier.to}
+            value={formatValue(tier.to)}
             onChange={(e) => {
               const value = e.target.value.replace(/[^0-9]/g, '');
               updateTier(index, 'to', value ? parseInt(value) : 0);
@@ -64,7 +69,7 @@ const TierRow: React.FC<TierRowProps> = ({
           <input 
             type="text" 
             className="form-input pl-8 py-2"
-            value={tier.rate === 0 ? '' : tier.rate}
+            value={formatValue(tier.rate)}
             onChange={(e) => {
               const value = e.target.value.replace(/[^0-9]/g, '');
               updateTier(index, 'rate', value ? parseInt(value) : 0);
