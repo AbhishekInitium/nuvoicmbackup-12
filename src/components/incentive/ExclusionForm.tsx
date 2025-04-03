@@ -15,6 +15,7 @@ interface ExclusionFormProps {
   kpiMetadata?: Record<string, KpiField>;
   onUpdateExclusion: (index: number, field: keyof Exclusion, value: string | number) => void;
   onRemoveExclusion: (index: number) => void;
+  isReadOnly?: boolean;
 }
 
 const ExclusionForm: React.FC<ExclusionFormProps> = ({
@@ -23,7 +24,8 @@ const ExclusionForm: React.FC<ExclusionFormProps> = ({
   dbFields,
   kpiMetadata,
   onUpdateExclusion,
-  onRemoveExclusion
+  onRemoveExclusion,
+  isReadOnly = false
 }) => {
   // Determine input type based on field data type
   const getInputType = (): string => {
@@ -64,68 +66,92 @@ const ExclusionForm: React.FC<ExclusionFormProps> = ({
           onChange={(e) => onUpdateExclusion(exclusionIndex, 'description', e.target.value)}
           className="text-lg font-medium border-none px-0 h-auto focus-visible:ring-0"
           placeholder="Exclusion Description"
+          disabled={isReadOnly}
         />
-        <button 
-          className="p-1 rounded-full hover:bg-app-gray-100 text-app-gray-500 hover:text-app-red transition-colors duration-200"
-          onClick={() => onRemoveExclusion(exclusionIndex)}
-        >
-          <Trash2 size={18} />
-        </button>
+        {!isReadOnly && (
+          <button 
+            className="p-1 rounded-full hover:bg-app-gray-100 text-app-gray-500 hover:text-app-red transition-colors duration-200"
+            onClick={() => onRemoveExclusion(exclusionIndex)}
+          >
+            <Trash2 size={18} />
+          </button>
+        )}
       </div>
       
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div>
           <label className="block text-sm font-medium text-app-gray-700 mb-2">Field</label>
-          <Select 
-            value={exclusion.field}
-            onValueChange={(value) => onUpdateExclusion(exclusionIndex, 'field', value)}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select field" />
-            </SelectTrigger>
-            <SelectContent>
-              {dbFields.map(field => (
-                <SelectItem key={field} value={field}>{field}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          {isReadOnly ? (
+            <div className="h-10 px-4 py-2 rounded-md border border-gray-300 bg-gray-50 text-gray-700">
+              {exclusion.field}
+            </div>
+          ) : (
+            <Select 
+              value={exclusion.field}
+              onValueChange={(value) => onUpdateExclusion(exclusionIndex, 'field', value)}
+              disabled={isReadOnly}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select field" />
+              </SelectTrigger>
+              <SelectContent>
+                {dbFields.map(field => (
+                  <SelectItem key={field} value={field}>{field}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
         </div>
         
         <div>
           <label className="block text-sm font-medium text-app-gray-700 mb-2">Operator</label>
-          <Select 
-            value={exclusion.operator}
-            onValueChange={(value) => onUpdateExclusion(exclusionIndex, 'operator', value)}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Operator" />
-            </SelectTrigger>
-            <SelectContent>
-              {OPERATORS.map(op => (
-                <SelectItem key={op.value} value={op.value}>{op.label}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          {isReadOnly ? (
+            <div className="h-10 px-4 py-2 rounded-md border border-gray-300 bg-gray-50 text-gray-700">
+              {exclusion.operator}
+            </div>
+          ) : (
+            <Select 
+              value={exclusion.operator}
+              onValueChange={(value) => onUpdateExclusion(exclusionIndex, 'operator', value)}
+              disabled={isReadOnly}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Operator" />
+              </SelectTrigger>
+              <SelectContent>
+                {OPERATORS.map(op => (
+                  <SelectItem key={op.value} value={op.value}>{op.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
         </div>
         
         <div>
           <label className="block text-sm font-medium text-app-gray-700 mb-2">Value</label>
-          <Input 
-            type={inputType}
-            value={exclusion.value}
-            onChange={(e) => {
-              const value = e.target.value;
-              
-              // Only try to parse as number if input type is number
-              if (inputType === 'number') {
-                const numValue = parseFloat(value);
-                onUpdateExclusion(exclusionIndex, 'value', isNaN(numValue) ? value : numValue);
-              } else {
-                onUpdateExclusion(exclusionIndex, 'value', value);
-              }
-            }}
-            step={inputType === 'number' ? "0.01" : undefined}
-          />
+          {isReadOnly ? (
+            <div className="h-10 px-4 py-2 rounded-md border border-gray-300 bg-gray-50 text-gray-700">
+              {exclusion.value}
+            </div>
+          ) : (
+            <Input 
+              type={inputType}
+              value={exclusion.value}
+              onChange={(e) => {
+                const value = e.target.value;
+                
+                // Only try to parse as number if input type is number
+                if (inputType === 'number') {
+                  const numValue = parseFloat(value);
+                  onUpdateExclusion(exclusionIndex, 'value', isNaN(numValue) ? value : numValue);
+                } else {
+                  onUpdateExclusion(exclusionIndex, 'value', value);
+                }
+              }}
+              step={inputType === 'number' ? "0.01" : undefined}
+              disabled={isReadOnly}
+            />
+          )}
         </div>
       </div>
     </GlassCard>

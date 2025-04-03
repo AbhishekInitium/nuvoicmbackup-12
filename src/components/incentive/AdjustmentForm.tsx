@@ -16,6 +16,7 @@ interface AdjustmentFormProps {
   currencySymbol: string;
   onUpdateAdjustment: (index: number, field: keyof Adjustment, value: string | number) => void;
   onRemoveAdjustment: (index: number) => void;
+  isReadOnly?: boolean;
 }
 
 const AdjustmentForm: React.FC<AdjustmentFormProps> = ({
@@ -25,7 +26,8 @@ const AdjustmentForm: React.FC<AdjustmentFormProps> = ({
   kpiMetadata,
   currencySymbol,
   onUpdateAdjustment,
-  onRemoveAdjustment
+  onRemoveAdjustment,
+  isReadOnly = false
 }) => {
   // Determine input type based on field data type
   const getInputType = (): string => {
@@ -66,85 +68,116 @@ const AdjustmentForm: React.FC<AdjustmentFormProps> = ({
           onChange={(e) => onUpdateAdjustment(adjustmentIndex, 'description', e.target.value)}
           className="text-lg font-medium border-none px-0 h-auto focus-visible:ring-0"
           placeholder="Adjustment Description"
+          disabled={isReadOnly}
         />
-        <button 
-          className="p-1 rounded-full hover:bg-app-gray-100 text-app-gray-500 hover:text-app-red transition-colors duration-200"
-          onClick={() => onRemoveAdjustment(adjustmentIndex)}
-        >
-          <Trash2 size={18} />
-        </button>
+        {!isReadOnly && (
+          <button 
+            className="p-1 rounded-full hover:bg-app-gray-100 text-app-gray-500 hover:text-app-red transition-colors duration-200"
+            onClick={() => onRemoveAdjustment(adjustmentIndex)}
+          >
+            <Trash2 size={18} />
+          </button>
+        )}
       </div>
       
       <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
         <div>
           <label className="block text-sm font-medium text-app-gray-700 mb-2">Field</label>
-          <Select 
-            value={adjustment.field}
-            onValueChange={(value) => onUpdateAdjustment(adjustmentIndex, 'field', value)}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select field" />
-            </SelectTrigger>
-            <SelectContent>
-              {dbFields.map(field => (
-                <SelectItem key={field} value={field}>{field}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          {isReadOnly ? (
+            <div className="h-10 px-4 py-2 rounded-md border border-gray-300 bg-gray-50 text-gray-700">
+              {adjustment.field}
+            </div>
+          ) : (
+            <Select 
+              value={adjustment.field}
+              onValueChange={(value) => onUpdateAdjustment(adjustmentIndex, 'field', value)}
+              disabled={isReadOnly}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select field" />
+              </SelectTrigger>
+              <SelectContent>
+                {dbFields.map(field => (
+                  <SelectItem key={field} value={field}>{field}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
         </div>
         
         <div>
           <label className="block text-sm font-medium text-app-gray-700 mb-2">Operator</label>
-          <Select 
-            value={adjustment.operator}
-            onValueChange={(value) => onUpdateAdjustment(adjustmentIndex, 'operator', value)}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Operator" />
-            </SelectTrigger>
-            <SelectContent>
-              {OPERATORS.map(op => (
-                <SelectItem key={op.value} value={op.value}>{op.label}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          {isReadOnly ? (
+            <div className="h-10 px-4 py-2 rounded-md border border-gray-300 bg-gray-50 text-gray-700">
+              {adjustment.operator}
+            </div>
+          ) : (
+            <Select 
+              value={adjustment.operator}
+              onValueChange={(value) => onUpdateAdjustment(adjustmentIndex, 'operator', value)}
+              disabled={isReadOnly}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Operator" />
+              </SelectTrigger>
+              <SelectContent>
+                {OPERATORS.map(op => (
+                  <SelectItem key={op.value} value={op.value}>{op.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
         </div>
         
         <div>
           <label className="block text-sm font-medium text-app-gray-700 mb-2">Value</label>
-          <Input 
-            type={inputType}
-            value={adjustment.value}
-            onChange={(e) => {
-              const value = e.target.value;
-              
-              // Only try to parse as number if input type is number
-              if (inputType === 'number') {
-                const numValue = parseFloat(value);
-                onUpdateAdjustment(adjustmentIndex, 'value', isNaN(numValue) ? value : numValue);
-              } else {
-                onUpdateAdjustment(adjustmentIndex, 'value', value);
-              }
-            }}
-            step={inputType === 'number' ? "0.01" : undefined}
-          />
+          {isReadOnly ? (
+            <div className="h-10 px-4 py-2 rounded-md border border-gray-300 bg-gray-50 text-gray-700">
+              {adjustment.value}
+            </div>
+          ) : (
+            <Input 
+              type={inputType}
+              value={adjustment.value}
+              onChange={(e) => {
+                const value = e.target.value;
+                
+                // Only try to parse as number if input type is number
+                if (inputType === 'number') {
+                  const numValue = parseFloat(value);
+                  onUpdateAdjustment(adjustmentIndex, 'value', isNaN(numValue) ? value : numValue);
+                } else {
+                  onUpdateAdjustment(adjustmentIndex, 'value', value);
+                }
+              }}
+              step={inputType === 'number' ? "0.01" : undefined}
+              disabled={isReadOnly}
+            />
+          )}
         </div>
         
         <div>
           <label className="block text-sm font-medium text-app-gray-700 mb-2">Adjustment Type</label>
-          <Select 
-            value={adjustment.type}
-            onValueChange={(value) => onUpdateAdjustment(adjustmentIndex, 'type', value)}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Adjustment Type" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="PERCENTAGE_BOOST">Percentage Boost</SelectItem>
-              <SelectItem value="FLAT_AMOUNT">Flat Amount</SelectItem>
-              <SelectItem value="TIER_OVERRIDE">Tier Override</SelectItem>
-            </SelectContent>
-          </Select>
+          {isReadOnly ? (
+            <div className="h-10 px-4 py-2 rounded-md border border-gray-300 bg-gray-50 text-gray-700">
+              {adjustment.type}
+            </div>
+          ) : (
+            <Select 
+              value={adjustment.type}
+              onValueChange={(value) => onUpdateAdjustment(adjustmentIndex, 'type', value)}
+              disabled={isReadOnly}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Adjustment Type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="PERCENTAGE_BOOST">Percentage Boost</SelectItem>
+                <SelectItem value="FLAT_AMOUNT">Flat Amount</SelectItem>
+                <SelectItem value="TIER_OVERRIDE">Tier Override</SelectItem>
+              </SelectContent>
+            </Select>
+          )}
         </div>
         
         <div>
@@ -156,12 +189,19 @@ const AdjustmentForm: React.FC<AdjustmentFormProps> = ({
                 : "Factor"
             }
           </label>
-          <Input 
-            type="number"
-            value={adjustment.impact}
-            onChange={(e) => onUpdateAdjustment(adjustmentIndex, 'impact', parseFloat(e.target.value))}
-            step="0.01"
-          />
+          {isReadOnly ? (
+            <div className="h-10 px-4 py-2 rounded-md border border-gray-300 bg-gray-50 text-gray-700">
+              {adjustment.impact}
+            </div>
+          ) : (
+            <Input 
+              type="number"
+              value={adjustment.impact}
+              onChange={(e) => onUpdateAdjustment(adjustmentIndex, 'impact', parseFloat(e.target.value))}
+              step="0.01"
+              disabled={isReadOnly}
+            />
+          )}
         </div>
       </div>
     </GlassCard>
