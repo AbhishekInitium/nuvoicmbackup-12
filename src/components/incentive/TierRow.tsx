@@ -21,7 +21,7 @@ const TierRow: React.FC<TierRowProps> = ({
 }) => {
   // Format the displayed value
   const formatValue = (value: number): string => {
-    return value === 0 ? '' : value.toString();
+    return value === 0 ? '0' : value.toString();
   };
 
   return (
