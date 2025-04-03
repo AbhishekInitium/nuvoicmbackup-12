@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -165,7 +166,8 @@ const BasicInformation: React.FC<BasicInformationProps> = ({
                   ) : (
                     <Input
                       id="salesQuota"
-                      type="text"
+                      type="number"
+                      min="0"
                       value={plan.salesQuota || 0}
                       onChange={handleNumberChange}
                       className="w-full pl-7"

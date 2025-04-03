@@ -40,10 +40,7 @@ export const getOperatorsByDataType = (dataType: string | undefined) => {
   
   const type = dataType.toLowerCase();
   
-  // Check for character/string type fields first
-  if (type.startsWith('char') || type === 'string' || type === 'text') {
-    return STRING_OPERATORS;
-  } else if (type === 'number' || type === 'decimal' || type === 'integer' || type === 'int8' || type === 'float') {
+  if (type === 'number' || type === 'decimal' || type === 'integer' || type === 'int8') {
     return NUMERIC_OPERATORS;
   } else if (type === 'boolean') {
     return BOOLEAN_OPERATORS;

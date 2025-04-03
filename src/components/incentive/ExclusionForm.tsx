@@ -29,17 +29,10 @@ const ExclusionForm: React.FC<ExclusionFormProps> = ({
 }) => {
   const [dataType, setDataType] = useState<string | undefined>(undefined);
 
-  // Safety check to ensure we have valid fields
-  const safeDbFields = dbFields && dbFields.length > 0 ? 
-    dbFields.filter(field => field !== undefined && field !== "") :
-    ["default_field"]; // Fallback to prevent empty values
-
   // Update data type when field changes
   useEffect(() => {
     if (exclusion.field && kpiMetadata && kpiMetadata[exclusion.field]) {
-      const fieldDataType = kpiMetadata[exclusion.field].dataType;
-      setDataType(fieldDataType);
-      console.log(`ExclusionForm - Setting data type for ${exclusion.field} with dataType ${fieldDataType}`);
+      setDataType(kpiMetadata[exclusion.field].dataType);
     }
   }, [exclusion.field, kpiMetadata]);
 
@@ -53,7 +46,6 @@ const ExclusionForm: React.FC<ExclusionFormProps> = ({
         case 'decimal':
         case 'integer':
         case 'int8':
-        case 'float':
           return 'number';
         case 'date':
           return 'date';
@@ -66,7 +58,6 @@ const ExclusionForm: React.FC<ExclusionFormProps> = ({
         case 'char':
         case 'char10':
         case 'string':
-        case 'text':
         default:
           return 'text';
       }
@@ -124,14 +115,14 @@ const ExclusionForm: React.FC<ExclusionFormProps> = ({
                 <SelectValue placeholder="Select field" />
               </SelectTrigger>
               <SelectContent className="bg-white">
-                {safeDbFields.length > 0 ? (
-                  safeDbFields.map((field, index) => {
+                {dbFields.length > 0 ? (
+                  dbFields.map(field => {
                     // Get the display name from metadata if available
                     const displayName = kpiMetadata && kpiMetadata[field] 
                       ? kpiMetadata[field].description || field 
                       : field;
                     return (
-                      <SelectItem key={index} value={field}>{displayName}</SelectItem>
+                      <SelectItem key={field} value={field}>{displayName}</SelectItem>
                     );
                   })
                 ) : (

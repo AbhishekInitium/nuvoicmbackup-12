@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
@@ -93,7 +94,8 @@ const SchemeStructureSection: React.FC<SchemeStructureSectionProps> = ({
 
   const handleCalculationFieldChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
-    updatePlan('baseField', value); // Changed from calculationField
+    setCalculationField(value);
+    updatePlan('calculationField', value);
   };
 
   return (
@@ -145,28 +147,28 @@ const SchemeStructureSection: React.FC<SchemeStructureSectionProps> = ({
           </div>
         </div>
 
-        {/* Base Field */}
+        {/* Calculation Field */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <Label className="text-sm font-medium text-app-gray-700 mb-2 flex items-center">
               <Calculator className="w-4 h-4 mr-1" />
-              Base Field
+              Calculation Field
             </Label>
             {isReadOnly ? (
               <div className="h-10 px-4 py-2 rounded-md border border-gray-300 bg-gray-50 text-gray-700">
-                {plan.baseField || 'Not specified'}
+                {calculationField || 'Not specified'}
               </div>
             ) : (
               <Input
-                value={plan.baseField || ''} // Changed from calculationField
+                value={calculationField}
                 onChange={handleCalculationFieldChange}
-                placeholder="Enter base field"
+                placeholder="Enter calculation field"
                 className="w-full"
                 disabled={isReadOnly}
               />
             )}
             <p className="mt-1 text-xs text-app-gray-500">
-              Specify the base field used for calculations
+              Specify the field used for calculations
             </p>
           </div>
         </div>

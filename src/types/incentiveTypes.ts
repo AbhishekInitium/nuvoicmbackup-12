@@ -82,7 +82,7 @@ export interface IncentivePlan {
   effectiveEnd?: string;
   currency: string;
   revenueBase: string; 
-  baseField?: string; // Renamed from calculationField
+  calculationField?: string;
   participants: string[];
   salesQuota: number;
   commissionStructure: CommissionStructure;

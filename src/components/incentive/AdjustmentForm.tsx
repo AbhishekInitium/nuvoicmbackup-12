@@ -31,20 +31,6 @@ const AdjustmentForm: React.FC<AdjustmentFormProps> = ({
 }) => {
   const [dataType, setDataType] = useState<string | undefined>(undefined);
 
-  // Safety check to ensure we have valid fields
-  const safeDbFields = dbFields && dbFields.length > 0 ? 
-    dbFields.filter(field => field !== undefined && field !== "") :
-    ["default_field"]; // Fallback to prevent empty values
-
-  // Update data type when field changes
-  useEffect(() => {
-    if (adjustment.field && kpiMetadata && kpiMetadata[adjustment.field]) {
-      const fieldDataType = kpiMetadata[adjustment.field].dataType;
-      setDataType(fieldDataType);
-      console.log(`AdjustmentForm - Setting data type for ${adjustment.field} with dataType ${fieldDataType}`);
-    }
-  }, [adjustment.field, kpiMetadata]);
-
   // Determine input type based on field data type
   const getInputType = (): string => {
     if (adjustment.field && kpiMetadata && kpiMetadata[adjustment.field]) {
@@ -55,7 +41,6 @@ const AdjustmentForm: React.FC<AdjustmentFormProps> = ({
         case 'decimal':
         case 'integer':
         case 'int8':
-        case 'float':
           return 'number';
         case 'date':
           return 'date';
@@ -68,7 +53,6 @@ const AdjustmentForm: React.FC<AdjustmentFormProps> = ({
         case 'char':
         case 'char10':
         case 'string':
-        case 'text':
         default:
           return 'text';
       }
@@ -77,15 +61,17 @@ const AdjustmentForm: React.FC<AdjustmentFormProps> = ({
     return 'text';
   };
 
+  // Update data type when field changes
+  useEffect(() => {
+    if (adjustment.field && kpiMetadata && kpiMetadata[adjustment.field]) {
+      setDataType(kpiMetadata[adjustment.field].dataType);
+    }
+  }, [adjustment.field, kpiMetadata]);
+
   const inputType = getInputType();
   
   // Get operators based on data type
   const operators = getOperatorsByDataType(dataType);
-  
-  console.log(`Adjustment Form #${adjustmentIndex} - Available fields:`, dbFields);
-  console.log(`Adjustment Form #${adjustmentIndex} - KPI Metadata:`, kpiMetadata);
-  console.log(`Adjustment Form #${adjustmentIndex} - Data Type:`, dataType);
-  console.log(`Adjustment Form #${adjustmentIndex} - Available operators:`, operators);
 
   return (
     <GlassCard className="p-4">
@@ -125,13 +111,13 @@ const AdjustmentForm: React.FC<AdjustmentFormProps> = ({
                 <SelectValue placeholder="Select field" />
               </SelectTrigger>
               <SelectContent className="bg-white">
-                {safeDbFields.map((field, index) => {
+                {dbFields.map(field => {
                   // Get the display name from metadata if available
                   const displayName = kpiMetadata && kpiMetadata[field] 
                     ? kpiMetadata[field].description || field 
                     : field;
                   return (
-                    <SelectItem key={index} value={field}>{displayName}</SelectItem>
+                    <SelectItem key={field} value={field}>{displayName}</SelectItem>
                   );
                 })}
               </SelectContent>
