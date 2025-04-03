@@ -133,13 +133,11 @@ const RuleConditionComponent: React.FC<RuleConditionComponentProps> = ({
   return (
     <div className="flex items-center space-x-3">
       <Select 
-        value={condition.field || ''}
+        value={condition.field}
         onValueChange={handleFieldSelect}
       >
         <SelectTrigger className="w-36">
-          <SelectValue placeholder="Select field">
-            {condition.field || ''}
-          </SelectValue>
+          <SelectValue placeholder="Select field" />
         </SelectTrigger>
         <SelectContent>
           {fieldOptions.map(field => (
@@ -149,13 +147,11 @@ const RuleConditionComponent: React.FC<RuleConditionComponentProps> = ({
       </Select>
       
       <Select 
-        value={condition.operator || ''}
+        value={condition.operator}
         onValueChange={(value) => onUpdate('operator', value)}
       >
         <SelectTrigger className="w-24">
-          <SelectValue placeholder="Operator">
-            {getOperatorLabel(condition.operator || '')}
-          </SelectValue>
+          <SelectValue placeholder="Operator" />
         </SelectTrigger>
         <SelectContent>
           {OPERATORS.map(op => (
