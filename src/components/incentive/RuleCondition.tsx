@@ -141,12 +141,12 @@ const RuleConditionComponent: React.FC<RuleConditionComponentProps> = ({
         value={condition.field || ""}
         onValueChange={handleFieldSelect}
       >
-        <SelectTrigger className="w-36">
+        <SelectTrigger className="w-36 bg-white">
           <SelectValue>
             {condition.field || "Select field"}
           </SelectValue>
         </SelectTrigger>
-        <SelectContent className="bg-white z-[100]">
+        <SelectContent className="bg-white z-[100]" position="popper">
           {fieldOptions.length === 0 ? (
             <div className="px-2 py-2 text-sm text-gray-500">No fields available</div>
           ) : (
@@ -161,12 +161,12 @@ const RuleConditionComponent: React.FC<RuleConditionComponentProps> = ({
         value={condition.operator || ""}
         onValueChange={(value) => onUpdate('operator', value)}
       >
-        <SelectTrigger className="w-24">
+        <SelectTrigger className="w-24 bg-white">
           <SelectValue>
             {condition.operator ? getOperatorLabel(condition.operator) : "Operator"}
           </SelectValue>
         </SelectTrigger>
-        <SelectContent className="bg-white z-[100]">
+        <SelectContent className="bg-white z-[100]" position="popper">
           {OPERATORS.map(op => (
             <SelectItem key={op.value} value={op.value}>{op.label}</SelectItem>
           ))}
