@@ -41,12 +41,41 @@ const CustomRules: React.FC<CustomRulesProps> = ({
 
   // Get custom fields metadata
   const getCustomMetadata = () => {
-    if (!selectedScheme?.customRules?.length) return {};
+    if (!selectedScheme) return {};
     
     const metadata: Record<string, KpiField> = {};
-    selectedScheme.customRules.forEach(rule => {
-      metadata[rule.kpi] = rule;
-    });
+    
+    // Add custom rules KPIs
+    if (selectedScheme.customRules?.length) {
+      selectedScheme.customRules.forEach(rule => {
+        metadata[rule.kpi] = rule;
+      });
+    }
+    
+    // Also include other KPIs for reference, in case they're used in conditions
+    if (selectedScheme.qualificationFields?.length) {
+      selectedScheme.qualificationFields.forEach(field => {
+        if (!metadata[field.kpi]) {
+          metadata[field.kpi] = field;
+        }
+      });
+    }
+    
+    if (selectedScheme.adjustmentFields?.length) {
+      selectedScheme.adjustmentFields.forEach(field => {
+        if (!metadata[field.kpi]) {
+          metadata[field.kpi] = field;
+        }
+      });
+    }
+    
+    if (selectedScheme.exclusionFields?.length) {
+      selectedScheme.exclusionFields.forEach(field => {
+        if (!metadata[field.kpi]) {
+          metadata[field.kpi] = field;
+        }
+      });
+    }
     
     return metadata;
   };
@@ -82,7 +111,7 @@ const CustomRules: React.FC<CustomRulesProps> = ({
               rule={rule}
               ruleIndex={index}
               currencySymbol={currencySymbol}
-              availableFields={customFields}
+              availableFields={customFields.length > 0 ? customFields : Object.keys(customMetadata)}
               kpiMetadata={customMetadata}
               onUpdateRule={(field, value) => updateCustomRule(index, field, value)}
               onUpdateCondition={(conditionIndex, field, value) => updateCustomRuleCondition(index, conditionIndex, field, value)}

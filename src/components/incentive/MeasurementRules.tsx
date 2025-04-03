@@ -51,23 +51,35 @@ const MeasurementRules: React.FC<MeasurementRulesProps> = ({
 
   // Get KPI metadata as a lookup object for field properties
   const getKpiMetadata = () => {
-    if (!selectedScheme?.qualificationFields?.length) return {};
+    if (!selectedScheme) return {};
     
     // Create a dictionary of KPI metadata keyed by KPI name
     const metadata: Record<string, KpiField> = {};
-    selectedScheme.qualificationFields.forEach(field => {
-      metadata[field.kpi] = field;
-    });
     
-    // Also include adjustment and exclusion fields in the metadata
+    // Include qualification fields in the metadata
+    if (selectedScheme.qualificationFields?.length) {
+      selectedScheme.qualificationFields.forEach(field => {
+        metadata[field.kpi] = field;
+      });
+    }
+    
+    // Include adjustment fields in the metadata
     if (selectedScheme.adjustmentFields?.length) {
       selectedScheme.adjustmentFields.forEach(field => {
         metadata[field.kpi] = field;
       });
     }
     
+    // Include exclusion fields in the metadata
     if (selectedScheme.exclusionFields?.length) {
       selectedScheme.exclusionFields.forEach(field => {
+        metadata[field.kpi] = field;
+      });
+    }
+    
+    // Include custom rule fields in the metadata
+    if (selectedScheme.customRules?.length) {
+      selectedScheme.customRules.forEach(field => {
         metadata[field.kpi] = field;
       });
     }

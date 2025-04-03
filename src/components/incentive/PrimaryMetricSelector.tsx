@@ -75,7 +75,7 @@ const PrimaryMetricSelector: React.FC<PrimaryMetricSelectorProps> = ({
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Select field" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-white">
                 {dbFields.map(field => {
                   // Get the display name from metadata if available
                   const displayName = kpiMetadata && kpiMetadata[field] 
@@ -98,7 +98,7 @@ const PrimaryMetricSelector: React.FC<PrimaryMetricSelectorProps> = ({
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Operator" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-white">
                 {OPERATORS.map(op => (
                   <SelectItem key={op.value} value={op.value}>{op.label}</SelectItem>
                 ))}

@@ -98,7 +98,7 @@ const AdjustmentForm: React.FC<AdjustmentFormProps> = ({
               <SelectTrigger>
                 <SelectValue placeholder="Select field" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-white">
                 {dbFields.map(field => {
                   // Get the display name from metadata if available
                   const displayName = kpiMetadata && kpiMetadata[field] 
@@ -128,7 +128,7 @@ const AdjustmentForm: React.FC<AdjustmentFormProps> = ({
               <SelectTrigger>
                 <SelectValue placeholder="Operator" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-white">
                 {OPERATORS.map(op => (
                   <SelectItem key={op.value} value={op.value}>{op.label}</SelectItem>
                 ))}
@@ -179,7 +179,7 @@ const AdjustmentForm: React.FC<AdjustmentFormProps> = ({
               <SelectTrigger>
                 <SelectValue placeholder="Adjustment Type" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-white">
                 <SelectItem value="PERCENTAGE_BOOST">Percentage Boost</SelectItem>
                 <SelectItem value="FLAT_AMOUNT">Flat Amount</SelectItem>
                 <SelectItem value="TIER_OVERRIDE">Tier Override</SelectItem>
