@@ -91,7 +91,7 @@ const ConfigurationSelector: React.FC<ConfigurationSelectorProps> = ({
         onClick={onCreateNew}
         className="whitespace-nowrap"
       >
-        <PlusCircle className="mr-2 h-4 w-4" /> New Configuration
+        <PlusCircle className="h-4 w-4 mr-2" /> New Configuration
       </Button>
     </div>
   );
