@@ -39,13 +39,13 @@ const SchemeStructureSection: React.FC<SchemeStructureSectionProps> = ({
       console.log("Fetched scheme configs:", adminConfigs);
       
       // If we have a revenue base set in the plan, find the matching config
-      if (plan.revenueBase && adminConfigs.length > 0 && plan.selectedSchemeConfig) {
+      if (plan.revenueBase && adminConfigs.length > 0) {
         const matchingConfig = adminConfigs.find(config => 
-          config._id === plan.selectedSchemeConfig?._id
+          config.calculationBase.toLowerCase() === plan.revenueBase.toLowerCase()
         );
         if (matchingConfig) {
           setSelectedConfig(matchingConfig);
-          console.log("Found matching config based on ID:", matchingConfig);
+          console.log("Found matching config based on revenue base:", matchingConfig);
           // Load the full config details to make sure we have all the KPIs
           loadFullConfig(matchingConfig._id || '');
         }
@@ -109,7 +109,7 @@ const SchemeStructureSection: React.FC<SchemeStructureSectionProps> = ({
             <Select
               value={selectedConfig?._id}
               onValueChange={handleConfigChange}
-              disabled={isReadOnly || isLoading}
+              disabled={isReadOnly || isLoading || !!selectedConfig}
             >
               <SelectTrigger className="w-full bg-white">
                 <SelectValue placeholder={isLoading ? "Loading..." : "Select a configuration"} />
@@ -130,7 +130,9 @@ const SchemeStructureSection: React.FC<SchemeStructureSectionProps> = ({
               </SelectContent>
             </Select>
             <p className="mt-1 text-xs text-app-gray-500">
-              Select the KPI configuration for this scheme
+              {selectedConfig 
+                ? "Configuration selected - cannot be changed" 
+                : "Select the KPI configuration for this scheme (can only be set once)"}
             </p>
           </div>
 

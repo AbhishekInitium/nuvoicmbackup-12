@@ -31,7 +31,7 @@ export interface ParticipantResult {
 export interface AdjustmentRecord {
   adjustmentId: string;
   description: string;
-  impact?: number;
+  impact: number;
 }
 
 /**
@@ -319,7 +319,7 @@ const applyCustomRules = (
               const boostFactor = rule.factor || 1.5; // Default boost of 50%
               modifiedRecord.TotalNetAmount = originalAmount * boostFactor;
               
-              // Record the adjustment - don't rely on impact if it might not exist
+              // Record the adjustment
               const impact = modifiedRecord.TotalNetAmount - originalAmount;
               participantResult.adjustments.push({
                 adjustmentId: rule.name,

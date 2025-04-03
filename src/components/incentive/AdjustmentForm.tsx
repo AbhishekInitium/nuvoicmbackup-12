@@ -1,11 +1,11 @@
 
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { Trash2 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Adjustment } from '@/types/incentiveTypes';
 import GlassCard from '../ui-custom/GlassCard';
-import { getOperatorsByDataType } from '@/constants/operatorConstants';
+import { OPERATORS } from '@/constants/incentiveConstants';
 import { KpiField } from '@/types/schemeAdminTypes';
 
 interface AdjustmentFormProps {
@@ -29,14 +29,12 @@ const AdjustmentForm: React.FC<AdjustmentFormProps> = ({
   onRemoveAdjustment,
   isReadOnly = false
 }) => {
-  const [dataType, setDataType] = useState<string | undefined>(undefined);
-
   // Determine input type based on field data type
   const getInputType = (): string => {
     if (adjustment.field && kpiMetadata && kpiMetadata[adjustment.field]) {
-      const fieldDataType = kpiMetadata[adjustment.field].dataType;
+      const dataType = kpiMetadata[adjustment.field].dataType;
       
-      switch(fieldDataType?.toLowerCase()) {
+      switch(dataType?.toLowerCase()) {
         case 'number':
         case 'decimal':
         case 'integer':
@@ -61,17 +59,7 @@ const AdjustmentForm: React.FC<AdjustmentFormProps> = ({
     return 'text';
   };
 
-  // Update data type when field changes
-  useEffect(() => {
-    if (adjustment.field && kpiMetadata && kpiMetadata[adjustment.field]) {
-      setDataType(kpiMetadata[adjustment.field].dataType);
-    }
-  }, [adjustment.field, kpiMetadata]);
-
   const inputType = getInputType();
-  
-  // Get operators based on data type
-  const operators = getOperatorsByDataType(dataType);
 
   return (
     <GlassCard className="p-4">
@@ -94,7 +82,7 @@ const AdjustmentForm: React.FC<AdjustmentFormProps> = ({
         )}
       </div>
       
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
         <div>
           <label className="block text-sm font-medium text-app-gray-700 mb-2">Field</label>
           {isReadOnly ? (
@@ -141,7 +129,7 @@ const AdjustmentForm: React.FC<AdjustmentFormProps> = ({
                 <SelectValue placeholder="Operator" />
               </SelectTrigger>
               <SelectContent className="bg-white">
-                {operators.map(op => (
+                {OPERATORS.map(op => (
                   <SelectItem key={op.value} value={op.value}>{op.label}</SelectItem>
                 ))}
               </SelectContent>
@@ -171,6 +159,54 @@ const AdjustmentForm: React.FC<AdjustmentFormProps> = ({
                 }
               }}
               step={inputType === 'number' ? "0.01" : undefined}
+              disabled={isReadOnly}
+            />
+          )}
+        </div>
+        
+        <div>
+          <label className="block text-sm font-medium text-app-gray-700 mb-2">Adjustment Type</label>
+          {isReadOnly ? (
+            <div className="h-10 px-4 py-2 rounded-md border border-gray-300 bg-gray-50 text-gray-700">
+              {adjustment.type}
+            </div>
+          ) : (
+            <Select 
+              value={adjustment.type}
+              onValueChange={(value) => onUpdateAdjustment(adjustmentIndex, 'type', value)}
+              disabled={isReadOnly}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Adjustment Type" />
+              </SelectTrigger>
+              <SelectContent className="bg-white">
+                <SelectItem value="PERCENTAGE_BOOST">Percentage Boost</SelectItem>
+                <SelectItem value="FLAT_AMOUNT">Flat Amount</SelectItem>
+                <SelectItem value="TIER_OVERRIDE">Tier Override</SelectItem>
+              </SelectContent>
+            </Select>
+          )}
+        </div>
+        
+        <div>
+          <label className="block text-sm font-medium text-app-gray-700 mb-2">
+            {adjustment.type === "FLAT_AMOUNT" 
+              ? `Amount (${currencySymbol})` 
+              : adjustment.type === "PERCENTAGE_BOOST" 
+                ? "Multiplier" 
+                : "Factor"
+            }
+          </label>
+          {isReadOnly ? (
+            <div className="h-10 px-4 py-2 rounded-md border border-gray-300 bg-gray-50 text-gray-700">
+              {adjustment.impact}
+            </div>
+          ) : (
+            <Input 
+              type="number"
+              value={adjustment.impact}
+              onChange={(e) => onUpdateAdjustment(adjustmentIndex, 'impact', parseFloat(e.target.value))}
+              step="0.01"
               disabled={isReadOnly}
             />
           )}

@@ -4,7 +4,7 @@ import { Trash2 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { RuleCondition } from '@/types/incentiveTypes';
-import { getOperatorsByDataType } from '@/constants/operatorConstants';
+import { OPERATORS, DB_FIELDS } from '@/constants/incentiveConstants';
 import { KpiField } from '@/types/schemeAdminTypes';
 
 interface RuleConditionComponentProps {
@@ -25,36 +25,32 @@ const RuleConditionComponent: React.FC<RuleConditionComponentProps> = ({
   onRemove
 }) => {
   const [inputType, setInputType] = useState<string>("text");
-  const [dataType, setDataType] = useState<string | undefined>(undefined);
   
-  // Get field options from availableFields or fallback to empty array
+  // Get field options from availableFields or fallback to DB_FIELDS
   const getFieldOptions = () => {
     if (availableFields && availableFields.length > 0) {
       return availableFields;
     }
-    return [];
+    
+    // Fallback to default fields from constant
+    const allFields = Object.values(DB_FIELDS).flat();
+    return [...new Set(allFields.map(field => field.value))];
   };
   
   const fieldOptions = getFieldOptions();
 
-  // Get appropriate operators based on data type
-  const operators = getOperatorsByDataType(dataType);
-
   console.log("RuleCondition - Available fields:", availableFields);
   console.log("RuleCondition - KPI metadata:", kpiMetadata);
   console.log("RuleCondition - Current condition:", condition);
-  console.log("RuleCondition - Data type:", dataType);
-  console.log("RuleCondition - Available operators:", operators);
 
-  // Set input type and data type based on field data type
+  // Set input type based on field data type
   useEffect(() => {
     if (condition.field && kpiMetadata && kpiMetadata[condition.field]) {
-      const fieldDataType = kpiMetadata[condition.field].dataType;
-      setDataType(fieldDataType);
-      console.log(`Setting input type for ${condition.field} with dataType ${fieldDataType}`);
+      const dataType = kpiMetadata[condition.field].dataType;
+      console.log(`Setting input type for ${condition.field} with dataType ${dataType}`);
       
       // Determine input type based on the dataType
-      switch(fieldDataType?.toLowerCase()) {
+      switch(dataType?.toLowerCase()) {
         case 'number':
         case 'decimal':
         case 'integer':
@@ -115,7 +111,7 @@ const RuleConditionComponent: React.FC<RuleConditionComponentProps> = ({
           <SelectValue placeholder="Operator" />
         </SelectTrigger>
         <SelectContent className="bg-white z-50">
-          {operators.map(op => (
+          {OPERATORS.map(op => (
             <SelectItem key={op.value} value={op.value}>{op.label}</SelectItem>
           ))}
         </SelectContent>
