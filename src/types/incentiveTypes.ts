@@ -1,5 +1,3 @@
-
-// Add this to the existing file
 import { DataSourceType, KpiField } from './schemeAdminTypes';
 
 export interface RuleCondition {

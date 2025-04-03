@@ -132,7 +132,7 @@ const IncentivePlanDesigner: React.FC<IncentivePlanDesignerProps> = ({
     from: tier.from,
     to: tier.to !== undefined ? tier.to : Number.MAX_SAFE_INTEGER,
     rate: tier.rate,
-    description: tier.description || `${tier.from}-${tier.to || 'max'}`
+    description: `${tier.from}-${tier.to || 'max'}`
   }));
 
   return (
