@@ -1,11 +1,11 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Trash2 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { PrimaryMetric } from '@/types/incentiveTypes';
 import GlassCard from '../ui-custom/GlassCard';
-import { OPERATORS } from '@/constants/incentiveConstants';
+import { getOperatorsByDataType } from '@/constants/operatorConstants';
 import { KpiField } from '@/types/schemeAdminTypes';
 
 interface PrimaryMetricSelectorProps {
@@ -29,6 +29,16 @@ const PrimaryMetricSelector: React.FC<PrimaryMetricSelectorProps> = ({
 }) => {
   // Since we're working with a single metric at a time
   const metric = primaryMetrics[0];
+  const [dataType, setDataType] = useState<string | undefined>(undefined);
+  
+  // Update data type when field changes
+  useEffect(() => {
+    if (metric.field && kpiMetadata && kpiMetadata[metric.field]) {
+      const fieldDataType = kpiMetadata[metric.field].dataType;
+      setDataType(fieldDataType);
+      console.log(`Setting data type for ${metric.field} with dataType ${fieldDataType}`);
+    }
+  }, [metric.field, kpiMetadata]);
   
   // Determine input type based on field data type
   const getInputType = (): string => {
@@ -41,6 +51,7 @@ const PrimaryMetricSelector: React.FC<PrimaryMetricSelectorProps> = ({
         case 'decimal':
         case 'integer':
         case 'int8':
+        case 'float':
           return 'number';
         case 'date':
           return 'date';
@@ -53,6 +64,7 @@ const PrimaryMetricSelector: React.FC<PrimaryMetricSelectorProps> = ({
         case 'char':
         case 'char10':
         case 'string':
+        case 'text':
         default:
           return 'text';
       }
@@ -63,11 +75,16 @@ const PrimaryMetricSelector: React.FC<PrimaryMetricSelectorProps> = ({
 
   const inputType = getInputType();
   
+  // Get operators based on data type
+  const operators = getOperatorsByDataType(dataType);
+  
   // Debug logs
   console.log("PrimaryMetricSelector - Available fields:", dbFields);
   console.log("PrimaryMetricSelector - KPI Metadata:", kpiMetadata);
   console.log("PrimaryMetricSelector - Current metric:", metric);
   console.log("PrimaryMetricSelector - Input type:", inputType);
+  console.log("PrimaryMetricSelector - Data type:", dataType);
+  console.log("PrimaryMetricSelector - Operators:", operators);
 
   return (
     <GlassCard variant="outlined" className="p-4">
@@ -110,7 +127,7 @@ const PrimaryMetricSelector: React.FC<PrimaryMetricSelectorProps> = ({
                 <SelectValue placeholder="Operator" />
               </SelectTrigger>
               <SelectContent className="bg-white z-50">
-                {OPERATORS.map(op => (
+                {operators.map(op => (
                   <SelectItem key={op.value} value={op.value}>{op.label}</SelectItem>
                 ))}
               </SelectContent>

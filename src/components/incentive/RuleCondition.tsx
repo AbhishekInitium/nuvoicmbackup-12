@@ -37,21 +37,12 @@ const RuleConditionComponent: React.FC<RuleConditionComponentProps> = ({
   
   const fieldOptions = getFieldOptions();
 
-  // Get appropriate operators based on data type
-  const operators = getOperatorsByDataType(dataType);
-
-  console.log("RuleCondition - Available fields:", availableFields);
-  console.log("RuleCondition - KPI metadata:", kpiMetadata);
-  console.log("RuleCondition - Current condition:", condition);
-  console.log("RuleCondition - Data type:", dataType);
-  console.log("RuleCondition - Available operators:", operators);
-
-  // Set input type and data type based on field data type
+  // Update data type when field changes
   useEffect(() => {
     if (condition.field && kpiMetadata && kpiMetadata[condition.field]) {
       const fieldDataType = kpiMetadata[condition.field].dataType;
       setDataType(fieldDataType);
-      console.log(`Setting input type for ${condition.field} with dataType ${fieldDataType}`);
+      console.log(`Setting data type for ${condition.field} with dataType ${fieldDataType}`);
       
       // Determine input type based on the dataType
       switch(fieldDataType?.toLowerCase()) {
@@ -59,6 +50,7 @@ const RuleConditionComponent: React.FC<RuleConditionComponentProps> = ({
         case 'decimal':
         case 'integer':
         case 'int8':
+        case 'float':
           setInputType('number');
           break;
         case 'date':
@@ -74,12 +66,24 @@ const RuleConditionComponent: React.FC<RuleConditionComponentProps> = ({
         case 'char':
         case 'char10':
         case 'string':
+        case 'text':
+          setInputType('text');
+          break;
         default:
           setInputType('text');
           break;
       }
     }
   }, [condition.field, kpiMetadata]);
+
+  // Get appropriate operators based on data type
+  const operators = getOperatorsByDataType(dataType);
+
+  console.log("RuleCondition - Available fields:", availableFields);
+  console.log("RuleCondition - KPI metadata:", kpiMetadata);
+  console.log("RuleCondition - Current condition:", condition);
+  console.log("RuleCondition - Data type:", dataType);
+  console.log("RuleCondition - Available operators:", operators);
 
   return (
     <div className="flex items-center space-x-3">

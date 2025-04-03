@@ -32,7 +32,9 @@ const ExclusionForm: React.FC<ExclusionFormProps> = ({
   // Update data type when field changes
   useEffect(() => {
     if (exclusion.field && kpiMetadata && kpiMetadata[exclusion.field]) {
-      setDataType(kpiMetadata[exclusion.field].dataType);
+      const fieldDataType = kpiMetadata[exclusion.field].dataType;
+      setDataType(fieldDataType);
+      console.log(`ExclusionForm - Setting data type for ${exclusion.field} with dataType ${fieldDataType}`);
     }
   }, [exclusion.field, kpiMetadata]);
 
@@ -46,6 +48,7 @@ const ExclusionForm: React.FC<ExclusionFormProps> = ({
         case 'decimal':
         case 'integer':
         case 'int8':
+        case 'float':
           return 'number';
         case 'date':
           return 'date';
@@ -58,6 +61,7 @@ const ExclusionForm: React.FC<ExclusionFormProps> = ({
         case 'char':
         case 'char10':
         case 'string':
+        case 'text':
         default:
           return 'text';
       }
