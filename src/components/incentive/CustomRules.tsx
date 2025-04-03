@@ -7,7 +7,7 @@ import CustomRuleCard from './CustomRuleCard';
 import EmptyRulesState from './EmptyRulesState';
 import { getCurrencySymbol } from '@/utils/incentiveUtils';
 import { useCustomRules } from './useCustomRules';
-import { SchemeAdminConfig } from '@/types/schemeAdminTypes';
+import { SchemeAdminConfig, KpiField } from '@/types/schemeAdminTypes';
 
 interface CustomRulesProps {
   customRules: CustomRule[];
@@ -39,7 +39,20 @@ const CustomRules: React.FC<CustomRulesProps> = ({
     return selectedScheme.customRules.map(rule => rule.kpi);
   };
 
+  // Get custom fields metadata
+  const getCustomMetadata = () => {
+    if (!selectedScheme?.customRules?.length) return {};
+    
+    const metadata: Record<string, KpiField> = {};
+    selectedScheme.customRules.forEach(rule => {
+      metadata[rule.kpi] = rule;
+    });
+    
+    return metadata;
+  };
+
   const customFields = getCustomFields();
+  const customMetadata = getCustomMetadata();
 
   return (
     <div className="space-y-6">
@@ -70,6 +83,7 @@ const CustomRules: React.FC<CustomRulesProps> = ({
               ruleIndex={index}
               currencySymbol={currencySymbol}
               availableFields={customFields}
+              kpiMetadata={customMetadata}
               onUpdateRule={(field, value) => updateCustomRule(index, field, value)}
               onUpdateCondition={(conditionIndex, field, value) => updateCustomRuleCondition(index, conditionIndex, field, value)}
               onAddCondition={() => addCustomRuleCondition(index)}

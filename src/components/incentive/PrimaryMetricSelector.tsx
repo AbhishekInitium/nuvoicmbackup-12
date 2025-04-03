@@ -6,11 +6,13 @@ import { Input } from "@/components/ui/input";
 import { PrimaryMetric } from '@/types/incentiveTypes';
 import GlassCard from '../ui-custom/GlassCard';
 import { OPERATORS } from '@/constants/incentiveConstants';
+import { KpiField } from '@/types/schemeAdminTypes';
 
 interface PrimaryMetricSelectorProps {
   primaryMetrics: PrimaryMetric[];
   dbFields: string[];
   currencySymbol: string;
+  kpiMetadata?: Record<string, KpiField>;
   onAddMetric: () => void;
   onUpdateMetric: (field: keyof PrimaryMetric, value: string | number) => void;
   onRemoveMetric: () => void;
@@ -20,12 +22,43 @@ const PrimaryMetricSelector: React.FC<PrimaryMetricSelectorProps> = ({
   primaryMetrics,
   dbFields,
   currencySymbol,
+  kpiMetadata,
   onAddMetric,
   onUpdateMetric,
   onRemoveMetric
 }) => {
   // Since we're working with a single metric at a time
   const metric = primaryMetrics[0];
+  
+  // Determine input type based on field data type
+  const getInputType = (): string => {
+    if (metric.field && kpiMetadata && kpiMetadata[metric.field]) {
+      const dataType = kpiMetadata[metric.field].dataType;
+      
+      switch(dataType?.toLowerCase()) {
+        case 'number':
+        case 'decimal':
+        case 'integer':
+          return 'number';
+        case 'date':
+          return 'date';
+        case 'boolean':
+          return 'checkbox';
+        case 'char1':
+        case 'char2':
+        case 'char3':
+        case 'char4':
+        case 'char':
+        case 'string':
+        default:
+          return 'text';
+      }
+    }
+    
+    return 'text';
+  };
+
+  const inputType = getInputType();
 
   return (
     <GlassCard variant="outlined" className="p-4">
@@ -68,10 +101,20 @@ const PrimaryMetricSelector: React.FC<PrimaryMetricSelectorProps> = ({
           <div className="sm:col-span-3">
             <label className="block text-sm font-medium text-app-gray-700 mb-2">Value</label>
             <Input 
-              type="number" 
+              type={inputType}
               value={metric.value}
-              onChange={(e) => onUpdateMetric('value', parseFloat(e.target.value))}
-              step="0.01"
+              onChange={(e) => {
+                const value = e.target.value;
+                
+                // Only try to parse as number if input type is number
+                if (inputType === 'number') {
+                  const numValue = parseFloat(value);
+                  onUpdateMetric('value', isNaN(numValue) ? value : numValue);
+                } else {
+                  onUpdateMetric('value', value);
+                }
+              }}
+              step={inputType === 'number' ? "0.01" : undefined}
             />
           </div>
           

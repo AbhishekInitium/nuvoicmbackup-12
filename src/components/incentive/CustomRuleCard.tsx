@@ -7,12 +7,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import GlassCard from '../ui-custom/GlassCard';
 import { CustomRule, RuleCondition } from '@/types/incentiveTypes';
 import RuleConditionComponent from './RuleCondition';
+import { KpiField } from '@/types/schemeAdminTypes';
 
 interface CustomRuleCardProps {
   rule: CustomRule;
   ruleIndex: number;
   currencySymbol: string;
   availableFields?: string[];
+  kpiMetadata?: Record<string, KpiField>;
   onUpdateRule: (field: keyof CustomRule, value: string | boolean) => void;
   onUpdateCondition: (conditionIndex: number, field: keyof RuleCondition, value: string | number) => void;
   onAddCondition: () => void;
@@ -25,6 +27,7 @@ const CustomRuleCard: React.FC<CustomRuleCardProps> = ({
   ruleIndex,
   currencySymbol,
   availableFields = [],
+  kpiMetadata,
   onUpdateRule,
   onUpdateCondition,
   onAddCondition,
@@ -84,6 +87,7 @@ const CustomRuleCard: React.FC<CustomRuleCardProps> = ({
               condition={condition}
               currencySymbol={currencySymbol}
               availableFields={availableFields}
+              kpiMetadata={kpiMetadata}
               onUpdate={(field, value) => onUpdateCondition(condIndex, field, value)}
               onRemove={() => onRemoveCondition(condIndex)}
             />

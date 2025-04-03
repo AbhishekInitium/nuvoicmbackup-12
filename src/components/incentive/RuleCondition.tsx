@@ -1,15 +1,17 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Trash2 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { RuleCondition } from '@/types/incentiveTypes';
 import { OPERATORS, DB_FIELDS } from '@/constants/incentiveConstants';
+import { KpiField } from '@/types/schemeAdminTypes';
 
 interface RuleConditionComponentProps {
   condition: RuleCondition;
   currencySymbol: string;
   availableFields?: string[];
+  kpiMetadata?: Record<string, KpiField>;
   onUpdate: (field: keyof RuleCondition, value: string | number) => void;
   onRemove: () => void;
 }
@@ -18,9 +20,12 @@ const RuleConditionComponent: React.FC<RuleConditionComponentProps> = ({
   condition,
   currencySymbol,
   availableFields = [],
+  kpiMetadata,
   onUpdate,
   onRemove
 }) => {
+  const [inputType, setInputType] = useState<string>("text");
+  
   // Get field options from DB_FIELDS or use provided availableFields
   const getFieldOptions = () => {
     if (availableFields && availableFields.length > 0) {
@@ -33,6 +38,60 @@ const RuleConditionComponent: React.FC<RuleConditionComponentProps> = ({
   };
   
   const fieldOptions = getFieldOptions();
+
+  // Set input type based on field data type
+  useEffect(() => {
+    if (condition.field && kpiMetadata && kpiMetadata[condition.field]) {
+      const dataType = kpiMetadata[condition.field].dataType;
+      
+      // Determine input type based on the dataType
+      switch(dataType?.toLowerCase()) {
+        case 'number':
+        case 'decimal':
+        case 'integer':
+          setInputType('number');
+          break;
+        case 'date':
+          setInputType('date');
+          break;
+        case 'boolean':
+          setInputType('checkbox');
+          break;
+        case 'char1':
+        case 'char2':
+        case 'char3':
+        case 'char4':
+        case 'char':
+        case 'string':
+        default:
+          setInputType('text');
+          break;
+      }
+      
+      /* // If we have metadata for this field, copy all the relevant properties
+      if (kpiMetadata && kpiMetadata[fieldName]) {
+        const metadata = kpiMetadata[fieldName];
+        
+        // Update other properties with metadata
+        if (metadata.description) {
+          onUpdate('description', metadata.description);
+        }
+        
+        if (metadata.sourceType) {
+          onUpdate('sourceType', metadata.sourceType);
+        }
+        
+        if (metadata.sourceField) {
+          onUpdate('sourceField', metadata.sourceField);
+        }
+        
+        // Include the dataType in the condition for future reference
+        if (metadata.dataType) {
+          onUpdate('dataType', metadata.dataType);
+        }
+      } */
+    }
+  }, [condition.field, kpiMetadata]);
 
   return (
     <div className="flex items-center space-x-3">
@@ -65,14 +124,19 @@ const RuleConditionComponent: React.FC<RuleConditionComponentProps> = ({
       </Select>
       
       <Input 
-        type="text" 
+        type={inputType}
         className="w-36"
         value={condition.value || ''}
         onChange={(e) => {
           const value = e.target.value;
-          // Try to parse as number if possible
-          const numValue = parseFloat(value);
-          onUpdate('value', isNaN(numValue) ? value : numValue);
+          
+          // Only try to parse as number if input type is number
+          if (inputType === 'number') {
+            const numValue = parseFloat(value);
+            onUpdate('value', isNaN(numValue) ? value : numValue);
+          } else {
+            onUpdate('value', value);
+          }
         }}
       />
       
