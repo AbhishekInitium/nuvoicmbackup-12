@@ -28,13 +28,18 @@ const PrimaryMetricSelector: React.FC<PrimaryMetricSelectorProps> = ({
   // Use the first metric as the current one
   const metric = primaryMetrics[0];
 
+  const handleUpdate = (field: keyof PrimaryMetric, value: string | number) => {
+    console.log(`Updating ${field} to:`, value);
+    onUpdateMetric(field, value);
+  };
+
   return (
     <div className="space-y-1">
       <RuleCondition
         condition={metric}
         availableFields={dbFields}
         currencySymbol={currencySymbol}
-        onUpdate={onUpdateMetric}
+        onUpdate={handleUpdate}
         onRemove={onRemoveMetric}
         selectedScheme={selectedScheme}
         kpiMetadata={kpiMetadata}
