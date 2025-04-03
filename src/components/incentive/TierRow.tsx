@@ -2,6 +2,7 @@
 import React from 'react';
 import { Trash2, Percent } from 'lucide-react';
 import { Tier } from '@/types/incentiveTypes';
+import { getCurrencySymbol } from '@/utils/incentiveUtils';
 
 interface TierRowProps {
   tier: Tier;
@@ -22,6 +23,9 @@ const TierRow: React.FC<TierRowProps> = ({
     <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-app-gray-50 bg-opacity-30'}>
       <td className="px-6 py-4 whitespace-nowrap">
         <div className="relative">
+          <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+            <span className="text-app-gray-400">{currencySymbol}</span>
+          </div>
           <input 
             type="text" 
             className="form-input pl-8 py-2"
@@ -30,16 +34,16 @@ const TierRow: React.FC<TierRowProps> = ({
               const value = e.target.value.replace(/[^0-9]/g, '');
               updateTier(index, 'from', value ? parseInt(value) : 0);
             }}
-            disabled={index > 0} // First tier's "from" can be edited, others are derived
+            disabled={index > 0} 
             placeholder="Enter amount"
           />
-          <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-            <span className="text-app-gray-400">{currencySymbol}</span>
-          </div>
         </div>
       </td>
       <td className="px-6 py-4 whitespace-nowrap">
         <div className="relative">
+          <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+            <span className="text-app-gray-400">{currencySymbol}</span>
+          </div>
           <input 
             type="text" 
             className="form-input pl-8 py-2"
@@ -50,13 +54,13 @@ const TierRow: React.FC<TierRowProps> = ({
             }}
             placeholder="Enter amount"
           />
-          <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-            <span className="text-app-gray-400">{currencySymbol}</span>
-          </div>
         </div>
       </td>
       <td className="px-6 py-4 whitespace-nowrap">
         <div className="relative">
+          <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+            <Percent size={16} className="text-app-gray-400" />
+          </div>
           <input 
             type="text" 
             className="form-input pl-8 py-2"
@@ -67,9 +71,6 @@ const TierRow: React.FC<TierRowProps> = ({
             }}
             placeholder="Enter rate"
           />
-          <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-            <Percent size={16} className="text-app-gray-400" />
-          </div>
         </div>
       </td>
       <td className="px-6 py-4 whitespace-nowrap text-app-gray-500">
