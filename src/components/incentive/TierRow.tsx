@@ -36,6 +36,11 @@ const TierRow: React.FC<TierRowProps> = ({
             <span className="text-app-gray-400">{currencySymbol}</span>
           </div>
         </div>
+        {index > 0 && (
+          <p className="text-xs text-app-gray-500 mt-1">
+            Default: Previous tier's "To" value
+          </p>
+        )}
       </td>
       <td className="px-6 py-4 whitespace-nowrap">
         <div className="relative">
@@ -53,6 +58,11 @@ const TierRow: React.FC<TierRowProps> = ({
             <span className="text-app-gray-400">{currencySymbol}</span>
           </div>
         </div>
+        {(
+          <p className="text-xs text-app-gray-500 mt-1">
+            Default: "From" value + 100
+          </p>
+        )}
       </td>
       <td className="px-6 py-4 whitespace-nowrap">
         <div className="relative">
