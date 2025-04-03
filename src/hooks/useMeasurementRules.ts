@@ -5,23 +5,42 @@ import { MeasurementRules, Adjustment, Exclusion, PrimaryMetric } from '@/types/
 import { v4 as uuidv4 } from 'uuid';
 
 export const useMeasurementRules = (
-  initialRules: MeasurementRules,
+  initialRules: MeasurementRules | null | undefined,
   revenueBase: string,
   onUpdateRules: (rules: MeasurementRules) => void
 ) => {
-  // Ensure initialRules.primaryMetrics is an array but don't add default values
+  // Create a default rules object if initialRules is null or undefined
+  const defaultRules: MeasurementRules = {
+    primaryMetrics: [],
+    minQualification: 0,
+    adjustments: [],
+    exclusions: []
+  };
+  
+  // Use the provided initialRules if available, otherwise use default
+  const safeInitialRules = initialRules || defaultRules;
+  
+  // Ensure all properties exist within the initialRules
   const normalizedInitialRules = {
-    ...initialRules,
-    primaryMetrics: Array.isArray(initialRules.primaryMetrics) ? initialRules.primaryMetrics : [],
-    adjustments: Array.isArray(initialRules.adjustments) ? initialRules.adjustments : [],
-    exclusions: Array.isArray(initialRules.exclusions) ? initialRules.exclusions : []
+    ...defaultRules,
+    ...safeInitialRules,
+    primaryMetrics: Array.isArray(safeInitialRules.primaryMetrics) ? safeInitialRules.primaryMetrics : [],
+    adjustments: Array.isArray(safeInitialRules.adjustments) ? safeInitialRules.adjustments : [],
+    exclusions: Array.isArray(safeInitialRules.exclusions) ? safeInitialRules.exclusions : []
   };
 
   const [rules, setRules] = useState<MeasurementRules>(normalizedInitialRules);
 
   // Update rules if initialRules changes
   useEffect(() => {
+    // Re-normalize rules when initialRules changes
+    if (initialRules === null || initialRules === undefined) {
+      setRules(defaultRules);
+      return;
+    }
+    
     const normalizedRules = {
+      ...defaultRules,
       ...initialRules,
       primaryMetrics: Array.isArray(initialRules.primaryMetrics) ? initialRules.primaryMetrics : [],
       adjustments: Array.isArray(initialRules.adjustments) ? initialRules.adjustments : [],
