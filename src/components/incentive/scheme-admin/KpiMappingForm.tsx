@@ -1,15 +1,23 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
-import { Form } from '@/components/ui/form';
+import { Card } from '@/components/ui/card';
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel
+} from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
 import { KpiField, SchemeAdminConfig } from '@/types/schemeAdminTypes';
+import { KpiMappingCard } from './KpiMappingCard';
 import { JsonPreview } from './JsonPreview';
 import { saveSchemeAdmin } from '@/services/database/mongoDBService';
 import { useForm } from 'react-hook-form';
 import { v4 as uuidv4 } from 'uuid';
 import { useToast } from "@/hooks/use-toast";
-import { ConfigurationForm } from './ConfigurationForm';
-import { KpiSections } from './KpiSections';
 
 interface KpiMappingFormProps {
   onSaveSuccess: (id: string) => void;
@@ -43,8 +51,7 @@ export const KpiMappingForm: React.FC<KpiMappingFormProps> = ({
     defaultValues: {
       adminId: initialConfig.adminId || uuidv4(),
       adminName: initialConfig.adminName || "",
-      calculationBase: initialConfig.calculationBase || "",
-      baseSource: initialConfig.baseData?.source || "Excel"
+      calculationBase: initialConfig.calculationBase || ""
     }
   });
 
@@ -54,7 +61,6 @@ export const KpiMappingForm: React.FC<KpiMappingFormProps> = ({
       console.log("Setting form values from initialConfig:", {
         adminName: initialConfig.adminName,
         calculationBase: initialConfig.calculationBase,
-        baseSource: initialConfig.baseData?.source,
         _id: initialConfig._id,
         isEditMode: isEditMode
       });
@@ -63,8 +69,7 @@ export const KpiMappingForm: React.FC<KpiMappingFormProps> = ({
       form.reset({
         adminId: initialConfig.adminId || uuidv4(),
         adminName: initialConfig.adminName || "",
-        calculationBase: initialConfig.calculationBase || "",
-        baseSource: initialConfig.baseData?.source || "Excel"
+        calculationBase: initialConfig.calculationBase || ""
       });
       
       // Update KPI data state with the new values
@@ -86,9 +91,6 @@ export const KpiMappingForm: React.FC<KpiMappingFormProps> = ({
         adminId: formValues.adminId,
         adminName: formValues.adminName,
         calculationBase: formValues.calculationBase,
-        baseData: {
-          source: formValues.baseSource
-        },
         qualificationFields: kpiData.qualificationFields,
         adjustmentFields: kpiData.adjustmentFields,
         exclusionFields: kpiData.exclusionFields,
@@ -213,8 +215,8 @@ export const KpiMappingForm: React.FC<KpiMappingFormProps> = ({
       updatedAt: new Date().toISOString(),
       calculationBase: formValues.calculationBase,
       baseField: initialConfig.baseField || "",
-      baseData: {
-        source: formValues.baseSource
+      baseData: initialConfig.baseData || {
+        source: "Excel" 
       },
       qualificationFields: kpiData.qualificationFields,
       adjustmentFields: kpiData.adjustmentFields,
@@ -255,7 +257,49 @@ export const KpiMappingForm: React.FC<KpiMappingFormProps> = ({
       
       <Form {...form}>
         <form onSubmit={form.handleSubmit(handleSaveConfig)} className="space-y-6">
-          <ConfigurationForm form={form} />
+          <Card className="p-4">
+            <h3 className="text-lg font-medium mb-4">Scheme Configuration</h3>
+            
+            <div className="space-y-4">
+              <FormField
+                control={form.control}
+                name="adminName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Configuration Name</FormLabel>
+                    <FormControl>
+                      <Input 
+                        {...field} 
+                        placeholder="e.g., NorthAmerica_Orders_2024" 
+                      />
+                    </FormControl>
+                    <FormDescription>
+                      A descriptive name for this scheme configuration
+                    </FormDescription>
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="calculationBase"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Calculation Base</FormLabel>
+                    <FormControl>
+                      <Input 
+                        {...field} 
+                        placeholder="e.g., Sales Orders" 
+                      />
+                    </FormControl>
+                    <FormDescription>
+                      The primary metric used for calculations
+                    </FormDescription>
+                  </FormItem>
+                )}
+              />
+            </div>
+          </Card>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
@@ -263,12 +307,131 @@ export const KpiMappingForm: React.FC<KpiMappingFormProps> = ({
             </div>
           </div>
           
-          <KpiSections 
-            kpiData={kpiData} 
-            onAddKpi={handleAddKpi}
-            onUpdateKpi={handleUpdateKpi}
-            onRemoveKpi={handleRemoveKpi}
-          />
+          <div className="space-y-6">
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-medium">Qualification KPIs</h3>
+                <Button 
+                  type="button"
+                  onClick={() => handleAddKpi('qualification')}
+                  size="sm"
+                  variant="outline"
+                >
+                  Add Qualification KPI
+                </Button>
+              </div>
+              
+              <div className="space-y-4">
+                {kpiData.qualificationFields.length === 0 ? (
+                  <p className="text-gray-500 italic text-sm">
+                    No qualification KPIs defined yet. Click the button above to add one.
+                  </p>
+                ) : (
+                  kpiData.qualificationFields.map(kpi => (
+                    <KpiMappingCard 
+                      key={kpi.id} 
+                      kpi={kpi} 
+                      onUpdate={handleUpdateKpi} 
+                      onRemove={handleRemoveKpi} 
+                    />
+                  ))
+                )}
+              </div>
+            </div>
+            
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-medium">Adjustment KPIs</h3>
+                <Button 
+                  type="button"
+                  onClick={() => handleAddKpi('adjustment')}
+                  size="sm"
+                  variant="outline"
+                >
+                  Add Adjustment KPI
+                </Button>
+              </div>
+              
+              <div className="space-y-4">
+                {kpiData.adjustmentFields.length === 0 ? (
+                  <p className="text-gray-500 italic text-sm">
+                    No adjustment KPIs defined yet. Click the button above to add one.
+                  </p>
+                ) : (
+                  kpiData.adjustmentFields.map(kpi => (
+                    <KpiMappingCard 
+                      key={kpi.id} 
+                      kpi={kpi} 
+                      onUpdate={handleUpdateKpi} 
+                      onRemove={handleRemoveKpi} 
+                    />
+                  ))
+                )}
+              </div>
+            </div>
+            
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-medium">Exclusion KPIs</h3>
+                <Button 
+                  type="button"
+                  onClick={() => handleAddKpi('exclusion')}
+                  size="sm"
+                  variant="outline"
+                >
+                  Add Exclusion KPI
+                </Button>
+              </div>
+              
+              <div className="space-y-4">
+                {kpiData.exclusionFields.length === 0 ? (
+                  <p className="text-gray-500 italic text-sm">
+                    No exclusion KPIs defined yet. Click the button above to add one.
+                  </p>
+                ) : (
+                  kpiData.exclusionFields.map(kpi => (
+                    <KpiMappingCard 
+                      key={kpi.id} 
+                      kpi={kpi} 
+                      onUpdate={handleUpdateKpi} 
+                      onRemove={handleRemoveKpi} 
+                    />
+                  ))
+                )}
+              </div>
+            </div>
+            
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-medium">Custom Rule KPIs</h3>
+                <Button 
+                  type="button"
+                  onClick={() => handleAddKpi('custom')}
+                  size="sm"
+                  variant="outline"
+                >
+                  Add Custom KPI
+                </Button>
+              </div>
+              
+              <div className="space-y-4">
+                {kpiData.customRules.length === 0 ? (
+                  <p className="text-gray-500 italic text-sm">
+                    No custom KPIs defined yet. Click the button above to add one.
+                  </p>
+                ) : (
+                  kpiData.customRules.map(kpi => (
+                    <KpiMappingCard 
+                      key={kpi.id} 
+                      kpi={kpi} 
+                      onUpdate={handleUpdateKpi} 
+                      onRemove={handleRemoveKpi} 
+                    />
+                  ))
+                )}
+              </div>
+            </div>
+          </div>
           
           <div className="flex justify-end pt-6 border-t">
             <Button type="submit" className="w-40" disabled={isSaving}>

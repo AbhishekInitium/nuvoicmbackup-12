@@ -20,9 +20,9 @@ export const getMockIncentivePlans = (): IncentivePlanWithStatus[] => {
     salesQuota: 100000,
     commissionStructure: { 
       tiers: [
-        { id: 'tier_1', from: 0, to: 50000, rate: 0.01 },
-        { id: 'tier_2', from: 50001, to: 100000, rate: 0.02 },
-        { id: 'tier_3', from: 100001, rate: 0.03 }
+        { from: 0, to: 50000, rate: 0.01 },
+        { from: 50001, to: 100000, rate: 0.02 },
+        { from: 100001, to: -1, rate: 0.03 }
       ] 
     },
     measurementRules: { 
@@ -34,27 +34,14 @@ export const getMockIncentivePlans = (): IncentivePlanWithStatus[] => {
       }],
       minQualification: 0,
       adjustments: [{
-        type: 'percentage',
-        value: 10,
+        id: 'adj1',
         description: 'Default adjustment',
-        condition: {
-          field: 'SoAmount',
-          operator: '>',
-          value: 1000
-        }
+        impact: 1.1,
+        type: 'PERCENTAGE_BOOST'
       }],
       exclusions: []
     },
-    creditRules: { 
-      levels: [
-        {
-          level: 1,
-          role: 'Primary',
-          percent: 100,
-          name: 'Primary Credit'
-        }
-      ] 
-    },
+    creditRules: { levels: [] },
     customRules: [],
     hasBeenExecuted: false,
     metadata: {

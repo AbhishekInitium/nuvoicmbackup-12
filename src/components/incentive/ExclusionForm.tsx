@@ -1,62 +1,97 @@
 
 import React from 'react';
+import { Trash2 } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import GlassCard from '../ui-custom/GlassCard';
 import { Exclusion } from '@/types/incentiveTypes';
-import RuleCondition from './RuleCondition';
-import { SchemeAdminConfig, KpiField } from '@/types/schemeAdminTypes';
+import { OPERATORS } from '@/constants/incentiveConstants';
 
 interface ExclusionFormProps {
   exclusion: Exclusion;
+  index: number;
   dbFields: string[];
-  onUpdate: (field: keyof Exclusion, value: any) => void;
-  onRemove: () => void;
-  selectedScheme?: SchemeAdminConfig | null;
-  kpiMetadata?: Record<string, KpiField>;
+  onUpdate: (index: number, field: keyof Exclusion, value: string | number) => void;
+  onRemove: (index: number) => void;
 }
 
 const ExclusionForm: React.FC<ExclusionFormProps> = ({
   exclusion,
+  index,
   dbFields,
   onUpdate,
-  onRemove,
-  selectedScheme,
-  kpiMetadata
+  onRemove
 }) => {
-  // Handle condition update
-  const handleConditionUpdate = (field: string, value: string | number) => {
-    // Create a copy of the current condition
-    const updatedCondition = { ...exclusion.condition, [field]: value };
-    onUpdate('condition', updatedCondition);
-
-    // If this is a field update and we have metadata, also update description
-    if (field === 'field' && kpiMetadata && kpiMetadata[value as string]) {
-      const metadata = kpiMetadata[value as string];
-      if (metadata.description) {
-        onUpdate('description', metadata.description);
-      }
-    }
-  };
-
   return (
-    <div className="border rounded-md p-4 bg-app-gray-50">
-      <div className="flex flex-col space-y-4">
-        <div>
-          <span className="text-sm text-app-gray-600 mb-2 block">Exclude when:</span>
-          <RuleCondition
-            condition={exclusion.condition}
-            availableFields={dbFields}
-            currencySymbol="$" // Not used for exclusions but required by the component
-            onUpdate={handleConditionUpdate}
-            onRemove={onRemove}
-            selectedScheme={selectedScheme}
-            kpiMetadata={kpiMetadata}
-          />
+    <GlassCard key={index} variant="outlined" className="p-4">
+      <div className="flex justify-between items-start">
+        <div className="flex-1 grid grid-cols-1 sm:grid-cols-4 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-app-gray-700 mb-2">Field</label>
+            <Select 
+              value={exclusion.field}
+              onValueChange={(value) => onUpdate(index, 'field', value)}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select field" />
+              </SelectTrigger>
+              <SelectContent>
+                {dbFields.map(field => (
+                  <SelectItem key={field} value={field}>{field}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
           
-          {exclusion.description && (
-            <p className="text-sm text-app-gray-500 mt-1">{exclusion.description}</p>
-          )}
+          <div>
+            <label className="block text-sm font-medium text-app-gray-700 mb-2">Operator</label>
+            <Select 
+              value={exclusion.operator}
+              onValueChange={(value) => onUpdate(index, 'operator', value)}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Operator" />
+              </SelectTrigger>
+              <SelectContent>
+                {OPERATORS.map(op => (
+                  <SelectItem key={op.value} value={op.value}>{op.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-app-gray-700 mb-2">Value</label>
+            <Input 
+              type="text" 
+              value={exclusion.value || ''}
+              onChange={(e) => {
+                const value = e.target.value;
+                // Try to parse as number if possible
+                const numValue = parseFloat(value);
+                onUpdate(index, 'value', isNaN(numValue) ? value : numValue);
+              }}
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-app-gray-700 mb-2">Description</label>
+            <Input 
+              type="text" 
+              value={exclusion.description}
+              onChange={(e) => onUpdate(index, 'description', e.target.value)}
+            />
+          </div>
         </div>
+        
+        <button 
+          className="p-1 rounded-full hover:bg-app-gray-100 text-app-gray-500 hover:text-app-red transition-colors duration-200 ml-3"
+          onClick={() => onRemove(index)}
+        >
+          <Trash2 size={18} />
+        </button>
       </div>
-    </div>
+    </GlassCard>
   );
 };
 

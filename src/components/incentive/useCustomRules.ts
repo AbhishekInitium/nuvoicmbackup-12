@@ -10,12 +10,6 @@ export const useCustomRules = (
   const { toast } = useToast();
   const [rules, setRules] = useState<CustomRule[]>(initialRules);
 
-  // Helper function to get available fields
-  const getAvailableFields = () => {
-    // Return a default list of fields if no specific ones are provided
-    return ['sales', 'quantity', 'margin', 'revenue', 'product', 'customer', 'region'];
-  };
-
   // Custom rules management
   const addCustomRule = () => {
     const newRules = [...rules];
@@ -23,11 +17,9 @@ export const useCustomRules = (
     newRules.push({
       name: 'New Custom Rule',
       description: 'Define criteria for this rule',
-      condition: {
-        field: '', // Empty field, will be populated when user selects a value
-        operator: '', // Empty operator initially
-        value: '' // Empty value initially
-      },
+      conditions: [
+        { operator: '>=', value: 1000, metric: 'sales', period: 'current' }
+      ],
       action: 'qualify',
       active: true
     });
@@ -47,22 +39,33 @@ export const useCustomRules = (
   const addCustomRuleCondition = (ruleIndex: number) => {
     const newRules = [...rules];
     
-    // This function is no longer needed as we have a single condition
-    // but we'll keep it to avoid breaking existing code
-    toast({
-      title: "Operation Not Supported",
-      description: "Multiple conditions per rule are no longer supported.",
-      variant: "destructive"
+    newRules[ruleIndex].conditions.push({
+      operator: '>=',
+      value: 1000,
+      metric: 'sales',
+      period: 'current'
     });
+    
+    setRules(newRules);
+    onUpdateRules(newRules);
   };
 
   const removeCustomRuleCondition = (ruleIndex: number, conditionIndex: number) => {
-    // This function is no longer needed as we have a single condition
-    toast({
-      title: "Cannot Remove Condition",
-      description: "A rule must have at least one condition.",
-      variant: "destructive"
-    });
+    // Don't allow removing all conditions
+    if (rules[ruleIndex].conditions.length <= 1) {
+      toast({
+        title: "Cannot Remove Condition",
+        description: "A rule must have at least one condition.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    const newRules = [...rules];
+    newRules[ruleIndex].conditions.splice(conditionIndex, 1);
+    
+    setRules(newRules);
+    onUpdateRules(newRules);
   };
 
   const updateCustomRule = (ruleIndex: number, field: keyof CustomRule, value: string | boolean) => {
@@ -83,11 +86,10 @@ export const useCustomRules = (
     const newRules = [...rules];
     
     // Handle all available fields in RuleCondition
-    if (field === 'field' || field === 'operator' || field === 'description' || 
-        field === 'sourceType' || field === 'sourceField' || field === 'dataType') {
-      (newRules[ruleIndex].condition[field] as string) = value as string;
+    if (field === 'metric' || field === 'field' || field === 'operator' || field === 'period') {
+      (newRules[ruleIndex].conditions[conditionIndex][field] as string) = value as string;
     } else if (field === 'value') {
-      (newRules[ruleIndex].condition[field]) = value;
+      (newRules[ruleIndex].conditions[conditionIndex][field] as number) = value as number;
     }
     
     setRules(newRules);
@@ -96,7 +98,6 @@ export const useCustomRules = (
 
   return {
     rules,
-    getAvailableFields,
     addCustomRule,
     removeCustomRule,
     addCustomRuleCondition,

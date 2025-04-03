@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import SectionPanel from '../ui-custom/SectionPanel';
 import { IncentivePlan } from '@/types/incentiveTypes';
@@ -5,7 +6,7 @@ import RevenueBaseSelector from './RevenueBaseSelector';
 import MeasurementRules from './MeasurementRules';
 import CustomRules from './CustomRules';
 import { getSchemeAdminConfigs, getSchemeAdminConfig } from '@/services/database/mongoDBService';
-import { SchemeAdminConfig, KpiField } from '@/types/schemeAdminTypes';
+import { SchemeAdminConfig } from '@/types/schemeAdminTypes';
 import { useToast } from '@/hooks/use-toast';
 
 interface SchemeStructureSectionsProps {
@@ -22,6 +23,7 @@ const SchemeStructureSections: React.FC<SchemeStructureSectionsProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
+  // Fetch available scheme configurations on component mount
   useEffect(() => {
     const fetchSchemeConfigs = async () => {
       try {
@@ -43,6 +45,7 @@ const SchemeStructureSections: React.FC<SchemeStructureSectionsProps> = ({
     fetchSchemeConfigs();
   }, [toast]);
 
+  // Handle scheme selection
   const handleSchemeSelection = async (schemeId: string) => {
     try {
       setIsLoading(true);
@@ -51,13 +54,8 @@ const SchemeStructureSections: React.FC<SchemeStructureSectionsProps> = ({
       if (selectedConfig) {
         setSelectedScheme(selectedConfig);
         
+        // Update the revenue base with the selected scheme's calculation base
         updatePlan('revenueBase', selectedConfig.calculationBase);
-        
-        if (selectedConfig.baseData?.source) {
-          updatePlan('sourceType', selectedConfig.baseData.source);
-        }
-        
-        enhancePlanWithKpiMetadata(selectedConfig);
         
         toast({
           title: "Scheme Configuration Loaded",
@@ -78,24 +76,10 @@ const SchemeStructureSections: React.FC<SchemeStructureSectionsProps> = ({
     }
   };
 
-  const enhancePlanWithKpiMetadata = (config: SchemeAdminConfig) => {
-    const kpiLookup: Record<string, KpiField> = {};
-    
-    [
-      ...(config.qualificationFields || []),
-      ...(config.adjustmentFields || []),
-      ...(config.exclusionFields || []),
-      ...(config.customRules || [])
-    ].forEach(kpi => {
-      kpiLookup[kpi.kpi] = kpi;
-    });
-    
-    updatePlan('kpiMetadata', kpiLookup);
-  };
-
   return (
     <SectionPanel title="2. Scheme Structure">
       <div className="space-y-8">
+        {/* 1. Revenue base for Calculation */}
         <RevenueBaseSelector
           revenueBase={plan.revenueBase}
           updateRevenueBase={(value) => updatePlan('revenueBase', value)}
@@ -104,21 +88,21 @@ const SchemeStructureSections: React.FC<SchemeStructureSectionsProps> = ({
           isLoading={isLoading}
         />
         
+        {/* 2. Qualifying Criteria, 3. Adjustments + Exclusions */}
         <MeasurementRules 
           measurementRules={plan.measurementRules}
           revenueBase={plan.revenueBase}
           currency={plan.currency}
           updateMeasurementRules={(updatedRules) => updatePlan('measurementRules', updatedRules)}
           selectedScheme={selectedScheme}
-          kpiMetadata={plan.kpiMetadata}
         />
         
+        {/* 4. Custom Rules */}
         <CustomRules 
           customRules={plan.customRules}
           currency={plan.currency}
           updateCustomRules={(rules) => updatePlan('customRules', rules)}
           selectedScheme={selectedScheme}
-          kpiMetadata={plan.kpiMetadata}
         />
       </div>
     </SectionPanel>

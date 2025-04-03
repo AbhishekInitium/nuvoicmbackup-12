@@ -1,6 +1,8 @@
 
 import { useState, useEffect } from 'react';
-import { MeasurementRules, Adjustment, Exclusion, PrimaryMetric, RuleCondition } from '@/types/incentiveTypes';
+import { DB_FIELDS } from '@/constants/incentiveConstants';
+import { MeasurementRules, Adjustment, Exclusion, PrimaryMetric } from '@/types/incentiveTypes';
+import { v4 as uuidv4 } from 'uuid';
 
 export const useMeasurementRules = (
   initialRules: MeasurementRules,
@@ -31,20 +33,17 @@ export const useMeasurementRules = (
 
   // Helper function to get database fields based on revenue base
   const getDbFields = () => {
-    // Return empty array initially - fields will come from configurations
-    if (!revenueBase) return [];
-    
-    // Basic default set of fields based on revenue base
-    const baseFields = ['sales', 'quantity', 'margin', 'revenue'];
-    return baseFields;
+    const fields = DB_FIELDS[revenueBase as keyof typeof DB_FIELDS] || [];
+    return fields.map(field => field.value);
   };
 
   // Primary Metric handlers
   const addPrimaryMetric = () => {
+    const defaultField = getDbFields()[0] || '';
     const newMetric: PrimaryMetric = {
-      field: '', // Empty field, will be populated when user selects a value
-      operator: '', // Empty operator initially
-      value: '', // Empty value initially
+      field: defaultField,
+      operator: '>',
+      value: 0,
       description: 'New qualifying criteria'
     };
     
@@ -99,17 +98,16 @@ export const useMeasurementRules = (
 
   // Adjustment handlers
   const addAdjustment = () => {
-    const defaultCondition: RuleCondition = {
-      field: '', // Empty field initially
-      operator: '', // Empty operator initially
-      value: '' // Empty value initially
-    };
-    
+    const defaultField = getDbFields()[0] || '';
     const newAdjustment: Adjustment = {
-      type: 'percentage',
-      value: 10,
+      id: uuidv4(),
       description: 'New adjustment rule',
-      condition: defaultCondition
+      impact: 1.0,
+      type: 'PERCENTAGE_BOOST',
+      field: defaultField,
+      operator: '>',
+      value: 0,
+      factor: 1.0
     };
     
     const updatedRules = {
@@ -121,7 +119,7 @@ export const useMeasurementRules = (
     onUpdateRules(updatedRules);
   };
 
-  const updateAdjustment = (index: number, field: keyof Adjustment, value: any) => {
+  const updateAdjustment = (index: number, field: keyof Adjustment, value: string | number) => {
     const newAdjustments = [...rules.adjustments];
     newAdjustments[index] = {
       ...newAdjustments[index],
@@ -152,15 +150,12 @@ export const useMeasurementRules = (
 
   // Exclusion handlers
   const addExclusion = () => {
-    const defaultCondition: RuleCondition = {
-      field: '', // Empty field initially
-      operator: '', // Empty operator initially 
-      value: '' // Empty value initially
-    };
-    
+    const defaultField = getDbFields()[0] || '';
     const newExclusion: Exclusion = {
-      description: 'New exclusion rule',
-      condition: defaultCondition
+      field: defaultField,
+      operator: '>',
+      value: 0,
+      description: 'New exclusion rule'
     };
     
     const updatedRules = {
@@ -172,7 +167,7 @@ export const useMeasurementRules = (
     onUpdateRules(updatedRules);
   };
 
-  const updateExclusion = (index: number, field: keyof Exclusion, value: any) => {
+  const updateExclusion = (index: number, field: keyof Exclusion, value: string | number) => {
     const newExclusions = [...rules.exclusions];
     newExclusions[index] = {
       ...newExclusions[index],

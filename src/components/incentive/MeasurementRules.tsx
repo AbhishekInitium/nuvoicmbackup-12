@@ -9,7 +9,7 @@ import AdjustmentsList from './AdjustmentsList';
 import ExclusionsList from './ExclusionsList';
 import EmptyRulesState from './EmptyRulesState';
 import { getCurrencySymbol } from '@/utils/incentiveUtils';
-import { SchemeAdminConfig, KpiField } from '@/types/schemeAdminTypes';
+import { SchemeAdminConfig } from '@/types/schemeAdminTypes';
 
 interface MeasurementRulesProps {
   measurementRules: MeasurementRulesType;
@@ -17,7 +17,6 @@ interface MeasurementRulesProps {
   currency: string;
   updateMeasurementRules: (rules: MeasurementRulesType) => void;
   selectedScheme?: SchemeAdminConfig | null;
-  kpiMetadata?: Record<string, KpiField>;
 }
 
 const MeasurementRules: React.FC<MeasurementRulesProps> = ({
@@ -25,8 +24,7 @@ const MeasurementRules: React.FC<MeasurementRulesProps> = ({
   revenueBase,
   currency,
   updateMeasurementRules,
-  selectedScheme,
-  kpiMetadata
+  selectedScheme
 }) => {
   const currencySymbol = getCurrencySymbol(currency);
   const {
@@ -102,8 +100,6 @@ const MeasurementRules: React.FC<MeasurementRulesProps> = ({
                 onAddMetric={() => {}}
                 onUpdateMetric={(field, value) => updatePrimaryMetric(index, field, value)}
                 onRemoveMetric={() => removePrimaryMetric(index)}
-                selectedScheme={selectedScheme}
-                kpiMetadata={kpiMetadata}
               />
             ))}
           </div>
@@ -118,8 +114,6 @@ const MeasurementRules: React.FC<MeasurementRulesProps> = ({
         onRemoveAdjustment={removeAdjustment}
         onAddAdjustment={addAdjustment}
         currencySymbol={currencySymbol}
-        selectedScheme={selectedScheme}
-        kpiMetadata={kpiMetadata}
       />
 
       {/* Exclusions */}
@@ -129,8 +123,6 @@ const MeasurementRules: React.FC<MeasurementRulesProps> = ({
         onUpdateExclusion={updateExclusion}
         onRemoveExclusion={removeExclusion}
         onAddExclusion={addExclusion}
-        selectedScheme={selectedScheme}
-        kpiMetadata={kpiMetadata}
       />
     </div>
   );

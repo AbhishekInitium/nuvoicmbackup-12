@@ -1,52 +1,50 @@
 
 import React from 'react';
+import { CustomRule } from '@/types/incentiveTypes';
 import { PlusCircle } from 'lucide-react';
 import ActionButton from '../ui-custom/ActionButton';
-import { CustomRule } from '@/types/incentiveTypes';
-import { useCustomRules } from '../incentive/useCustomRules';
-import EmptyRulesState from './EmptyRulesState';
 import CustomRuleCard from './CustomRuleCard';
-import { SchemeAdminConfig, KpiField } from '@/types/schemeAdminTypes';
+import EmptyRulesState from './EmptyRulesState';
+import { getCurrencySymbol } from '@/utils/incentiveUtils';
+import { useCustomRules } from './useCustomRules';
+import { SchemeAdminConfig } from '@/types/schemeAdminTypes';
 
 interface CustomRulesProps {
   customRules: CustomRule[];
   currency: string;
   updateCustomRules: (rules: CustomRule[]) => void;
   selectedScheme?: SchemeAdminConfig | null;
-  kpiMetadata?: Record<string, KpiField>;
 }
 
-const CustomRules: React.FC<CustomRulesProps> = ({ 
-  customRules, 
-  currency, 
+const CustomRules: React.FC<CustomRulesProps> = ({
+  customRules,
+  currency,
   updateCustomRules,
-  selectedScheme,
-  kpiMetadata
+  selectedScheme
 }) => {
-  const {
-    rules,
-    getAvailableFields,
-    addCustomRule,
-    updateCustomRule,
-    removeCustomRule
+  const currencySymbol = getCurrencySymbol(currency);
+  const { 
+    rules, 
+    addCustomRule, 
+    updateCustomRule, 
+    removeCustomRule,
+    addCustomRuleCondition,
+    removeCustomRuleCondition,
+    updateCustomRuleCondition
   } = useCustomRules(customRules, updateCustomRules);
-  
-  // Get fields from selectedScheme if available
+
+  // Get custom fields from the selected scheme if available
   const getCustomFields = () => {
-    if (!selectedScheme?.customRules?.length) return getAvailableFields();
-    
-    // Extract KPI names from custom rules
+    if (!selectedScheme?.customRules?.length) return [];
     return selectedScheme.customRules.map(rule => rule.kpi);
   };
-  
+
   const customFields = getCustomFields();
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <label className="text-sm font-medium text-app-gray-700">
-          Custom Rules
-        </label>
+        <h3 className="text-lg font-medium">Custom Rules</h3>
         <ActionButton
           variant="outline"
           size="sm"
@@ -55,11 +53,11 @@ const CustomRules: React.FC<CustomRulesProps> = ({
           <PlusCircle size={16} className="mr-1" /> Add Custom Rule
         </ActionButton>
       </div>
-      
+
       {rules.length === 0 ? (
         <EmptyRulesState
           message="No custom rules defined"
-          description="Add custom rules for special handling of specific cases"
+          description="Add custom rules to handle specific business requirements"
           buttonText="Add Custom Rule"
           onAction={addCustomRule}
         />
@@ -69,12 +67,14 @@ const CustomRules: React.FC<CustomRulesProps> = ({
             <CustomRuleCard
               key={index}
               rule={rule}
+              ruleIndex={index}
+              currencySymbol={currencySymbol}
               availableFields={customFields}
-              currency={currency}
-              onUpdate={(field, value) => updateCustomRule(index, field, value)}
-              onRemove={() => removeCustomRule(index)}
-              selectedScheme={selectedScheme}
-              kpiMetadata={kpiMetadata}
+              onUpdateRule={(field, value) => updateCustomRule(index, field, value)}
+              onUpdateCondition={(conditionIndex, field, value) => updateCustomRuleCondition(index, conditionIndex, field, value)}
+              onAddCondition={() => addCustomRuleCondition(index)}
+              onRemoveCondition={(conditionIndex) => removeCustomRuleCondition(index, conditionIndex)}
+              onRemoveRule={() => removeCustomRule(index)}
             />
           ))}
         </div>

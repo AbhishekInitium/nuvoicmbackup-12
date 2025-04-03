@@ -1,7 +1,15 @@
 
 import { useState } from 'react';
 import { useToast } from "@/hooks/use-toast";
-import { CommissionStructure, Tier } from '@/types/incentiveTypes';
+import { CommissionStructure } from '@/types/incentiveTypes';
+
+// Define Tier type since it's being referenced but not exported from incentiveTypes
+interface Tier {
+  from: number;
+  to: number;
+  rate: number;
+  description?: string;
+}
 
 export const useCommissionTiers = (
   initialCommissionStructure: CommissionStructure,
@@ -10,7 +18,7 @@ export const useCommissionTiers = (
   const { toast } = useToast();
   const [tiers, setTiers] = useState<Tier[]>(initialCommissionStructure.tiers || []);
 
-  // Add new tier with empty values
+  // Add new tier with empty/default values
   const addTier = () => {
     const newTier: Tier = {
       from: 0,
@@ -22,6 +30,8 @@ export const useCommissionTiers = (
     const newTiers = [...tiers, newTier];
     setTiers(newTiers);
     onUpdateCommissionStructure({ tiers: newTiers });
+    
+    // Toast notification removed
   };
 
   // Remove tier

@@ -1,6 +1,7 @@
+
 import React, { useState, useEffect } from 'react';
 import { useS4HanaData } from '@/hooks/useS4HanaData';
-import { IncentivePlan, PlanMetadata, CreditLevel } from '@/types/incentiveTypes';
+import { IncentivePlan, PlanMetadata } from '@/types/incentiveTypes';
 import { useIncentivePlan } from '@/hooks/useIncentivePlan';
 import { IncentiveStatus } from '@/services/incentive/types/incentiveServiceTypes';
 
@@ -46,8 +47,13 @@ const IncentivePlanDesigner: React.FC<IncentivePlanDesignerProps> = ({
   
   useEffect(() => {
     if (initialPlan) {
+      // Set the scheme ID from the initial plan
       setSchemeId(initialPlan.schemeId || generateTimestampId());
+      
+      // Set the version number for editing (current version + 1) or new (1)
       setVersionNumber(isEditMode ? (initialPlan.metadata?.version || 0) + 1 : 1);
+      
+      // Store the MongoDB document ID if available
       if (initialPlan._id) {
         setDocumentId(initialPlan._id);
       }
@@ -86,23 +92,28 @@ const IncentivePlanDesigner: React.FC<IncentivePlanDesignerProps> = ({
   });
 
   const handleEditVersion = (selectedVersion: IncentivePlan) => {
+    // When a specific version is selected for editing, load it and create a new version
+    // Keep the schemeId but increment the version
     setSchemeId(selectedVersion.schemeId);
     setVersionNumber((selectedVersion.metadata?.version || 0) + 1);
     
+    // Set status from metadata or default to 'DRAFT'
     const status = (selectedVersion.metadata?.status || 'DRAFT') as IncentiveStatus;
     
+    // Copy all data from the selected version
     copyExistingScheme({
       ...selectedVersion,
-      name: selectedVersion.name,
-      status: status,
+      name: selectedVersion.name, // Keep original name (no "Copy of" prefix)
+      status: status, // Add this top-level status property required by IncentivePlanWithStatus
       metadata: {
-        createdAt: selectedVersion.metadata?.createdAt || new Date().toISOString(),
+        createdAt: selectedVersion.metadata?.createdAt || new Date().toISOString(), // Ensure createdAt is not optional
         updatedAt: new Date().toISOString(),
-        version: (selectedVersion.metadata?.version || 0) + 1,
-        status: selectedVersion.metadata?.status || 'DRAFT'
+        version: (selectedVersion.metadata?.version || 0) + 1, // New version number
+        status: selectedVersion.metadata?.status || 'DRAFT' // Ensure status is not optional
       }
     });
     
+    // Return to the editing view
     setShowVersionHistory(false);
   };
 
@@ -110,6 +121,7 @@ const IncentivePlanDesigner: React.FC<IncentivePlanDesignerProps> = ({
     return <div className="flex justify-center items-center h-screen">Loading plans...</div>;
   }
 
+  // Show version history view when requested
   if (showVersionHistory && schemeId) {
     return (
       <div className="py-12 sm:py-16 px-4 md:px-8 max-w-4xl mx-auto">
@@ -122,18 +134,6 @@ const IncentivePlanDesigner: React.FC<IncentivePlanDesignerProps> = ({
       </div>
     );
   }
-
-  const creditLevels: CreditLevel[] = plan.creditRules.levels.map(rule => ({
-    name: rule.role || rule.name || `Level ${rule.level}`,
-    percentage: rule.percent
-  }));
-
-  const fixedTiers = plan.commissionStructure.tiers.map(tier => ({
-    from: tier.from,
-    to: tier.to !== undefined ? tier.to : Number.MAX_SAFE_INTEGER,
-    rate: tier.rate,
-    description: `${tier.from}-${tier.to || 'max'}`
-  }));
 
   return (
     <div className="py-12 sm:py-16 px-4 md:px-8 min-h-screen">
@@ -149,6 +149,7 @@ const IncentivePlanDesigner: React.FC<IncentivePlanDesignerProps> = ({
             hideSchemeButtons={true}
           />
           
+          {/* Version history button - only show for existing schemes */}
           {isEditMode && schemeId && (
             <Button 
               variant="outline" 
@@ -185,30 +186,14 @@ const IncentivePlanDesigner: React.FC<IncentivePlanDesignerProps> = ({
         />
         
         <CreditDistributionSection 
-          levels={creditLevels}
-          updateCreditRules={(updatedLevels) => {
-            const creditRules = updatedLevels.map((level, idx) => ({
-              level: idx + 1,
-              role: level.name,
-              percent: level.percentage,
-              name: level.name
-            }));
-            updatePlan('creditRules', { levels: creditRules });
-          }}
+          levels={plan.creditRules.levels}
+          updateCreditRules={(levels) => updatePlan('creditRules', { levels })}
         />
         
         <PayoutStructureSection 
-          tiers={fixedTiers}
+          tiers={plan.commissionStructure.tiers}
           currency={plan.currency}
-          updateCommissionStructure={(updatedTiers) => {
-            const commissionTiers = updatedTiers.map((tier, idx) => ({
-              id: `tier_${idx}`,
-              from: tier.from,
-              to: tier.to === Number.MAX_SAFE_INTEGER ? undefined : tier.to,
-              rate: tier.rate
-            }));
-            updatePlan('commissionStructure', { tiers: commissionTiers });
-          }}
+          updateCommissionStructure={(tiers) => updatePlan('commissionStructure', { tiers })}
         />
         
         <div className="mt-10 flex justify-end space-x-4">
