@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { DB_FIELDS } from '@/constants/incentiveConstants';
 import { MeasurementRules, Adjustment, Exclusion, PrimaryMetric } from '@/types/incentiveTypes';
@@ -129,6 +130,7 @@ export const useMeasurementRules = (
   };
 
   const addPrimaryMetric = () => {
+    console.log("Adding primary metric");
     const qualificationFields = getDbFields('qualification');
     const defaultField = qualificationFields.length > 0 ? qualificationFields[0] : '';
     
@@ -139,14 +141,19 @@ export const useMeasurementRules = (
       description: 'New qualifying criteria'
     };
     
+    console.log("Creating new metric:", newMetric);
+    console.log("Current primaryMetrics:", rules.primaryMetrics);
+    
     const updatedRules = {
       ...rules,
       primaryMetrics: [...rules.primaryMetrics, newMetric]
     };
     
+    console.log("Updated rules:", updatedRules);
     setRules(updatedRules);
     
     if (typeof onUpdateRules === 'function') {
+      console.log("Calling onUpdateRules with:", updatedRules);
       onUpdateRules(updatedRules);
     } else {
       console.error("onUpdateRules is not a function", onUpdateRules);

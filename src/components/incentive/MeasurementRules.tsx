@@ -59,6 +59,12 @@ const MeasurementRules: React.FC<MeasurementRulesProps> = ({
   const adjustmentFields = getDbFields('adjustment');
   const exclusionFields = getDbFields('exclusion');
   const kpiMetadata = getKpiMetadata();
+  
+  // Handle add primary metric click with explicit function
+  const handleAddPrimaryMetric = () => {
+    console.log("Add Primary Metric button clicked");
+    addPrimaryMetric();
+  };
 
   return (
     <SectionPanel title="3. Measurement Rules" defaultExpanded={true}>
@@ -73,7 +79,8 @@ const MeasurementRules: React.FC<MeasurementRulesProps> = ({
               <ActionButton
                 variant="outline"
                 size="sm"
-                onClick={addPrimaryMetric}
+                onClick={handleAddPrimaryMetric}
+                type="button"
               >
                 <PlusCircle size={16} className="mr-1" /> Add Criteria
               </ActionButton>
@@ -85,7 +92,7 @@ const MeasurementRules: React.FC<MeasurementRulesProps> = ({
               message="No qualifying criteria defined"
               description="Add criteria to determine when a transaction qualifies for incentive"
               buttonText="Add Qualifying Criteria"
-              onAction={!isReadOnly ? addPrimaryMetric : undefined}
+              onAction={!isReadOnly ? handleAddPrimaryMetric : undefined}
             />
           ) : (
             <div className="space-y-4">

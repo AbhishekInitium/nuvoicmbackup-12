@@ -17,6 +17,7 @@ const ActionButton: React.FC<ActionButtonProps> = ({
   className,
   disabled,
   loading = false,
+  type = 'button', // Ensure type defaults to 'button' to prevent form submissions
   ...props
 }) => {
   const variantClasses = {
@@ -35,6 +36,7 @@ const ActionButton: React.FC<ActionButtonProps> = ({
 
   return (
     <button
+      type={type}
       disabled={disabled || loading}
       className={cn(
         'action-button',
