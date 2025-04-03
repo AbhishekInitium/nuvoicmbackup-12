@@ -1,12 +1,10 @@
 
 import React from 'react';
-import { Trash2 } from 'lucide-react';
 import { Adjustment } from '@/types/incentiveTypes';
 import RuleCondition from './RuleCondition';
 import { SchemeAdminConfig, KpiField } from '@/types/schemeAdminTypes';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Button } from '@/components/ui/button';
 
 // Define the adjustment types directly here since they're not exported from constants
 const ADJUSTMENT_TYPES = [
@@ -49,19 +47,19 @@ const AdjustmentForm: React.FC<AdjustmentFormProps> = ({
   };
 
   return (
-    <div className="border rounded-md p-4 bg-white shadow-sm">
+    <div className="border rounded-md p-4 bg-app-gray-50">
       <div className="flex flex-col space-y-4">
-        <div className="flex justify-between">
+        <div className="flex justify-between items-start">
           <div className="flex-grow">
-            <div className="flex flex-wrap items-center gap-4">
+            <div className="flex items-center space-x-4">
               <Select
                 value={adjustment.type}
                 onValueChange={(value) => onUpdate('type', value)}
               >
-                <SelectTrigger className="w-44 bg-white">
-                  <SelectValue>{adjustment.type === 'percentage' ? 'Percentage' : 'Fixed Amount'}</SelectValue>
+                <SelectTrigger className="w-44">
+                  <SelectValue placeholder="Adjustment Type" />
                 </SelectTrigger>
-                <SelectContent className="bg-white z-[100]">
+                <SelectContent>
                   {ADJUSTMENT_TYPES.map((type) => (
                     <SelectItem key={type.value} value={type.value}>
                       {type.label}
@@ -70,11 +68,11 @@ const AdjustmentForm: React.FC<AdjustmentFormProps> = ({
                 </SelectContent>
               </Select>
               
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-medium">by</span>
+              <div className="flex items-center space-x-2">
+                <span className="text-sm">by</span>
                 <Input
                   type="number"
-                  className="w-24"
+                  className="w-20"
                   value={adjustment.value}
                   onChange={(e) => {
                     const value = parseFloat(e.target.value);
@@ -82,19 +80,10 @@ const AdjustmentForm: React.FC<AdjustmentFormProps> = ({
                   }}
                 />
                 
-                <span className="text-sm font-medium">
+                <span className="text-sm">
                   {adjustment.type === 'percentage' ? '%' : currencySymbol}
                 </span>
               </div>
-              
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={onRemove} 
-                className="ml-auto text-app-gray-500 hover:text-app-red"
-              >
-                <Trash2 size={16} />
-              </Button>
             </div>
             
             {adjustment.description && (
@@ -104,7 +93,7 @@ const AdjustmentForm: React.FC<AdjustmentFormProps> = ({
         </div>
         
         <div className="mt-2">
-          <span className="text-sm font-medium text-app-gray-700 mb-2 block">When:</span>
+          <span className="text-sm text-app-gray-600 mb-2 block">When:</span>
           <RuleCondition
             condition={adjustment.condition}
             availableFields={dbFields}

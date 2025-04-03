@@ -1,5 +1,6 @@
 
-import React, { useEffect } from 'react';
+import React from 'react';
+import { Trash2 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { RuleCondition } from '@/types/incentiveTypes';
@@ -78,8 +79,6 @@ const RuleConditionComponent: React.FC<RuleConditionComponentProps> = ({
 
   // Handle field selection with metadata
   const handleFieldSelect = (fieldName: string) => {
-    console.log('Field selected:', fieldName);
-    
     // First update the field name
     onUpdate('field', fieldName);
     
@@ -107,12 +106,6 @@ const RuleConditionComponent: React.FC<RuleConditionComponentProps> = ({
     }
   };
 
-  // Handle operator selection with logging
-  const handleOperatorSelect = (operatorValue: string) => {
-    console.log('Operator selected:', operatorValue);
-    onUpdate('operator', operatorValue);
-  };
-
   // Determine input type based on data type
   const getInputTypeForDataType = (dataType: string) => {
     switch(dataType) {
@@ -138,37 +131,33 @@ const RuleConditionComponent: React.FC<RuleConditionComponentProps> = ({
   };
 
   return (
-    <div className="flex flex-wrap items-center gap-3">
+    <div className="flex items-center space-x-3">
       <Select 
-        value={condition.field || ""}
         onValueChange={handleFieldSelect}
+        value={condition.field || undefined}
       >
-        <SelectTrigger className="w-40 bg-white">
-          <SelectValue>
+        <SelectTrigger className="w-36">
+          <SelectValue placeholder="Select field">
             {condition.field || "Select field"}
           </SelectValue>
         </SelectTrigger>
-        <SelectContent className="bg-white z-[100]" position="popper">
-          {fieldOptions.length === 0 ? (
-            <div className="px-2 py-2 text-sm text-gray-500">No fields available</div>
-          ) : (
-            fieldOptions.map(field => (
-              <SelectItem key={field} value={field}>{field}</SelectItem>
-            ))
-          )}
+        <SelectContent className="bg-white z-50">
+          {fieldOptions.map(field => (
+            <SelectItem key={field} value={field}>{field}</SelectItem>
+          ))}
         </SelectContent>
       </Select>
       
       <Select 
-        value={condition.operator || ""}
-        onValueChange={handleOperatorSelect}
+        onValueChange={(value) => onUpdate('operator', value)}
+        value={condition.operator || undefined}
       >
-        <SelectTrigger className="w-40 bg-white">
-          <SelectValue>
+        <SelectTrigger className="w-24">
+          <SelectValue placeholder="Operator">
             {condition.operator ? getOperatorLabel(condition.operator) : "Operator"}
           </SelectValue>
         </SelectTrigger>
-        <SelectContent className="bg-white z-[100]" position="popper">
+        <SelectContent className="bg-white z-50">
           {OPERATORS.map(op => (
             <SelectItem key={op.value} value={op.value}>{op.label}</SelectItem>
           ))}
@@ -191,6 +180,13 @@ const RuleConditionComponent: React.FC<RuleConditionComponentProps> = ({
           }
         }}
       />
+      
+      <button 
+        className="p-1 rounded-full hover:bg-app-gray-100 text-app-gray-500 hover:text-app-red"
+        onClick={onRemove}
+      >
+        <Trash2 size={16} />
+      </button>
     </div>
   );
 };

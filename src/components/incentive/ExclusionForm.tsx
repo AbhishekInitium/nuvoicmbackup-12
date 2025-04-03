@@ -1,10 +1,8 @@
 
 import React from 'react';
-import { Trash2 } from 'lucide-react';
 import { Exclusion } from '@/types/incentiveTypes';
 import RuleCondition from './RuleCondition';
 import { SchemeAdminConfig, KpiField } from '@/types/schemeAdminTypes';
-import { Button } from '@/components/ui/button';
 
 interface ExclusionFormProps {
   exclusion: Exclusion;
@@ -39,21 +37,10 @@ const ExclusionForm: React.FC<ExclusionFormProps> = ({
   };
 
   return (
-    <div className="border rounded-md p-4 bg-white shadow-sm">
+    <div className="border rounded-md p-4 bg-app-gray-50">
       <div className="flex flex-col space-y-4">
-        <div className="flex justify-between items-start">
-          <span className="text-sm font-medium text-app-gray-700 mb-2">Exclude when:</span>
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={onRemove} 
-            className="text-app-gray-500 hover:text-app-red"
-          >
-            <Trash2 size={16} />
-          </Button>
-        </div>
-        
         <div>
+          <span className="text-sm text-app-gray-600 mb-2 block">Exclude when:</span>
           <RuleCondition
             condition={exclusion.condition}
             availableFields={dbFields}
@@ -65,7 +52,7 @@ const ExclusionForm: React.FC<ExclusionFormProps> = ({
           />
           
           {exclusion.description && (
-            <p className="text-sm text-app-gray-500 mt-2">{exclusion.description}</p>
+            <p className="text-sm text-app-gray-500 mt-1">{exclusion.description}</p>
           )}
         </div>
       </div>
