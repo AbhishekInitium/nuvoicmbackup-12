@@ -38,7 +38,6 @@ const RevenueBaseSelector: React.FC<RevenueBaseSelectorProps> = ({
           ) : (
             <Select 
               onValueChange={(schemeId) => onSchemeSelect && onSchemeSelect(schemeId)}
-              disabled={isLoading}
             >
               <SelectTrigger className="w-full bg-white">
                 <SelectValue placeholder="Choose a scheme configuration" />

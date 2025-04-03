@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import SectionPanel from '../ui-custom/SectionPanel';
 import { Label } from '../ui/label';
 import { useToast } from '@/hooks/use-toast';
+import { Badge } from '../ui/badge';
 
 interface SchemeStructureSectionProps {
   plan: IncentivePlan;
@@ -72,11 +73,19 @@ const SchemeStructureSection: React.FC<SchemeStructureSectionProps> = ({
       // Also update the revenue base to match the config
       updatePlan('revenueBase', selectedConfig.calculationBase);
       updatePlan('baseField', selectedConfig.baseField);
+      
+      toast({
+        title: "Configuration Selected",
+        description: `Selected: ${selectedConfig.adminName}`,
+      });
     }
   };
 
   return (
-    <SectionPanel title="2. Scheme Structure">
+    <SectionPanel 
+      title="2. Scheme Structure"
+      badge={selectedConfig ? <Badge variant="success">Configuration Selected</Badge> : undefined}
+    >
       <div className="space-y-4">
         <div className="grid md:grid-cols-2 gap-6">
           <div>
