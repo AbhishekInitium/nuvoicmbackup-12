@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { DB_FIELDS } from '@/constants/incentiveConstants';
 import { MeasurementRules, Adjustment, Exclusion, PrimaryMetric } from '@/types/incentiveTypes';
@@ -11,7 +10,6 @@ export const useMeasurementRules = (
   onUpdateRules: (rules: MeasurementRules) => void,
   selectedScheme?: SchemeAdminConfig | null
 ) => {
-  // Create a default rules object if initialRules is null or undefined
   const defaultRules: MeasurementRules = {
     primaryMetrics: [],
     minQualification: 0,
@@ -19,10 +17,8 @@ export const useMeasurementRules = (
     exclusions: []
   };
   
-  // Use the provided initialRules if available, otherwise use default
   const safeInitialRules = initialRules || defaultRules;
   
-  // Ensure all properties exist within the initialRules
   const normalizedInitialRules = {
     ...defaultRules,
     ...safeInitialRules,
@@ -34,20 +30,16 @@ export const useMeasurementRules = (
   const [rules, setRules] = useState<MeasurementRules>(normalizedInitialRules);
   const [lastSelectedScheme, setLastSelectedScheme] = useState<SchemeAdminConfig | null | undefined>(selectedScheme);
 
-  // Debug log the selected scheme
   useEffect(() => {
     console.log("useMeasurementRules - Selected scheme:", selectedScheme);
     
-    // If scheme changed, update last selected scheme
     if (selectedScheme !== lastSelectedScheme) {
       console.log("Scheme changed, updating lastSelectedScheme");
       setLastSelectedScheme(selectedScheme);
     }
   }, [selectedScheme, lastSelectedScheme]);
 
-  // Update rules if initialRules changes or if scheme changes
   useEffect(() => {
-    // Re-normalize rules when initialRules or scheme changes
     if (initialRules === null || initialRules === undefined) {
       setRules(defaultRules);
       return;
@@ -64,7 +56,6 @@ export const useMeasurementRules = (
     setRules(normalizedRules);
   }, [initialRules]);
 
-  // Helper function to get KPI fields from selected scheme based on category
   const getKpiFieldsByCategory = (category: 'qualification' | 'adjustment' | 'exclusion' | 'custom'): string[] => {
     if (!selectedScheme) {
       console.log(`No selected scheme for category ${category}`);
@@ -92,13 +83,11 @@ export const useMeasurementRules = (
     return fields.map(field => field.kpi);
   };
 
-  // Helper function to get KPI metadata from selected scheme
   const getKpiMetadata = () => {
     if (!selectedScheme) return {};
     
     const metadata: Record<string, KpiField> = {};
     
-    // Add all KPIs from all categories
     if (selectedScheme.qualificationFields?.length) {
       selectedScheme.qualificationFields.forEach((field: KpiField) => {
         metadata[field.kpi] = field;
@@ -126,23 +115,19 @@ export const useMeasurementRules = (
     return metadata;
   };
 
-  // Helper function to get database fields based on revenue base or scheme configuration
   const getDbFields = (category?: 'qualification' | 'adjustment' | 'exclusion' | 'custom') => {
-    // If we have a selected scheme and category, use the appropriate fields from it
     if (selectedScheme && category) {
       const fields = getKpiFieldsByCategory(category);
       console.log(`getDbFields for ${category}:`, fields);
       return fields;
     }
     
-    // Fallback to using constant DB fields
     const fields = DB_FIELDS[revenueBase as keyof typeof DB_FIELDS] || [];
     const fieldValues = fields.map(field => field.value);
     console.log(`Fallback fields for ${revenueBase}:`, fieldValues);
     return fieldValues;
   };
 
-  // Primary Metric handlers
   const addPrimaryMetric = () => {
     const qualificationFields = getDbFields('qualification');
     const defaultField = qualificationFields.length > 0 ? qualificationFields[0] : '';
@@ -197,7 +182,6 @@ export const useMeasurementRules = (
     onUpdateRules(updatedRules);
   };
 
-  // Update minimum qualification
   const updateMinQualification = (value: number) => {
     const updatedRules = {
       ...rules,
@@ -207,7 +191,6 @@ export const useMeasurementRules = (
     onUpdateRules(updatedRules);
   };
 
-  // Adjustment handlers
   const addAdjustment = () => {
     const adjustmentFields = getDbFields('adjustment');
     const defaultField = adjustmentFields.length > 0 ? adjustmentFields[0] : '';
@@ -215,12 +198,9 @@ export const useMeasurementRules = (
     const newAdjustment: Adjustment = {
       id: uuidv4(),
       description: 'New adjustment rule',
-      impact: 1.0,
-      type: 'PERCENTAGE_BOOST',
       field: defaultField,
       operator: '>',
-      value: 0,
-      factor: 1.0
+      value: 0
     };
     
     const updatedRules = {
@@ -261,7 +241,6 @@ export const useMeasurementRules = (
     onUpdateRules(updatedRules);
   };
 
-  // Exclusion handlers
   const addExclusion = () => {
     const exclusionFields = getDbFields('exclusion');
     const defaultField = exclusionFields.length > 0 ? exclusionFields[0] : '';

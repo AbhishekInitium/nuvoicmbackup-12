@@ -82,7 +82,7 @@ const AdjustmentForm: React.FC<AdjustmentFormProps> = ({
         )}
       </div>
       
-      <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div>
           <label className="block text-sm font-medium text-app-gray-700 mb-2">Field</label>
           {isReadOnly ? (
@@ -159,54 +159,6 @@ const AdjustmentForm: React.FC<AdjustmentFormProps> = ({
                 }
               }}
               step={inputType === 'number' ? "0.01" : undefined}
-              disabled={isReadOnly}
-            />
-          )}
-        </div>
-        
-        <div>
-          <label className="block text-sm font-medium text-app-gray-700 mb-2">Adjustment Type</label>
-          {isReadOnly ? (
-            <div className="h-10 px-4 py-2 rounded-md border border-gray-300 bg-gray-50 text-gray-700">
-              {adjustment.type}
-            </div>
-          ) : (
-            <Select 
-              value={adjustment.type}
-              onValueChange={(value) => onUpdateAdjustment(adjustmentIndex, 'type', value)}
-              disabled={isReadOnly}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Adjustment Type" />
-              </SelectTrigger>
-              <SelectContent className="bg-white">
-                <SelectItem value="PERCENTAGE_BOOST">Percentage Boost</SelectItem>
-                <SelectItem value="FLAT_AMOUNT">Flat Amount</SelectItem>
-                <SelectItem value="TIER_OVERRIDE">Tier Override</SelectItem>
-              </SelectContent>
-            </Select>
-          )}
-        </div>
-        
-        <div>
-          <label className="block text-sm font-medium text-app-gray-700 mb-2">
-            {adjustment.type === "FLAT_AMOUNT" 
-              ? `Amount (${currencySymbol})` 
-              : adjustment.type === "PERCENTAGE_BOOST" 
-                ? "Multiplier" 
-                : "Factor"
-            }
-          </label>
-          {isReadOnly ? (
-            <div className="h-10 px-4 py-2 rounded-md border border-gray-300 bg-gray-50 text-gray-700">
-              {adjustment.impact}
-            </div>
-          ) : (
-            <Input 
-              type="number"
-              value={adjustment.impact}
-              onChange={(e) => onUpdateAdjustment(adjustmentIndex, 'impact', parseFloat(e.target.value))}
-              step="0.01"
               disabled={isReadOnly}
             />
           )}

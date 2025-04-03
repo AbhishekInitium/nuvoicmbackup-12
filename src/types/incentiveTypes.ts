@@ -1,4 +1,3 @@
-
 import { SchemeAdminConfig } from './schemeAdminTypes';
 
 export interface PlanMetadata {
@@ -34,11 +33,11 @@ export interface RuleCondition {
 export interface Adjustment {
   id: string;
   description: string;
-  impact: number;
-  type: string; // e.g., PERCENTAGE_BOOST, FLAT_ADDITION
-  field?: string;
-  operator?: string;
-  value?: string | number;
+  field: string;
+  operator: string;
+  value: string | number;
+  impact?: number;
+  type?: string;
   factor?: number;
 }
 
