@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { DB_FIELDS } from '@/constants/incentiveConstants';
-import { MeasurementRules, Adjustment, Exclusion, PrimaryMetric } from '@/types/incentiveTypes';
+import { MeasurementRules, Adjustment, Exclusion, PrimaryMetric, RuleCondition } from '@/types/incentiveTypes';
 import { v4 as uuidv4 } from 'uuid';
 
 export const useMeasurementRules = (
@@ -99,15 +99,17 @@ export const useMeasurementRules = (
   // Adjustment handlers
   const addAdjustment = () => {
     const defaultField = getDbFields()[0] || '';
-    const newAdjustment: Adjustment = {
-      id: uuidv4(),
-      description: 'New adjustment rule',
-      impact: 1.0,
-      type: 'PERCENTAGE_BOOST',
+    const defaultCondition: RuleCondition = {
       field: defaultField,
       operator: '>',
-      value: 0,
-      factor: 1.0
+      value: 0
+    };
+    
+    const newAdjustment: Adjustment = {
+      type: 'percentage',
+      value: 10,
+      description: 'New adjustment rule',
+      condition: defaultCondition
     };
     
     const updatedRules = {
@@ -119,7 +121,7 @@ export const useMeasurementRules = (
     onUpdateRules(updatedRules);
   };
 
-  const updateAdjustment = (index: number, field: keyof Adjustment, value: string | number) => {
+  const updateAdjustment = (index: number, field: keyof Adjustment, value: any) => {
     const newAdjustments = [...rules.adjustments];
     newAdjustments[index] = {
       ...newAdjustments[index],
@@ -151,11 +153,15 @@ export const useMeasurementRules = (
   // Exclusion handlers
   const addExclusion = () => {
     const defaultField = getDbFields()[0] || '';
-    const newExclusion: Exclusion = {
+    const defaultCondition: RuleCondition = {
       field: defaultField,
       operator: '>',
-      value: 0,
-      description: 'New exclusion rule'
+      value: 0
+    };
+    
+    const newExclusion: Exclusion = {
+      description: 'New exclusion rule',
+      condition: defaultCondition
     };
     
     const updatedRules = {
@@ -167,7 +173,7 @@ export const useMeasurementRules = (
     onUpdateRules(updatedRules);
   };
 
-  const updateExclusion = (index: number, field: keyof Exclusion, value: string | number) => {
+  const updateExclusion = (index: number, field: keyof Exclusion, value: any) => {
     const newExclusions = [...rules.exclusions];
     newExclusions[index] = {
       ...newExclusions[index],

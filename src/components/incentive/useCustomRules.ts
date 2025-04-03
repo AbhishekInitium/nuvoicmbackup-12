@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { CustomRule, RuleCondition } from '@/types/incentiveTypes';
@@ -17,9 +16,11 @@ export const useCustomRules = (
     newRules.push({
       name: 'New Custom Rule',
       description: 'Define criteria for this rule',
-      conditions: [
-        { operator: '>=', value: 1000, metric: 'sales', period: 'current' }
-      ],
+      condition: {
+        field: 'sales',
+        operator: '>=',
+        value: 1000
+      },
       action: 'qualify',
       active: true
     });
@@ -39,33 +40,22 @@ export const useCustomRules = (
   const addCustomRuleCondition = (ruleIndex: number) => {
     const newRules = [...rules];
     
-    newRules[ruleIndex].conditions.push({
-      operator: '>=',
-      value: 1000,
-      metric: 'sales',
-      period: 'current'
+    // This function is no longer needed as we have a single condition
+    // but we'll keep it to avoid breaking existing code
+    toast({
+      title: "Operation Not Supported",
+      description: "Multiple conditions per rule are no longer supported.",
+      variant: "destructive"
     });
-    
-    setRules(newRules);
-    onUpdateRules(newRules);
   };
 
   const removeCustomRuleCondition = (ruleIndex: number, conditionIndex: number) => {
-    // Don't allow removing all conditions
-    if (rules[ruleIndex].conditions.length <= 1) {
-      toast({
-        title: "Cannot Remove Condition",
-        description: "A rule must have at least one condition.",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    const newRules = [...rules];
-    newRules[ruleIndex].conditions.splice(conditionIndex, 1);
-    
-    setRules(newRules);
-    onUpdateRules(newRules);
+    // This function is no longer needed as we have a single condition
+    toast({
+      title: "Cannot Remove Condition",
+      description: "A rule must have at least one condition.",
+      variant: "destructive"
+    });
   };
 
   const updateCustomRule = (ruleIndex: number, field: keyof CustomRule, value: string | boolean) => {
@@ -86,10 +76,10 @@ export const useCustomRules = (
     const newRules = [...rules];
     
     // Handle all available fields in RuleCondition
-    if (field === 'metric' || field === 'field' || field === 'operator' || field === 'period') {
-      (newRules[ruleIndex].conditions[conditionIndex][field] as string) = value as string;
+    if (field === 'field' || field === 'operator') {
+      (newRules[ruleIndex].condition[field] as string) = value as string;
     } else if (field === 'value') {
-      (newRules[ruleIndex].conditions[conditionIndex][field] as number) = value as number;
+      (newRules[ruleIndex].condition[field]) = value;
     }
     
     setRules(newRules);

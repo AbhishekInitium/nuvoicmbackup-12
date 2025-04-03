@@ -1,4 +1,4 @@
-import { IncentivePlan } from '@/types/incentiveTypes';
+import { IncentivePlan, CustomRule, Exclusion, CreditRule } from '@/types/incentiveTypes';
 import { SelectedData } from './dataSelectionModule';
 import { LogEntry, addLogEntry } from './loggingModule';
 
@@ -165,8 +165,9 @@ const applyExclusionRules = (
     let shouldKeep = true;
     
     for (const exclusion of plan.measurementRules.exclusions) {
-      const fieldValue = item[exclusion.field];
-      const ruleValue = exclusion.value;
+      // Use the field from the condition
+      const fieldValue = item[exclusion.condition.field];
+      const ruleValue = exclusion.condition.value;
       
       // Skip if field doesn't exist in the item
       if (fieldValue === undefined) continue;
@@ -174,7 +175,7 @@ const applyExclusionRules = (
       // Check if exclusion applies
       let exclusionApplies = false;
       
-      switch (exclusion.operator) {
+      switch (exclusion.condition.operator) {
         case '=':
         case '==':
           exclusionApplies = (fieldValue === ruleValue);
@@ -198,8 +199,8 @@ const applyExclusionRules = (
       
       if (exclusionApplies) {
         // Record the exclusion in participant result
-        if (!participantResult.exclusionsApplied.includes(exclusion.description)) {
-          participantResult.exclusionsApplied.push(exclusion.description);
+        if (!participantResult.exclusionsApplied.includes(exclusion.description || '')) {
+          participantResult.exclusionsApplied.push(exclusion.description || '');
         }
         
         shouldKeep = false;
@@ -261,42 +262,50 @@ const applyCustomRules = (
     
     // Apply each active custom rule
     for (const rule of plan.customRules) {
-      if (!rule.active) continue;
+      if (rule.active === false) continue; // Skip inactive rules
       
-      // Check if all conditions are met
-      const allConditionsMet = rule.conditions.every(condition => {
-        // For rule conditions, use the metric field as field name if field is not defined
-        const fieldName = condition.field || condition.metric;
-        const metricValue = record[fieldName] || 0;
-        
-        switch (condition.operator) {
-          case '=':
-          case '==':
-            return metricValue === condition.value;
-          case '!=':
-            return metricValue !== condition.value;
-          case '>':
-            return metricValue > condition.value;
-          case '>=':
-            return metricValue >= condition.value;
-          case '<':
-            return metricValue < condition.value;
-          case '<=':
-            return metricValue <= condition.value;
-          default:
-            return false;
-        }
-      });
+      // Check if the condition is met
+      const condition = rule.condition;
       
-      if (allConditionsMet) {
+      // For rule conditions, use the field as field name
+      const fieldName = condition.field;
+      const metricValue = record[fieldName] || 0;
+      
+      let conditionMet = false;
+      
+      switch (condition.operator) {
+        case '=':
+        case '==':
+          conditionMet = metricValue === condition.value;
+          break;
+        case '!=':
+          conditionMet = metricValue !== condition.value;
+          break;
+        case '>':
+          conditionMet = metricValue > condition.value;
+          break;
+        case '>=':
+          conditionMet = metricValue >= condition.value;
+          break;
+        case '<':
+          conditionMet = metricValue < condition.value;
+          break;
+        case '<=':
+          conditionMet = metricValue <= condition.value;
+          break;
+        default:
+          conditionMet = false;
+      }
+      
+      if (conditionMet) {
         // Record the rule application
-        if (!participantResult.customRulesApplied.includes(rule.name)) {
-          participantResult.customRulesApplied.push(rule.name);
+        if (!participantResult.customRulesApplied.includes(rule.name || '')) {
+          participantResult.customRulesApplied.push(rule.name || '');
           
           addLogEntry(
             participantResult.logEntries,
             'Custom Rule Applied',
-            `Applied rule: ${rule.name} (${rule.action})`,
+            `Applied rule: ${rule.name || ''} (${rule.action || ''})`,
             'INFO',
             executionId
           );
@@ -322,8 +331,8 @@ const applyCustomRules = (
               // Record the adjustment
               const impact = modifiedRecord.TotalNetAmount - originalAmount;
               participantResult.adjustments.push({
-                adjustmentId: rule.name,
-                description: `Boost: ${rule.name}`,
+                adjustmentId: rule.name || '',
+                description: `Boost: ${rule.name || ''}`,
                 impact
               });
               
@@ -340,17 +349,17 @@ const applyCustomRules = (
             // Apply a cap to the amount
             if (modifiedRecord.TotalNetAmount !== undefined) {
               const originalAmount = modifiedRecord.TotalNetAmount;
-              // Use rule.value or default to 10000 if not defined
-              const capAmount = rule.value || 10000; // Default cap of 10K
+              // Use rule.condition.value from condition or default to 10000 if not defined
+              const capAmount = rule.condition.value || 10000; // Default cap of 10K
               
               if (originalAmount > capAmount) {
-                modifiedRecord.TotalNetAmount = capAmount;
+                modifiedRecord.TotalNetAmount = Number(capAmount);
                 
                 // Record the adjustment
                 const impact = modifiedRecord.TotalNetAmount - originalAmount;
                 participantResult.adjustments.push({
-                  adjustmentId: rule.name,
-                  description: `Cap: ${rule.name}`,
+                  adjustmentId: rule.name || '',
+                  description: `Cap: ${rule.name || ''}`,
                   impact
                 });
                 
@@ -462,16 +471,16 @@ const applyCommissionStructure = (
   if (plan.creditRules && plan.creditRules.levels && plan.creditRules.levels.length > 0) {
     // For now, we assume the credit rules are applied to all participants equally
     // This should be expanded to match participants to specific credit levels
-    const creditLevel = plan.creditRules.levels[0];
+    const creditLevel = plan.creditRules.levels[0] as CreditRule;
     
-    if (creditLevel && creditLevel.percentage !== 100) {
+    if (creditLevel && creditLevel.percent !== 100) {
       const originalCommission = commission;
-      commission = commission * (creditLevel.percentage / 100);
+      commission = commission * (creditLevel.percent / 100);
       
       addLogEntry(
         participantResult.logEntries,
         'Credit Rules',
-        `Applied credit level "${creditLevel.name}" with ${creditLevel.percentage}%: ${originalCommission.toFixed(2)} → ${commission.toFixed(2)}`,
+        `Applied credit level "${creditLevel.role || ''}" with ${creditLevel.percent}%: ${originalCommission.toFixed(2)} → ${commission.toFixed(2)}`,
         'INFO',
         executionId
       );

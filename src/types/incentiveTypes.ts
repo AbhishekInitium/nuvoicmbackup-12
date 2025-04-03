@@ -33,6 +33,9 @@ export interface CustomRule {
   name?: string;
   description?: string;
   condition: RuleCondition;
+  active?: boolean;
+  action?: string;
+  factor?: number;
 }
 
 export interface MeasurementRules {
@@ -46,6 +49,20 @@ export interface CreditRule {
   level: number;
   role: string;
   percent: number;
+  name?: string; // Added for processing module compatibility
+}
+
+// Added missing types
+export interface Tier {
+  from: number;
+  to: number;
+  rate: number;
+  description?: string;
+}
+
+export interface CreditLevel {
+  name: string;
+  percentage: number;
 }
 
 export interface CommissionTier {
@@ -54,6 +71,10 @@ export interface CommissionTier {
   to?: number;
   rate: number;
   base?: 'revenue' | 'margin' | 'quantity';
+}
+
+export interface CommissionStructure {
+  tiers: Tier[];
 }
 
 export interface IncentivePlan {

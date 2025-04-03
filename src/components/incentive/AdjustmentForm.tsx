@@ -5,7 +5,12 @@ import RuleCondition from './RuleCondition';
 import { SchemeAdminConfig, KpiField } from '@/types/schemeAdminTypes';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ADJUSTMENT_TYPES } from '@/constants/incentiveConstants';
+
+// Define the adjustment types directly here since they're not exported from constants
+const ADJUSTMENT_TYPES = [
+  { value: 'percentage', label: 'Percentage' },
+  { value: 'fixed', label: 'Fixed Amount' }
+];
 
 interface AdjustmentFormProps {
   adjustment: Adjustment;

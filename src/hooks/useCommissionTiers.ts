@@ -1,15 +1,7 @@
 
 import { useState } from 'react';
 import { useToast } from "@/hooks/use-toast";
-import { CommissionStructure } from '@/types/incentiveTypes';
-
-// Define Tier type since it's being referenced but not exported from incentiveTypes
-interface Tier {
-  from: number;
-  to: number;
-  rate: number;
-  description?: string;
-}
+import { CommissionStructure, Tier } from '@/types/incentiveTypes';
 
 export const useCommissionTiers = (
   initialCommissionStructure: CommissionStructure,
