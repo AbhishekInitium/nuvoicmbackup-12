@@ -8,14 +8,12 @@ interface DesignerNavigationProps {
   onBack?: () => void;
   showBackToDashboard?: boolean;
   title?: string;
-  subtitle?: string;
 }
 
 const DesignerNavigation: React.FC<DesignerNavigationProps> = ({ 
   onBack, 
   showBackToDashboard = false,
-  title = "Incentive Designer",
-  subtitle
+  title = "Incentive Designer"
 }) => {
   return (
     <div className="flex items-center justify-between py-4 px-4 md:px-8 border-b bg-white">
@@ -44,10 +42,7 @@ const DesignerNavigation: React.FC<DesignerNavigationProps> = ({
           </Button>
         ) : null}
         
-        <div>
-          <h2 className="text-xl font-semibold">{title}</h2>
-          {subtitle && <p className="text-sm text-gray-500 mt-1">{subtitle}</p>}
-        </div>
+        <h2 className="text-xl font-semibold">{title}</h2>
       </div>
     </div>
   );
