@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { DB_FIELDS } from '@/constants/incentiveConstants';
 import { MeasurementRules, Adjustment, Exclusion, PrimaryMetric } from '@/types/incentiveTypes';
@@ -31,15 +32,22 @@ export const useMeasurementRules = (
   };
 
   const [rules, setRules] = useState<MeasurementRules>(normalizedInitialRules);
+  const [lastSelectedScheme, setLastSelectedScheme] = useState<SchemeAdminConfig | null | undefined>(selectedScheme);
 
   // Debug log the selected scheme
   useEffect(() => {
     console.log("useMeasurementRules - Selected scheme:", selectedScheme);
-  }, [selectedScheme]);
+    
+    // If scheme changed, update last selected scheme
+    if (selectedScheme !== lastSelectedScheme) {
+      console.log("Scheme changed, updating lastSelectedScheme");
+      setLastSelectedScheme(selectedScheme);
+    }
+  }, [selectedScheme, lastSelectedScheme]);
 
-  // Update rules if initialRules changes
+  // Update rules if initialRules changes or if scheme changes
   useEffect(() => {
-    // Re-normalize rules when initialRules changes
+    // Re-normalize rules when initialRules or scheme changes
     if (initialRules === null || initialRules === undefined) {
       setRules(defaultRules);
       return;
