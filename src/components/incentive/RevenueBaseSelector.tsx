@@ -24,7 +24,7 @@ const RevenueBaseSelector: React.FC<RevenueBaseSelectorProps> = ({
   return (
     <div className="space-y-4">
       <div>
-        <label className="block text-sm font-medium text-app-gray-700 mb-2">Revenue Base</label>
+        <label className="block text-sm font-medium text-app-gray-700 mb-2">Calculation Base</label>
         
         {/* Scheme Configuration Selector */}
         <div className="mb-4">
@@ -60,7 +60,7 @@ const RevenueBaseSelector: React.FC<RevenueBaseSelectorProps> = ({
           </Select>
         </div>
 
-        {/* Current Revenue Base Display */}
+        {/* Current Calculation Base Display */}
         <div>
           <label className="text-sm text-app-gray-500 mb-2 block">
             Selected calculation base:

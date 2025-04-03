@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import SectionPanel from '../ui-custom/SectionPanel';
 import { IncentivePlan } from '@/types/incentiveTypes';
@@ -23,7 +22,6 @@ const SchemeStructureSections: React.FC<SchemeStructureSectionsProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
-  // Fetch available scheme configurations on component mount
   useEffect(() => {
     const fetchSchemeConfigs = async () => {
       try {
@@ -45,7 +43,6 @@ const SchemeStructureSections: React.FC<SchemeStructureSectionsProps> = ({
     fetchSchemeConfigs();
   }, [toast]);
 
-  // Handle scheme selection
   const handleSchemeSelection = async (schemeId: string) => {
     try {
       setIsLoading(true);
@@ -54,15 +51,12 @@ const SchemeStructureSections: React.FC<SchemeStructureSectionsProps> = ({
       if (selectedConfig) {
         setSelectedScheme(selectedConfig);
         
-        // Update the revenue base with the selected scheme's calculation base
         updatePlan('revenueBase', selectedConfig.calculationBase);
         
-        // Add information about the source type to the plan
         if (selectedConfig.baseData?.source) {
           updatePlan('sourceType', selectedConfig.baseData.source);
         }
         
-        // Enhance the plan with full KPI metadata
         enhancePlanWithKpiMetadata(selectedConfig);
         
         toast({
@@ -84,12 +78,9 @@ const SchemeStructureSections: React.FC<SchemeStructureSectionsProps> = ({
     }
   };
 
-  // Helper function to enhance the plan with KPI metadata
   const enhancePlanWithKpiMetadata = (config: SchemeAdminConfig) => {
-    // Create an object to easily look up KPIs by name from all categories
     const kpiLookup: Record<string, KpiField> = {};
     
-    // Add all KPIs from the config to the lookup object
     [
       ...(config.qualificationFields || []),
       ...(config.adjustmentFields || []),
@@ -99,14 +90,12 @@ const SchemeStructureSections: React.FC<SchemeStructureSectionsProps> = ({
       kpiLookup[kpi.kpi] = kpi;
     });
     
-    // Store the KPI lookup in the plan for later use
     updatePlan('kpiMetadata', kpiLookup);
   };
 
   return (
     <SectionPanel title="2. Scheme Structure">
       <div className="space-y-8">
-        {/* 1. Revenue base for Calculation */}
         <RevenueBaseSelector
           revenueBase={plan.revenueBase}
           updateRevenueBase={(value) => updatePlan('revenueBase', value)}
@@ -115,7 +104,6 @@ const SchemeStructureSections: React.FC<SchemeStructureSectionsProps> = ({
           isLoading={isLoading}
         />
         
-        {/* 2. Qualifying Criteria, 3. Adjustments + Exclusions */}
         <MeasurementRules 
           measurementRules={plan.measurementRules}
           revenueBase={plan.revenueBase}
@@ -125,7 +113,6 @@ const SchemeStructureSections: React.FC<SchemeStructureSectionsProps> = ({
           kpiMetadata={plan.kpiMetadata}
         />
         
-        {/* 4. Custom Rules */}
         <CustomRules 
           customRules={plan.customRules}
           currency={plan.currency}

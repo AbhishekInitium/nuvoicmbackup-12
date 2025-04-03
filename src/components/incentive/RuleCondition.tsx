@@ -133,15 +133,15 @@ const RuleConditionComponent: React.FC<RuleConditionComponentProps> = ({
   return (
     <div className="flex items-center space-x-3">
       <Select 
-        defaultValue={condition.field}
         onValueChange={handleFieldSelect}
+        value={condition.field || undefined}
       >
         <SelectTrigger className="w-36">
-          <SelectValue>
+          <SelectValue placeholder="Select field">
             {condition.field || "Select field"}
           </SelectValue>
         </SelectTrigger>
-        <SelectContent className="bg-white">
+        <SelectContent className="bg-white z-50">
           {fieldOptions.map(field => (
             <SelectItem key={field} value={field}>{field}</SelectItem>
           ))}
@@ -149,15 +149,15 @@ const RuleConditionComponent: React.FC<RuleConditionComponentProps> = ({
       </Select>
       
       <Select 
-        defaultValue={condition.operator}
         onValueChange={(value) => onUpdate('operator', value)}
+        value={condition.operator || undefined}
       >
         <SelectTrigger className="w-24">
-          <SelectValue>
+          <SelectValue placeholder="Operator">
             {condition.operator ? getOperatorLabel(condition.operator) : "Operator"}
           </SelectValue>
         </SelectTrigger>
-        <SelectContent className="bg-white">
+        <SelectContent className="bg-white z-50">
           {OPERATORS.map(op => (
             <SelectItem key={op.value} value={op.value}>{op.label}</SelectItem>
           ))}
