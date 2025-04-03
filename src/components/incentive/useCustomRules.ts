@@ -9,6 +9,12 @@ export const useCustomRules = (
   const { toast } = useToast();
   const [rules, setRules] = useState<CustomRule[]>(initialRules);
 
+  // Helper function to get available fields (was missing)
+  const getAvailableFields = () => {
+    // Return a default list of fields if no specific ones are provided
+    return ['sales', 'quantity', 'margin', 'revenue'];
+  };
+
   // Custom rules management
   const addCustomRule = () => {
     const newRules = [...rules];
@@ -88,6 +94,7 @@ export const useCustomRules = (
 
   return {
     rules,
+    getAvailableFields,
     addCustomRule,
     removeCustomRule,
     addCustomRuleCondition,

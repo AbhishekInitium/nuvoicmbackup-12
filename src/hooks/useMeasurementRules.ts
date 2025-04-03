@@ -2,7 +2,6 @@
 import { useState, useEffect } from 'react';
 import { DB_FIELDS } from '@/constants/incentiveConstants';
 import { MeasurementRules, Adjustment, Exclusion, PrimaryMetric, RuleCondition } from '@/types/incentiveTypes';
-import { v4 as uuidv4 } from 'uuid';
 
 export const useMeasurementRules = (
   initialRules: MeasurementRules,
