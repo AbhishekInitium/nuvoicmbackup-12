@@ -79,7 +79,6 @@ const IncentivePlanDesigner: React.FC<IncentivePlanDesignerProps> = ({
   }, [plan]);
 
   useEffect(() => {
-    // Validate plan when it changes
     if (plan && !isReadOnly) {
       const errors = validatePlanFields(plan);
       setValidationErrors(errors);
@@ -185,7 +184,7 @@ const IncentivePlanDesigner: React.FC<IncentivePlanDesignerProps> = ({
         
         {/* Scheme Panels */}
         <div className="space-y-6">
-          <SectionPanel title="1. Header Information" defaultExpanded={true}>
+          <SectionPanel title="Header Information" defaultExpanded={true}>
             <BasicInformation 
               plan={plan} 
               updatePlan={updatePlan}
@@ -202,7 +201,7 @@ const IncentivePlanDesigner: React.FC<IncentivePlanDesignerProps> = ({
             isReadOnly={isReadOnly}
           />
           
-          <SectionPanel title="3. Rule Definition">
+          <SectionPanel title="Rule Definition">
             <MeasurementRules
               plan={plan}
               updatePlan={updatePlan}
@@ -211,7 +210,7 @@ const IncentivePlanDesigner: React.FC<IncentivePlanDesignerProps> = ({
             />
           </SectionPanel>
           
-          <SectionPanel title="4. Credit Distribution">
+          <SectionPanel title="Credit Distribution">
             <CreditDistributionSection 
               levels={plan.creditRules.levels}
               updateCreditRules={(levels) => updatePlan('creditRules', { levels })}

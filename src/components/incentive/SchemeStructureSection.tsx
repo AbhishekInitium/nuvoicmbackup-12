@@ -9,6 +9,7 @@ import SectionPanel from '../ui-custom/SectionPanel';
 import { Label } from '../ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '../ui/badge';
+import { Input } from '../ui/input';
 
 interface SchemeStructureSectionProps {
   plan: IncentivePlan;
@@ -83,7 +84,7 @@ const SchemeStructureSection: React.FC<SchemeStructureSectionProps> = ({
 
   return (
     <SectionPanel 
-      title="2. Scheme Structure"
+      title="Scheme Structure"
       badge={selectedConfig ? <Badge variant="success">Configuration Selected</Badge> : undefined}
     >
       <div className="space-y-4">
@@ -128,6 +129,32 @@ const SchemeStructureSection: React.FC<SchemeStructureSectionProps> = ({
             </div>
             <p className="mt-1 text-xs text-app-gray-500">
               The base field used for calculations (defined by the selected configuration)
+            </p>
+          </div>
+        </div>
+        
+        {/* New Base Field Input */}
+        <div className="grid md:grid-cols-2 gap-6">
+          <div>
+            <Label className="text-sm font-medium text-app-gray-700 mb-2">
+              Base Field
+            </Label>
+            {isReadOnly ? (
+              <div className="h-10 px-4 py-2 rounded-md border border-gray-300 bg-gray-50 text-gray-700">
+                {plan.baseField || selectedConfig?.baseField || 'Not defined'}
+              </div>
+            ) : (
+              <Input
+                type="text"
+                value={plan.baseField || ''}
+                onChange={(e) => updatePlan('baseField', e.target.value)}
+                placeholder="Enter base field name"
+                className="bg-white"
+                disabled={isReadOnly}
+              />
+            )}
+            <p className="mt-1 text-xs text-app-gray-500">
+              The specific field name in the data source
             </p>
           </div>
         </div>
