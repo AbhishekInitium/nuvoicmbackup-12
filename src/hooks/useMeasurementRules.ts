@@ -3,11 +3,13 @@ import { useState, useEffect } from 'react';
 import { DB_FIELDS } from '@/constants/incentiveConstants';
 import { MeasurementRules, Adjustment, Exclusion, PrimaryMetric } from '@/types/incentiveTypes';
 import { v4 as uuidv4 } from 'uuid';
+import { KpiField } from '@/types/schemeAdminTypes';
 
 export const useMeasurementRules = (
   initialRules: MeasurementRules | null | undefined,
   revenueBase: string,
-  onUpdateRules: (rules: MeasurementRules) => void
+  onUpdateRules: (rules: MeasurementRules) => void,
+  selectedScheme?: any // Accept selected scheme data
 ) => {
   // Create a default rules object if initialRules is null or undefined
   const defaultRules: MeasurementRules = {
@@ -50,15 +52,70 @@ export const useMeasurementRules = (
     setRules(normalizedRules);
   }, [initialRules]);
 
-  // Helper function to get database fields based on revenue base
-  const getDbFields = () => {
+  // Helper function to get KPI fields from selected scheme based on category
+  const getKpiFieldsByCategory = (category: 'qualification' | 'adjustment' | 'exclusion' | 'custom'): string[] => {
+    if (!selectedScheme) return [];
+    
+    let fields: KpiField[] = [];
+    
+    switch(category) {
+      case 'qualification':
+        fields = selectedScheme.qualificationFields || [];
+        break;
+      case 'adjustment':
+        fields = selectedScheme.adjustmentFields || [];
+        break;
+      case 'exclusion':
+        fields = selectedScheme.exclusionFields || [];
+        break;
+      case 'custom':
+        fields = selectedScheme.customRules || [];
+        break;
+    }
+    
+    return fields.map(field => field.kpi);
+  };
+
+  // Helper function to get KPI metadata from selected scheme
+  const getKpiMetadata = () => {
+    if (!selectedScheme) return {};
+    
+    const metadata: Record<string, KpiField> = {};
+    
+    // Add all KPIs from all categories
+    ['qualificationFields', 'adjustmentFields', 'exclusionFields', 'customRules'].forEach(categoryField => {
+      const fields = selectedScheme[categoryField] || [];
+      fields.forEach((field: KpiField) => {
+        metadata[field.kpi] = field;
+      });
+    });
+    
+    return metadata;
+  };
+
+  // Helper function to get database fields based on revenue base or scheme configuration
+  const getDbFields = (category?: 'qualification' | 'adjustment' | 'exclusion' | 'custom') => {
+    // If we have a selected scheme and category, use the appropriate fields from it
+    if (selectedScheme && category) {
+      const fields = getKpiFieldsByCategory(category);
+      
+      // Debug logs
+      console.log(`Fields for ${category}:`, fields);
+      console.log(`KPI Metadata:`, getKpiMetadata());
+      
+      return fields;
+    }
+    
+    // Fallback to using constant DB fields
     const fields = DB_FIELDS[revenueBase as keyof typeof DB_FIELDS] || [];
     return fields.map(field => field.value);
   };
 
   // Primary Metric handlers
   const addPrimaryMetric = () => {
-    const defaultField = getDbFields()[0] || '';
+    const qualificationFields = getDbFields('qualification');
+    const defaultField = qualificationFields.length > 0 ? qualificationFields[0] : '';
+    
     const newMetric: PrimaryMetric = {
       field: defaultField,
       operator: '>',
@@ -72,7 +129,12 @@ export const useMeasurementRules = (
     };
     
     setRules(updatedRules);
-    onUpdateRules(updatedRules);
+    
+    if (typeof onUpdateRules === 'function') {
+      onUpdateRules(updatedRules);
+    } else {
+      console.error("onUpdateRules is not a function", onUpdateRules);
+    }
   };
 
   const updatePrimaryMetric = (index: number, field: keyof PrimaryMetric, value: string | number) => {
@@ -117,7 +179,9 @@ export const useMeasurementRules = (
 
   // Adjustment handlers
   const addAdjustment = () => {
-    const defaultField = getDbFields()[0] || '';
+    const adjustmentFields = getDbFields('adjustment');
+    const defaultField = adjustmentFields.length > 0 ? adjustmentFields[0] : '';
+    
     const newAdjustment: Adjustment = {
       id: uuidv4(),
       description: 'New adjustment rule',
@@ -169,7 +233,9 @@ export const useMeasurementRules = (
 
   // Exclusion handlers
   const addExclusion = () => {
-    const defaultField = getDbFields()[0] || '';
+    const exclusionFields = getDbFields('exclusion');
+    const defaultField = exclusionFields.length > 0 ? exclusionFields[0] : '';
+    
     const newExclusion: Exclusion = {
       field: defaultField,
       operator: '>',
@@ -218,6 +284,7 @@ export const useMeasurementRules = (
   return {
     rules,
     getDbFields,
+    getKpiMetadata,
     addPrimaryMetric,
     updatePrimaryMetric,
     removePrimaryMetric,

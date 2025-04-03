@@ -83,6 +83,11 @@ const CustomRules: React.FC<CustomRulesProps> = ({
   const customFields = getCustomFields();
   const customMetadata = getCustomMetadata();
 
+  // Add console logs for debugging
+  console.log("Selected scheme in CustomRules:", selectedScheme);
+  console.log("Available custom fields:", customFields);
+  console.log("Custom metadata:", customMetadata);
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">

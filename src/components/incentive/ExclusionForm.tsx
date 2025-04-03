@@ -58,6 +58,10 @@ const ExclusionForm: React.FC<ExclusionFormProps> = ({
   };
 
   const inputType = getInputType();
+  
+  // Add logging to debug available fields
+  console.log(`Exclusion Form #${exclusionIndex} - Available fields:`, dbFields);
+  console.log(`Exclusion Form #${exclusionIndex} - KPI Metadata:`, kpiMetadata);
 
   return (
     <GlassCard className="p-4">
@@ -97,15 +101,19 @@ const ExclusionForm: React.FC<ExclusionFormProps> = ({
                 <SelectValue placeholder="Select field" />
               </SelectTrigger>
               <SelectContent className="bg-white">
-                {dbFields.map(field => {
-                  // Get the display name from metadata if available
-                  const displayName = kpiMetadata && kpiMetadata[field] 
-                    ? kpiMetadata[field].description || field 
-                    : field;
-                  return (
-                    <SelectItem key={field} value={field}>{displayName}</SelectItem>
-                  );
-                })}
+                {dbFields.length > 0 ? (
+                  dbFields.map(field => {
+                    // Get the display name from metadata if available
+                    const displayName = kpiMetadata && kpiMetadata[field] 
+                      ? kpiMetadata[field].description || field 
+                      : field;
+                    return (
+                      <SelectItem key={field} value={field}>{displayName}</SelectItem>
+                    );
+                  })
+                ) : (
+                  <SelectItem value="no-fields" disabled>No fields available</SelectItem>
+                )}
               </SelectContent>
             </Select>
           )}

@@ -82,15 +82,19 @@ const RuleConditionComponent: React.FC<RuleConditionComponentProps> = ({
           <SelectValue placeholder="Select field" />
         </SelectTrigger>
         <SelectContent className="bg-white">
-          {fieldOptions.map(field => {
-            // Get the display name from metadata if available
-            const displayName = kpiMetadata && kpiMetadata[field] 
-              ? kpiMetadata[field].description || field 
-              : field;
-            return (
-              <SelectItem key={field} value={field}>{displayName}</SelectItem>
-            );
-          })}
+          {fieldOptions.length > 0 ? (
+            fieldOptions.map(field => {
+              // Get the display name from metadata if available
+              const displayName = kpiMetadata && kpiMetadata[field] 
+                ? kpiMetadata[field].description || field 
+                : field;
+              return (
+                <SelectItem key={field} value={field}>{displayName}</SelectItem>
+              );
+            })
+          ) : (
+            <SelectItem value="no-fields" disabled>No fields available</SelectItem>
+          )}
         </SelectContent>
       </Select>
       

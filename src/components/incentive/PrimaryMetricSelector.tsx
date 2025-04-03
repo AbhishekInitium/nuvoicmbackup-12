@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Trash2 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
@@ -61,6 +61,10 @@ const PrimaryMetricSelector: React.FC<PrimaryMetricSelectorProps> = ({
   };
 
   const inputType = getInputType();
+  
+  // Log the available fields for debugging
+  console.log("Primary Metric - Available fields:", dbFields);
+  console.log("Primary Metric - KPI Metadata:", kpiMetadata);
 
   return (
     <GlassCard variant="outlined" className="p-4">
@@ -76,15 +80,19 @@ const PrimaryMetricSelector: React.FC<PrimaryMetricSelectorProps> = ({
                 <SelectValue placeholder="Select field" />
               </SelectTrigger>
               <SelectContent className="bg-white">
-                {dbFields.map(field => {
-                  // Get the display name from metadata if available
-                  const displayName = kpiMetadata && kpiMetadata[field] 
-                    ? kpiMetadata[field].description || field 
-                    : field;
-                  return (
-                    <SelectItem key={field} value={field}>{displayName}</SelectItem>
-                  );
-                })}
+                {dbFields.length > 0 ? (
+                  dbFields.map(field => {
+                    // Get the display name from metadata if available
+                    const displayName = kpiMetadata && kpiMetadata[field] 
+                      ? kpiMetadata[field].description || field 
+                      : field;
+                    return (
+                      <SelectItem key={field} value={field}>{displayName}</SelectItem>
+                    );
+                  })
+                ) : (
+                  <SelectItem value="no-fields" disabled>No fields available</SelectItem>
+                )}
               </SelectContent>
             </Select>
           </div>
