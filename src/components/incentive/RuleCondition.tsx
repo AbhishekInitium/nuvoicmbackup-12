@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Trash2 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
@@ -134,10 +134,12 @@ const RuleConditionComponent: React.FC<RuleConditionComponentProps> = ({
     <div className="flex items-center space-x-3">
       <Select 
         onValueChange={handleFieldSelect}
-        value={condition.field}
+        value={condition.field || undefined}
       >
         <SelectTrigger className="w-36">
-          <SelectValue placeholder="Select field" />
+          <SelectValue placeholder="Select field">
+            {condition.field || "Select field"}
+          </SelectValue>
         </SelectTrigger>
         <SelectContent className="bg-white z-50">
           {fieldOptions.map(field => (
@@ -148,10 +150,12 @@ const RuleConditionComponent: React.FC<RuleConditionComponentProps> = ({
       
       <Select 
         onValueChange={(value) => onUpdate('operator', value)}
-        value={condition.operator}
+        value={condition.operator || undefined}
       >
         <SelectTrigger className="w-24">
-          <SelectValue placeholder="Operator" />
+          <SelectValue placeholder="Operator">
+            {condition.operator ? getOperatorLabel(condition.operator) : "Operator"}
+          </SelectValue>
         </SelectTrigger>
         <SelectContent className="bg-white z-50">
           {OPERATORS.map(op => (
