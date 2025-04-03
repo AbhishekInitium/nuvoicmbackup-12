@@ -1,12 +1,12 @@
+
 import React, { useState, useEffect } from 'react';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import SectionPanel from '../ui-custom/SectionPanel';
-import { getSchemeAdminConfigs, getSchemeAdminConfig } from '@/services/database/mongoDBService';
-import { SchemeAdminConfig } from '@/types/schemeAdminTypes';
 import { IncentivePlan } from '@/types/incentiveTypes';
-import { Calculator, Loader2 } from 'lucide-react';
+import RevenueBaseSelector from './RevenueBaseSelector';
+import { getSchemeAdminConfigs } from '@/services/database/mongoDBService';
+import { SchemeAdminConfig } from '@/types/schemeAdminTypes';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import SectionPanel from '../ui-custom/SectionPanel';
+import { Label } from '../ui/label';
 import { useToast } from '@/hooks/use-toast';
 
 interface SchemeStructureSectionProps {
@@ -15,68 +15,47 @@ interface SchemeStructureSectionProps {
   isReadOnly?: boolean;
 }
 
-const SchemeStructureSection: React.FC<SchemeStructureSectionProps> = ({
+const SchemeStructureSection: React.FC<SchemeStructureSectionProps> = ({ 
   plan,
   updatePlan,
   isReadOnly = false
 }) => {
-  const [configs, setConfigs] = useState<SchemeAdminConfig[]>([]);
-  const [selectedConfig, setSelectedConfig] = useState<SchemeAdminConfig | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [calculationField, setCalculationField] = useState(plan.calculationField || "");
   const { toast } = useToast();
+  const [isLoading, setIsLoading] = useState(false);
+  const [configOptions, setConfigOptions] = useState<SchemeAdminConfig[]>([]);
+  const [selectedConfig, setSelectedConfig] = useState<SchemeAdminConfig | null>(null);
 
   useEffect(() => {
-    fetchConfigurations();
+    loadConfigOptions();
   }, []);
 
-  const fetchConfigurations = async () => {
-    setIsLoading(true);
+  useEffect(() => {
+    if (plan.selectedSchemeConfig) {
+      setSelectedConfig(plan.selectedSchemeConfig);
+    }
+  }, [plan.selectedSchemeConfig]);
+
+  const loadConfigOptions = async () => {
     try {
-      const adminConfigs = await getSchemeAdminConfigs();
-      setConfigs(adminConfigs);
-      console.log("Fetched scheme configs:", adminConfigs);
+      setIsLoading(true);
+      const configs = await getSchemeAdminConfigs();
+      setConfigOptions(configs);
       
-      // If we have a revenue base set in the plan, find the matching config
-      if (plan.revenueBase && adminConfigs.length > 0 && plan.selectedSchemeConfig) {
-        const matchingConfig = adminConfigs.find(config => 
-          config._id === plan.selectedSchemeConfig?._id
-        );
-        if (matchingConfig) {
-          setSelectedConfig(matchingConfig);
-          console.log("Found matching config based on ID:", matchingConfig);
-          // Load the full config details to make sure we have all the KPIs
-          loadFullConfig(matchingConfig._id || '');
+      // If we have a selected config ID, find it in the loaded configs
+      if (plan.selectedSchemeConfig) {
+        const foundConfig = configs.find(cfg => cfg._id === plan.selectedSchemeConfig?._id);
+        if (foundConfig) {
+          setSelectedConfig(foundConfig);
+          // Update the plan with the complete config object
+          updatePlan('selectedSchemeConfig', foundConfig);
         }
       }
     } catch (error) {
-      console.error("Failed to fetch scheme configurations:", error);
+      console.error('Error loading scheme configurations:', error);
       toast({
         title: "Error",
         description: "Failed to load scheme configurations",
-        variant: "destructive"
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const loadFullConfig = async (configId: string) => {
-    try {
-      setIsLoading(true);
-      const fullConfig = await getSchemeAdminConfig(configId);
-      console.log("Loaded full config details:", fullConfig);
-      setSelectedConfig(fullConfig);
-      
-      // Update the parent plan with this scheme config
-      updatePlan('selectedSchemeConfig', fullConfig);
-      updatePlan('revenueBase', fullConfig.calculationBase);
-    } catch (error) {
-      console.error("Failed to load full scheme configuration:", error);
-      toast({
-        title: "Error",
-        description: "Failed to load scheme configuration details",
-        variant: "destructive"
+        variant: "destructive",
       });
     } finally {
       setIsLoading(false);
@@ -84,92 +63,73 @@ const SchemeStructureSection: React.FC<SchemeStructureSectionProps> = ({
   };
 
   const handleConfigChange = (configId: string) => {
-    const config = configs.find(c => c._id === configId);
-    if (config) {
-      // Load the full config with all KPI details
-      loadFullConfig(configId);
+    const selectedConfig = configOptions.find(config => config._id === configId);
+    
+    if (selectedConfig) {
+      setSelectedConfig(selectedConfig);
+      updatePlan('selectedSchemeConfig', selectedConfig);
+      
+      // Also update the revenue base to match the config
+      updatePlan('revenueBase', selectedConfig.calculationBase);
+      updatePlan('baseField', selectedConfig.baseField);
     }
   };
 
-  const handleCalculationFieldChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    updatePlan('baseField', value); // Changed from calculationField
-  };
-
   return (
-    <SectionPanel title="2. Scheme Structure" defaultExpanded={true}>
+    <SectionPanel title="2. Scheme Structure">
       <div className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid md:grid-cols-2 gap-6">
           <div>
-            <Label className="text-sm font-medium text-app-gray-700 mb-2">
-              Configuration
+            <Label htmlFor="configSelect" className="text-sm font-medium text-app-gray-700 mb-2">
+              Configuration <span className="text-red-500">*</span>
             </Label>
-            <Select
-              value={selectedConfig?._id}
-              onValueChange={handleConfigChange}
-              disabled={isReadOnly || isLoading}
-            >
-              <SelectTrigger className="w-full bg-white">
-                <SelectValue placeholder={isLoading ? "Loading..." : "Select a configuration"} />
-              </SelectTrigger>
-              <SelectContent className="bg-white">
-                {isLoading ? (
-                  <div className="flex items-center justify-center p-2">
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Loading...
-                  </div>
-                ) : (
-                  configs.map(config => (
-                    <SelectItem key={config._id} value={config._id || ''}>
-                      {config.adminName} ({config.calculationBase})
+            {isReadOnly ? (
+              <div className="h-10 px-4 py-2 rounded-md border border-gray-300 bg-gray-50 text-gray-700">
+                {selectedConfig?.adminName || 'No configuration selected'}
+              </div>
+            ) : (
+              <Select 
+                value={selectedConfig?._id || ""} 
+                onValueChange={handleConfigChange}
+                disabled={isLoading || isReadOnly}
+              >
+                <SelectTrigger id="configSelect">
+                  <SelectValue placeholder="Select scheme configuration" />
+                </SelectTrigger>
+                <SelectContent className="bg-white">
+                  {configOptions.map(config => (
+                    <SelectItem key={config._id} value={config._id || ""}>
+                      {config.adminName} - {config.calculationBase}
                     </SelectItem>
-                  ))
-                )}
-              </SelectContent>
-            </Select>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
             <p className="mt-1 text-xs text-app-gray-500">
-              Select the KPI configuration for this scheme
+              Select a pre-defined scheme configuration created by an administrator
             </p>
           </div>
-
+          
           <div>
             <Label className="text-sm font-medium text-app-gray-700 mb-2">
               Calculation Base
             </Label>
             <div className="h-10 px-4 py-2 rounded-md border border-gray-300 bg-gray-50 text-gray-700">
-              {selectedConfig ? selectedConfig.calculationBase : 'Not selected'}
+              {selectedConfig?.calculationBase || plan.revenueBase || 'Not selected'}
             </div>
             <p className="mt-1 text-xs text-app-gray-500">
-              Base for commission calculations (derived from configuration)
+              The base field used for calculations (defined by the selected configuration)
             </p>
           </div>
         </div>
-
-        {/* Base Field */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <Label className="text-sm font-medium text-app-gray-700 mb-2 flex items-center">
-              <Calculator className="w-4 h-4 mr-1" />
-              Base Field
-            </Label>
-            {isReadOnly ? (
-              <div className="h-10 px-4 py-2 rounded-md border border-gray-300 bg-gray-50 text-gray-700">
-                {plan.baseField || 'Not specified'}
-              </div>
-            ) : (
-              <Input
-                value={plan.baseField || ''} // Changed from calculationField
-                onChange={handleCalculationFieldChange}
-                placeholder="Enter base field"
-                className="w-full"
-                disabled={isReadOnly}
-              />
-            )}
-            <p className="mt-1 text-xs text-app-gray-500">
-              Specify the base field used for calculations
+        
+        {!selectedConfig && !isReadOnly && (
+          <div className="bg-yellow-50 p-3 rounded-md border border-yellow-100">
+            <p className="text-sm text-yellow-700">
+              You must select a scheme configuration to define the available metrics, adjustments, and calculation rules.
             </p>
           </div>
-        </div>
+        )}
       </div>
     </SectionPanel>
   );

@@ -1,3 +1,4 @@
+
 import { SchemeAdminConfig } from './schemeAdminTypes';
 
 export interface PlanMetadata {
@@ -82,7 +83,7 @@ export interface IncentivePlan {
   effectiveEnd?: string;
   currency: string;
   revenueBase: string; 
-  baseField?: string; // Renamed from calculationField
+  baseField?: string;
   participants: string[];
   salesQuota: number;
   commissionStructure: CommissionStructure;

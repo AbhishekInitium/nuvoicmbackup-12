@@ -45,6 +45,12 @@ const IncentiveDesigner = () => {
       })) as IncentivePlanWithStatus[];
       
       setSchemes(formattedSchemes);
+      
+      toast({
+        title: "Schemes Loaded",
+        description: `Loaded ${formattedSchemes.length} incentive schemes.`,
+        variant: "default"
+      });
     } catch (error) {
       console.error("Failed to load schemes:", error);
       toast({
@@ -97,12 +103,19 @@ const IncentiveDesigner = () => {
     setIsEditMode(false);
     setIsReadOnly(false);
     setShowDesigner(true);
+    
+    toast({
+      title: "New Scheme",
+      description: "Creating new incentive scheme",
+      variant: "default"
+    });
   };
 
   const handleViewScheme = (scheme: IncentivePlanWithStatus) => {
     setPlanTemplate(scheme);
     setIsEditMode(true);
-    setIsReadOnly(scheme.metadata.status !== 'DRAFT'); // Only editable if status is DRAFT
+    // Only editable if status is DRAFT
+    setIsReadOnly(scheme.metadata.status !== 'DRAFT'); 
     setShowDesigner(true);
     
     toast({
@@ -129,6 +142,7 @@ const IncentiveDesigner = () => {
         <DesignerNavigation 
           onBack={showDesigner || showAdminScreen ? handleBackToTable : undefined}
           showBackToDashboard={!showDesigner && !showAdminScreen}
+          title={showDesigner ? (isEditMode ? (isReadOnly ? "View Scheme" : "Edit Scheme") : "Create Scheme") : "Scheme Management"}
         />
         
         {showAdminScreen ? (
@@ -154,6 +168,7 @@ const IncentiveDesigner = () => {
               onViewDetails={handleViewScheme}
               onCreateNew={handleCreateNewScheme}
               isLoading={isLoading}
+              onRefresh={loadSchemes}
             />
           </div>
         )}

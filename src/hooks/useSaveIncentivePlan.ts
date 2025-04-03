@@ -22,7 +22,6 @@ export const useSaveIncentivePlan = ({
 }: UseSaveIncentivePlanProps) => {
   const { toast } = useToast();
   const [isSaving, setIsSaving] = useState(false);
-  const [showStorageNotice, setShowStorageNotice] = useState(false);
 
   const handleSave = async () => {
     if (!plan) {
@@ -38,7 +37,7 @@ export const useSaveIncentivePlan = ({
     if (validationErrors.length > 0) {
       toast({
         title: "Validation Error",
-        description: validationErrors.join(", "),
+        description: "Please fix all validation errors before saving",
         variant: "destructive"
       });
       return;
@@ -46,18 +45,14 @@ export const useSaveIncentivePlan = ({
 
     try {
       setIsSaving(true);
-      console.log("Saving plan, isEditMode:", isEditMode, "versionNumber:", versionNumber);
       
       // Create metadata with the correct version, ensuring all required fields are present
       const metadata: PlanMetadata = {
-        createdAt: plan.metadata?.createdAt || new Date().toISOString(), // Always ensure createdAt is present
+        createdAt: plan.metadata?.createdAt || new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         version: versionNumber,
         status: plan.metadata?.status || 'DRAFT'
       };
-      
-      console.log("Current plan metadata:", plan.metadata);
-      console.log("New metadata to use:", metadata);
       
       const schemeToSave: IncentivePlan = {
         ...plan,
@@ -69,25 +64,14 @@ export const useSaveIncentivePlan = ({
       
       if (isEditMode) {
         // For updates, we create a new document with the same schemeId but increased version
-        console.log("Creating new version for scheme:", schemeId, "with version:", versionNumber);
         try {
-          console.log("About to call updateIncentiveScheme with:", {
-            schemeId,
-            version: versionNumber
-          });
-          
           const success = await updateIncentiveScheme(schemeId, schemeToSave);
           if (success) {
-            // If successful, update the local version number
-            console.log("Successfully created version:", versionNumber);
-            
             toast({
-              title: "New Version Created",
-              description: `Scheme "${plan.name || 'Unnamed'}" saved as version ${versionNumber}`,
+              title: "Success",
+              description: `Scheme "${plan.name}" updated successfully (Version ${versionNumber})`,
               variant: "default"
             });
-            
-            setShowStorageNotice(true);
             
             if (onSaveSuccess) {
               onSaveSuccess();
@@ -98,21 +82,17 @@ export const useSaveIncentivePlan = ({
             throw new Error('Failed to create new version');
           }
         } catch (error) {
-          console.error('Error creating new version:', error);
           throw error;
         }
       } else {
         // For new schemes, simply save
-        console.log("Saving new scheme");
         id = await saveIncentiveScheme(schemeToSave, 'DRAFT');
         
         toast({
-          title: "Scheme Saved",
-          description: `Scheme "${plan.name || 'Unnamed'}" saved with ID: ${id}`,
+          title: "Success",
+          description: `New scheme "${plan.name}" created successfully`,
           variant: "default"
         });
-        
-        setShowStorageNotice(true);
         
         if (onSaveSuccess) {
           onSaveSuccess();
@@ -122,7 +102,6 @@ export const useSaveIncentivePlan = ({
     } catch (error) {
       console.error('Error saving to MongoDB:', error);
       
-      // Provide more detailed error message
       const errorMessage = error instanceof Error 
         ? error.message 
         : 'Unknown error';
@@ -139,8 +118,6 @@ export const useSaveIncentivePlan = ({
 
   return {
     handleSave,
-    isSaving,
-    showStorageNotice,
-    setShowStorageNotice
+    isSaving
   };
 };

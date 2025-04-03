@@ -1,72 +1,71 @@
 
-import { useState } from 'react';
-import { useToast } from "@/hooks/use-toast";
-import { CommissionStructure } from '@/types/incentiveTypes';
-
-// Define Tier type since it's being referenced but not exported from incentiveTypes
-interface Tier {
-  from: number;
-  to: number;
-  rate: number;
-  description?: string;
-}
+import { useState, useEffect } from 'react';
+import { Tier, CommissionStructure } from '@/types/incentiveTypes';
+import { hasOverlappingTiers } from '@/utils/validationUtils';
 
 export const useCommissionTiers = (
-  initialCommissionStructure: CommissionStructure,
-  onUpdateCommissionStructure: (structure: CommissionStructure) => void
+  initialStructure: CommissionStructure,
+  onChange?: (structure: CommissionStructure) => void
 ) => {
-  const { toast } = useToast();
-  const [tiers, setTiers] = useState<Tier[]>(initialCommissionStructure.tiers || []);
+  const [structure, setStructure] = useState<CommissionStructure>(initialStructure || { tiers: [] });
 
-  // Add new tier with empty/default values
-  const addTier = () => {
-    const newTier: Tier = {
-      from: 0,
-      to: 0,
-      rate: 0,
-      description: ''
-    };
-
-    const newTiers = [...tiers, newTier];
-    setTiers(newTiers);
-    onUpdateCommissionStructure({ tiers: newTiers });
-    
-    // Toast notification removed
-  };
-
-  // Remove tier
-  const removeTier = (index: number) => {
-    if (tiers.length <= 1) {
-      toast({
-        title: "Cannot Remove Tier",
-        description: "You must have at least one tier in the commission structure.",
-        variant: "destructive"
-      });
-      return;
+  useEffect(() => {
+    if (initialStructure && JSON.stringify(initialStructure) !== JSON.stringify(structure)) {
+      setStructure(initialStructure);
     }
+  }, [initialStructure]);
 
-    const newTiers = [...tiers];
-    newTiers.splice(index, 1);
-    setTiers(newTiers);
-    onUpdateCommissionStructure({ tiers: newTiers });
+  const addTier = () => {
+    // Get the highest 'to' value from existing tiers
+    const highestTo = structure.tiers.reduce((max, tier) => Math.max(max, tier.to), 0);
+    const newFrom = highestTo > 0 ? highestTo : 0;
+    const newTo = newFrom + 10000; // Add a reasonable gap
+    
+    const updatedStructure = {
+      ...structure,
+      tiers: [...structure.tiers, { from: newFrom, to: newTo, rate: 1 }]
+    };
+    
+    setStructure(updatedStructure);
+    if (onChange) onChange(updatedStructure);
   };
 
-  // Update tier
-  const updateTier = (index: number, field: keyof Tier, value: number) => {
-    const newTiers = [...tiers];
-    newTiers[index] = { ...newTiers[index], [field]: value };
+  const removeTier = (index: number) => {
+    const updatedTiers = [...structure.tiers];
+    updatedTiers.splice(index, 1);
     
-    // Update description
-    newTiers[index].description = `${newTiers[index].from} - ${newTiers[index].to}`;
+    const updatedStructure = {
+      ...structure,
+      tiers: updatedTiers
+    };
+    
+    setStructure(updatedStructure);
+    if (onChange) onChange(updatedStructure);
+  };
 
-    setTiers(newTiers);
-    onUpdateCommissionStructure({ tiers: newTiers });
+  const updateTier = (index: number, field: keyof Tier, value: number) => {
+    const updatedTiers = [...structure.tiers];
+    updatedTiers[index] = {
+      ...updatedTiers[index],
+      [field]: value
+    };
+    
+    const updatedStructure = {
+      ...structure,
+      tiers: updatedTiers
+    };
+    
+    setStructure(updatedStructure);
+    if (onChange) onChange(updatedStructure);
   };
 
   return {
-    tiers,
+    tiers: structure.tiers,
     addTier,
     removeTier,
-    updateTier
+    updateTier,
+    hasOverlappingTiers: () => hasOverlappingTiers(structure.tiers)
   };
 };
+
+export default useCommissionTiers;

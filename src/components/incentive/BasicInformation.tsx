@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -88,7 +89,7 @@ const BasicInformation: React.FC<BasicInformationProps> = ({
             <div className="mb-4">
               <div className="flex items-center justify-between">
                 <Label htmlFor="name" className="text-sm font-medium text-app-gray-700 mb-2">
-                  Scheme Name
+                  Scheme Name <span className="text-red-500">*</span>
                 </Label>
                 <div className="flex items-center">
                   {isEditMode && (
@@ -110,13 +111,14 @@ const BasicInformation: React.FC<BasicInformationProps> = ({
                   onChange={(e) => updatePlan('name', e.target.value)}
                   placeholder="Enter scheme name"
                   className="w-full"
+                  required
                 />
               )}
             </div>
 
             <div className="mb-4">
               <Label htmlFor="description" className="text-sm font-medium text-app-gray-700 mb-2">
-                Description
+                Description <span className="text-red-500">*</span>
               </Label>
               {isReadOnly ? (
                 <div className="h-10 px-4 py-2 rounded-md border border-gray-300 bg-gray-50 text-gray-700">
@@ -129,7 +131,14 @@ const BasicInformation: React.FC<BasicInformationProps> = ({
                   onChange={(e) => updatePlan('description', e.target.value)}
                   placeholder="Brief description of this incentive scheme"
                   className="w-full"
+                  maxLength={50}
+                  required
                 />
+              )}
+              {!isReadOnly && (
+                <p className="mt-1 text-xs text-app-gray-500">
+                  Maximum 50 characters
+                </p>
               )}
             </div>
 
@@ -141,41 +150,11 @@ const BasicInformation: React.FC<BasicInformationProps> = ({
                 <Input
                   value={schemeId}
                   readOnly
-                  className="w-full bg-app-gray-100"
+                  className="w-full bg-app-gray-100 text-app-gray-600"
                 />
               </div>
               <p className="mt-1 text-xs text-app-gray-500">
-                Unique identifier for this scheme
-              </p>
-            </div>
-
-            <div className="mb-4">
-              <Label htmlFor="salesQuota" className="text-sm font-medium text-app-gray-700 mb-2">
-                Sales Quota
-              </Label>
-              <div className="flex items-center space-x-2">
-                <div className="relative flex-1">
-                  <span className="absolute left-3 top-2.5 text-app-gray-500">
-                    {selectedCurrency?.symbol}
-                  </span>
-                  {isReadOnly ? (
-                    <div className="h-10 px-4 py-2 pl-7 rounded-md border border-gray-300 bg-gray-50 text-gray-700">
-                      {plan.salesQuota || 0}
-                    </div>
-                  ) : (
-                    <Input
-                      id="salesQuota"
-                      type="text"
-                      value={plan.salesQuota || 0}
-                      onChange={handleNumberChange}
-                      className="w-full pl-7"
-                      placeholder="Enter target sales quota"
-                    />
-                  )}
-                </div>
-              </div>
-              <p className="mt-1 text-xs text-app-gray-500">
-                The target sales quota for this incentive scheme
+                Auto-generated unique identifier for this scheme
               </p>
             </div>
           </div>
@@ -183,7 +162,7 @@ const BasicInformation: React.FC<BasicInformationProps> = ({
           <div>
             <div className="flex flex-col mb-4">
               <Label htmlFor="effectiveStart" className="text-sm font-medium text-app-gray-700 mb-2">
-                Effective Period
+                Effective Period <span className="text-red-500">*</span>
               </Label>
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -219,7 +198,7 @@ const BasicInformation: React.FC<BasicInformationProps> = ({
 
             <div className="mb-4">
               <Label htmlFor="currency" className="text-sm font-medium text-app-gray-700 mb-2">
-                Currency
+                Currency <span className="text-red-500">*</span>
               </Label>
               {isReadOnly ? (
                 <div className="h-10 px-4 py-2 rounded-md border border-gray-300 bg-gray-50 text-gray-700">
@@ -242,6 +221,36 @@ const BasicInformation: React.FC<BasicInformationProps> = ({
                   </SelectContent>
                 </Select>
               )}
+            </div>
+            
+            <div className="mb-4">
+              <Label htmlFor="salesQuota" className="text-sm font-medium text-app-gray-700 mb-2">
+                Sales Quota / Target
+              </Label>
+              <div className="flex items-center space-x-2">
+                <div className="relative flex-1">
+                  <span className="absolute left-3 top-2.5 text-app-gray-500">
+                    {selectedCurrency?.symbol}
+                  </span>
+                  {isReadOnly ? (
+                    <div className="h-10 px-4 py-2 pl-7 rounded-md border border-gray-300 bg-gray-50 text-gray-700">
+                      {plan.salesQuota || 0}
+                    </div>
+                  ) : (
+                    <Input
+                      id="salesQuota"
+                      type="text"
+                      value={plan.salesQuota || 0}
+                      onChange={handleNumberChange}
+                      className="w-full pl-7"
+                      placeholder="Enter target sales quota"
+                    />
+                  )}
+                </div>
+              </div>
+              <p className="mt-1 text-xs text-app-gray-500">
+                The target sales quota for this incentive scheme
+              </p>
             </div>
           </div>
         </div>

@@ -9,7 +9,7 @@ import {
   TableRow 
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Eye, Edit, Plus } from "lucide-react";
+import { Eye, Edit, Plus, RefreshCw } from "lucide-react";
 import { format } from "date-fns";
 import { IncentivePlanWithStatus } from '@/services/incentive/types/incentiveServiceTypes';
 import { Badge } from '../ui/badge';
@@ -19,13 +19,15 @@ interface SchemeTableProps {
   onViewDetails: (scheme: IncentivePlanWithStatus) => void;
   onCreateNew: () => void;
   isLoading: boolean;
+  onRefresh?: () => void;
 }
 
 const SchemeTable: React.FC<SchemeTableProps> = ({
   schemes,
   onViewDetails,
   onCreateNew,
-  isLoading
+  isLoading,
+  onRefresh
 }) => {
   const [selectedSchemeId, setSelectedSchemeId] = useState<string | null>(null);
 
@@ -52,9 +54,16 @@ const SchemeTable: React.FC<SchemeTableProps> = ({
     <div className="space-y-4">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-semibold">Incentive Schemes</h2>
-        <Button onClick={onCreateNew} className="flex items-center gap-2">
-          <Plus size={16} /> Create New Scheme
-        </Button>
+        <div className="flex space-x-2">
+          {onRefresh && (
+            <Button variant="outline" onClick={onRefresh} className="flex items-center gap-2">
+              <RefreshCw size={16} /> Refresh
+            </Button>
+          )}
+          <Button onClick={onCreateNew} className="flex items-center gap-2">
+            <Plus size={16} /> Create New Scheme
+          </Button>
+        </div>
       </div>
 
       {isLoading ? (

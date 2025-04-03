@@ -1,33 +1,49 @@
 
 import React from 'react';
+import { ArrowLeft, LayoutDashboard } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft } from 'lucide-react';
 
 interface DesignerNavigationProps {
   onBack?: () => void;
   showBackToDashboard?: boolean;
+  title?: string;
 }
 
 const DesignerNavigation: React.FC<DesignerNavigationProps> = ({ 
-  onBack,
-  showBackToDashboard = true 
+  onBack, 
+  showBackToDashboard = false,
+  title = "Incentive Designer"
 }) => {
   return (
-    <div className="flex items-center py-4 px-8">
-      {showBackToDashboard && (
-        <Link to="/manager">
-          <Button variant="ghost" className="flex items-center">
-            <ArrowLeft size={18} className="mr-2" /> Back to Dashboard
+    <div className="flex items-center justify-between py-4 px-4 md:px-8 border-b bg-white">
+      <div className="flex items-center space-x-4">
+        {onBack ? (
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={onBack} 
+            className="flex items-center text-gray-600 hover:text-black"
+          >
+            <ArrowLeft size={16} className="mr-2" />
+            Back
           </Button>
-        </Link>
-      )}
-      
-      {onBack && (
-        <Button variant="ghost" className="flex items-center" onClick={onBack}>
-          <ArrowLeft size={18} className="mr-2" /> Back to Options
-        </Button>
-      )}
+        ) : showBackToDashboard ? (
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            asChild 
+            className="flex items-center text-gray-600 hover:text-black"
+          >
+            <Link to="/manager">
+              <LayoutDashboard size={16} className="mr-2" />
+              Dashboard
+            </Link>
+          </Button>
+        ) : null}
+        
+        <h2 className="text-xl font-semibold">{title}</h2>
+      </div>
     </div>
   );
 };
