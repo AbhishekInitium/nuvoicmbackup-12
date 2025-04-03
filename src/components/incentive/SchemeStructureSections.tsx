@@ -57,6 +57,11 @@ const SchemeStructureSections: React.FC<SchemeStructureSectionsProps> = ({
         // Update the revenue base with the selected scheme's calculation base
         updatePlan('revenueBase', selectedConfig.calculationBase);
         
+        // Add information about the source type to the plan
+        if (selectedConfig.baseData?.source) {
+          updatePlan('sourceType', selectedConfig.baseData.source);
+        }
+        
         toast({
           title: "Scheme Configuration Loaded",
           description: `Loaded configuration: ${selectedConfig.adminName}`,

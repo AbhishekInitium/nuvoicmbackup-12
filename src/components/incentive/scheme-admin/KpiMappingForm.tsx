@@ -43,7 +43,8 @@ export const KpiMappingForm: React.FC<KpiMappingFormProps> = ({
     defaultValues: {
       adminId: initialConfig.adminId || uuidv4(),
       adminName: initialConfig.adminName || "",
-      calculationBase: initialConfig.calculationBase || ""
+      calculationBase: initialConfig.calculationBase || "",
+      baseSource: initialConfig.baseData?.source || "Excel"
     }
   });
 
@@ -53,6 +54,7 @@ export const KpiMappingForm: React.FC<KpiMappingFormProps> = ({
       console.log("Setting form values from initialConfig:", {
         adminName: initialConfig.adminName,
         calculationBase: initialConfig.calculationBase,
+        baseSource: initialConfig.baseData?.source,
         _id: initialConfig._id,
         isEditMode: isEditMode
       });
@@ -61,7 +63,8 @@ export const KpiMappingForm: React.FC<KpiMappingFormProps> = ({
       form.reset({
         adminId: initialConfig.adminId || uuidv4(),
         adminName: initialConfig.adminName || "",
-        calculationBase: initialConfig.calculationBase || ""
+        calculationBase: initialConfig.calculationBase || "",
+        baseSource: initialConfig.baseData?.source || "Excel"
       });
       
       // Update KPI data state with the new values
@@ -83,6 +86,9 @@ export const KpiMappingForm: React.FC<KpiMappingFormProps> = ({
         adminId: formValues.adminId,
         adminName: formValues.adminName,
         calculationBase: formValues.calculationBase,
+        baseData: {
+          source: formValues.baseSource
+        },
         qualificationFields: kpiData.qualificationFields,
         adjustmentFields: kpiData.adjustmentFields,
         exclusionFields: kpiData.exclusionFields,
@@ -207,8 +213,8 @@ export const KpiMappingForm: React.FC<KpiMappingFormProps> = ({
       updatedAt: new Date().toISOString(),
       calculationBase: formValues.calculationBase,
       baseField: initialConfig.baseField || "",
-      baseData: initialConfig.baseData || {
-        source: "Excel" 
+      baseData: {
+        source: formValues.baseSource
       },
       qualificationFields: kpiData.qualificationFields,
       adjustmentFields: kpiData.adjustmentFields,

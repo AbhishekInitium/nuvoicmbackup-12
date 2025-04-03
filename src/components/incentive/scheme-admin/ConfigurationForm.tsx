@@ -10,12 +10,15 @@ import {
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { UseFormReturn } from 'react-hook-form';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { DataSourceType } from '@/types/schemeAdminTypes';
 
 interface ConfigurationFormProps {
   form: UseFormReturn<{
     adminId: string;
     adminName: string;
     calculationBase: string;
+    baseSource: DataSourceType;
   }, any, undefined>;
 }
 
@@ -58,6 +61,35 @@ export const ConfigurationForm: React.FC<ConfigurationFormProps> = ({ form }) =>
               </FormControl>
               <FormDescription>
                 The primary metric used for calculations
+              </FormDescription>
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="baseSource"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Source Type</FormLabel>
+              <Select 
+                onValueChange={field.onChange} 
+                defaultValue={field.value}
+              >
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a source type" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="SAP">SAP</SelectItem>
+                  <SelectItem value="Excel">Excel</SelectItem>
+                  <SelectItem value="API">API</SelectItem>
+                  <SelectItem value="Custom">Custom</SelectItem>
+                </SelectContent>
+              </Select>
+              <FormDescription>
+                The system where calculation base data will be sourced from
               </FormDescription>
             </FormItem>
           )}
