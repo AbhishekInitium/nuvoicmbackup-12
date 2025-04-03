@@ -90,6 +90,7 @@ export interface IncentivePlan {
   effectiveEnd: string;
   currency: string;
   revenueBase: string;
+  calculationField?: string; // New field added for calculation field
   participants: string[];
   salesQuota: number;
   commissionStructure: CommissionStructure;

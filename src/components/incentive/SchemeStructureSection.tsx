@@ -2,10 +2,12 @@
 import React, { useState, useEffect } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import SectionPanel from '../ui-custom/SectionPanel';
 import { getSchemeAdminConfigs } from '@/services/database/mongoDBService';
 import { SchemeAdminConfig } from '@/types/schemeAdminTypes';
 import { IncentivePlan } from '@/types/incentiveTypes';
+import { Calculator } from 'lucide-react';
 
 interface SchemeStructureSectionProps {
   plan: IncentivePlan;
@@ -21,6 +23,7 @@ const SchemeStructureSection: React.FC<SchemeStructureSectionProps> = ({
   const [configs, setConfigs] = useState<SchemeAdminConfig[]>([]);
   const [selectedConfig, setSelectedConfig] = useState<SchemeAdminConfig | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [calculationField, setCalculationField] = useState(plan.calculationField || "");
 
   useEffect(() => {
     fetchConfigurations();
@@ -55,6 +58,12 @@ const SchemeStructureSection: React.FC<SchemeStructureSectionProps> = ({
       // Update the revenue base in the plan based on the selected config
       updatePlan('revenueBase', config.calculationBase);
     }
+  };
+
+  const handleCalculationFieldChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setCalculationField(value);
+    updatePlan('calculationField', value);
   };
 
   return (
@@ -95,6 +104,32 @@ const SchemeStructureSection: React.FC<SchemeStructureSectionProps> = ({
             </div>
             <p className="mt-1 text-xs text-app-gray-500">
               Base for commission calculations (derived from configuration)
+            </p>
+          </div>
+        </div>
+
+        {/* Added new Calculation Field */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <Label className="text-sm font-medium text-app-gray-700 mb-2 flex items-center">
+              <Calculator className="w-4 h-4 mr-1" />
+              Calculation Field
+            </Label>
+            {isReadOnly ? (
+              <div className="h-10 px-4 py-2 rounded-md border border-gray-300 bg-gray-50 text-gray-700">
+                {calculationField || 'Not specified'}
+              </div>
+            ) : (
+              <Input
+                value={calculationField}
+                onChange={handleCalculationFieldChange}
+                placeholder="Enter calculation field"
+                className="w-full"
+                disabled={isReadOnly}
+              />
+            )}
+            <p className="mt-1 text-xs text-app-gray-500">
+              Specify the field used for calculations
             </p>
           </div>
         </div>
