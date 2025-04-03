@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useS4HanaData } from '@/hooks/useS4HanaData';
 import { IncentivePlan, PlanMetadata } from '@/types/incentiveTypes';
@@ -201,7 +202,7 @@ const IncentivePlanDesigner: React.FC<IncentivePlanDesignerProps> = ({
             isReadOnly={isReadOnly}
           />
           
-          <SectionPanel title="Rule Definition">
+          <SectionPanel title="Measurement Rules">
             <MeasurementRules
               plan={plan}
               updatePlan={updatePlan}

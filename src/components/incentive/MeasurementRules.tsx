@@ -1,13 +1,11 @@
 
 import React, { useState, useEffect } from 'react';
 import { PlusCircle } from 'lucide-react';
-import SectionPanel from '../ui-custom/SectionPanel';
 import { IncentivePlan, MeasurementRules as MeasurementRulesType, PrimaryMetric } from '@/types/incentiveTypes';
 import ActionButton from '../ui-custom/ActionButton';
 import PrimaryMetricSelector from './PrimaryMetricSelector';
 import AdjustmentsList from './AdjustmentsList';
 import ExclusionsList from './ExclusionsList';
-import { Input } from "@/components/ui/input";
 import { getCurrencySymbol } from '@/utils/incentiveUtils';
 import { SchemeAdminConfig, KpiField } from '@/types/schemeAdminTypes';
 import { v4 as uuidv4 } from 'uuid';
@@ -115,16 +113,6 @@ const MeasurementRules: React.FC<MeasurementRulesProps> = ({
   const updateMeasurementRules = (updatedRules: MeasurementRulesType) => {
     setLocalMeasurementRules(updatedRules);
     updatePlan('measurementRules', updatedRules);
-  };
-  
-  // Handle minimum qualification threshold change
-  const handleMinQualificationChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = parseFloat(e.target.value);
-    const updatedRules = {
-      ...localMeasurementRules,
-      minQualification: isNaN(value) ? 0 : value
-    };
-    updateMeasurementRules(updatedRules);
   };
   
   // Add a new primary metric
@@ -261,93 +249,67 @@ const MeasurementRules: React.FC<MeasurementRulesProps> = ({
   };
   
   return (
-    <SectionPanel title="4. Measurement Rules" defaultExpanded={true}>
-      <div className="space-y-6">
-        {/* Qualifying Criteria */}
-        <div>
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-medium">Qualification Criteria</h3>
-            {!isReadOnly && (
-              <ActionButton
-                variant="outline"
-                size="sm"
-                onClick={handleAddPrimaryMetric}
-                type="button"
-              >
-                <PlusCircle size={16} className="mr-1" /> Add Criteria
-              </ActionButton>
-            )}
-          </div>
-          
-          <div className="space-y-4">
-            {localMeasurementRules.primaryMetrics.map((metric, index) => (
-              <PrimaryMetricSelector
-                key={metric.id || index}
-                metric={metric}
-                metricIndex={index}
-                dbFields={qualificationFields}
-                kpiMetadata={kpiMetadata}
-                onUpdateMetric={handleUpdateMetric}
-                onRemoveMetric={handleRemoveMetric}
-                isReadOnly={isReadOnly}
-              />
-            ))}
-            
-            {localMeasurementRules.primaryMetrics.length === 0 && (
-              <div className="text-app-gray-500 italic">No qualification criteria defined</div>
-            )}
-          </div>
-          
-          <div className="mt-4">
-            <label className="block text-sm font-medium text-app-gray-700 mb-2">
-              Minimum Qualification Threshold ({currencySymbol})
-            </label>
-            {isReadOnly ? (
-              <div className="h-10 px-4 py-2 rounded-md border border-gray-300 bg-gray-50 text-gray-700">
-                {currencySymbol}{localMeasurementRules.minQualification || 0}
-              </div>
-            ) : (
-              <div className="relative">
-                <span className="absolute left-3 top-2.5 text-app-gray-500">
-                  {currencySymbol}
-                </span>
-                <Input
-                  type="number"
-                  value={localMeasurementRules.minQualification || 0}
-                  onChange={handleMinQualificationChange}
-                  className="pl-7"
-                  disabled={isReadOnly}
-                />
-              </div>
-            )}
-          </div>
+    <div className="space-y-6">
+      {/* Qualifying Criteria */}
+      <div>
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-lg font-medium">Qualification Criteria</h3>
+          {!isReadOnly && (
+            <ActionButton
+              variant="outline"
+              size="sm"
+              onClick={handleAddPrimaryMetric}
+              type="button"
+            >
+              <PlusCircle size={16} className="mr-1" /> Add Criteria
+            </ActionButton>
+          )}
         </div>
         
-        {/* Adjustments */}
-        <AdjustmentsList
-          adjustments={localMeasurementRules.adjustments}
-          dbFields={adjustmentFields}
-          kpiMetadata={kpiMetadata}
-          onUpdateAdjustment={handleUpdateAdjustment}
-          onRemoveAdjustment={handleRemoveAdjustment}
-          onAddAdjustment={handleAddAdjustment}
-          currencySymbol={currencySymbol}
-          isReadOnly={isReadOnly}
-        />
-        
-        {/* Exclusions */}
-        <ExclusionsList
-          exclusions={localMeasurementRules.exclusions}
-          dbFields={exclusionFields}
-          kpiMetadata={kpiMetadata}
-          onUpdateExclusion={handleUpdateExclusion}
-          onRemoveExclusion={handleRemoveExclusion}
-          onAddExclusion={handleAddExclusion}
-          currencySymbol={currencySymbol}
-          isReadOnly={isReadOnly}
-        />
+        <div className="space-y-4">
+          {localMeasurementRules.primaryMetrics.map((metric, index) => (
+            <PrimaryMetricSelector
+              key={metric.id || index}
+              metric={metric}
+              metricIndex={index}
+              dbFields={qualificationFields}
+              kpiMetadata={kpiMetadata}
+              onUpdateMetric={handleUpdateMetric}
+              onRemoveMetric={handleRemoveMetric}
+              isReadOnly={isReadOnly}
+            />
+          ))}
+          
+          {localMeasurementRules.primaryMetrics.length === 0 && (
+            <div className="text-app-gray-500 italic">No qualification criteria defined</div>
+          )}
+        </div>
       </div>
-    </SectionPanel>
+      
+      {/* Adjustments */}
+      <AdjustmentsList
+        adjustments={localMeasurementRules.adjustments}
+        dbFields={adjustmentFields}
+        kpiMetadata={kpiMetadata}
+        onUpdateAdjustment={handleUpdateAdjustment}
+        onRemoveAdjustment={handleRemoveAdjustment}
+        onAddAdjustment={handleAddAdjustment}
+        currencySymbol={currencySymbol}
+        isReadOnly={isReadOnly}
+      />
+      
+      {/* Exclusions */}
+      <ExclusionsList
+        exclusions={localMeasurementRules.exclusions}
+        dbFields={exclusionFields}
+        kpiMetadata={kpiMetadata}
+        onUpdateExclusion={handleUpdateExclusion}
+        onRemoveExclusion={handleRemoveExclusion}
+        onAddExclusion={handleAddExclusion}
+        currencySymbol={currencySymbol}
+        isReadOnly={isReadOnly}
+      />
+    </div>
   );
 };
 
