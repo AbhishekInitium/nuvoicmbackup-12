@@ -20,7 +20,7 @@ export interface ParticipantResult {
   commissionAmount: number;
   tier: string;
   appliedRate: number;
-  adjustments: AdjustmentRecord[];
+  adjustments: AdjustmentApplication[];
   customRulesApplied: string[];
   exclusionsApplied: string[];
   qualifiedRecords: number;
@@ -31,7 +31,7 @@ export interface ParticipantResult {
 export interface AdjustmentRecord {
   adjustmentId: string;
   description: string;
-  impact?: number;
+  impact: number;
 }
 
 /**

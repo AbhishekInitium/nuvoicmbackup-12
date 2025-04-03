@@ -10,9 +10,10 @@ import EmptyRulesState from './EmptyRulesState';
 interface CreditRulesProps {
   levels: CreditLevel[];
   updateCreditRules: (levels: CreditLevel[]) => void;
+  isReadOnly?: boolean;
 }
 
-const CreditRules: React.FC<CreditRulesProps> = ({ levels, updateCreditRules }) => {
+const CreditRules: React.FC<CreditRulesProps> = ({ levels, updateCreditRules, isReadOnly = false }) => {
   const { toast } = useToast();
 
   const addCreditLevel = () => {
@@ -65,13 +66,15 @@ const CreditRules: React.FC<CreditRulesProps> = ({ levels, updateCreditRules }) 
       <div>
         <div className="flex justify-between items-center mb-4">
           <label className="text-sm font-medium text-app-gray-700">Credit Level Distribution</label>
-          <ActionButton 
-            variant="outline"
-            size="sm"
-            onClick={addCreditLevel}
-          >
-            <PlusCircle size={16} className="mr-1" /> Add Level
-          </ActionButton>
+          {!isReadOnly && (
+            <ActionButton 
+              variant="outline"
+              size="sm"
+              onClick={addCreditLevel}
+            >
+              <PlusCircle size={16} className="mr-1" /> Add Level
+            </ActionButton>
+          )}
         </div>
         
         {levels.length === 0 ? (
@@ -79,7 +82,7 @@ const CreditRules: React.FC<CreditRulesProps> = ({ levels, updateCreditRules }) 
             message="No credit levels defined"
             description="Add credit levels to define how commission is distributed"
             buttonText="Add Credit Level"
-            onAction={addCreditLevel}
+            onAction={!isReadOnly ? addCreditLevel : undefined}
           />
         ) : (
           <div className="overflow-hidden rounded-xl border border-app-gray-200">
@@ -98,8 +101,9 @@ const CreditRules: React.FC<CreditRulesProps> = ({ levels, updateCreditRules }) 
                       <td className="px-6 py-4 whitespace-nowrap">
                         <Input 
                           type="text" 
-                          value={level.name}
+                          value={level.name || ''}
                           onChange={(e) => updateCreditLevel(index, 'name', e.target.value)}
+                          readOnly={isReadOnly}
                         />
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
@@ -109,6 +113,7 @@ const CreditRules: React.FC<CreditRulesProps> = ({ levels, updateCreditRules }) 
                             className="form-input pl-8 py-2"
                             value={level.percentage}
                             onChange={(e) => updateCreditLevel(index, 'percentage', e.target.value)}
+                            readOnly={isReadOnly}
                           />
                           <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                             <Percent size={16} className="text-app-gray-400" />
@@ -116,12 +121,14 @@ const CreditRules: React.FC<CreditRulesProps> = ({ levels, updateCreditRules }) 
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right">
-                        <button 
-                          className="text-app-red hover:text-opacity-80 transition-colors duration-200"
-                          onClick={() => removeCreditLevel(index)}
-                        >
-                          <Trash2 size={18} />
-                        </button>
+                        {!isReadOnly && (
+                          <button 
+                            className="text-app-red hover:text-opacity-80 transition-colors duration-200"
+                            onClick={() => removeCreditLevel(index)}
+                          >
+                            <Trash2 size={18} />
+                          </button>
+                        )}
                       </td>
                     </tr>
                   ))}

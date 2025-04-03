@@ -1,4 +1,3 @@
-
 import React from 'react';
 import GlassCard from '../ui-custom/GlassCard';
 import { Trash2, PlusCircle } from 'lucide-react';
@@ -6,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import RuleConditionComponent from './RuleCondition';
 import { CustomRule, RuleCondition } from '@/types/incentiveTypes';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { RULE_IMPACTS } from '@/constants/incentiveConstants';
+import { RULE_IMPACTS } from '@/constants/ruleConstants';
 import { KpiField } from '@/types/schemeAdminTypes';
 
 interface CustomRuleCardProps {

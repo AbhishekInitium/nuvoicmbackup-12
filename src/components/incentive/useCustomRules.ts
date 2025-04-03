@@ -18,10 +18,12 @@ export const useCustomRules = (
       name: 'New Custom Rule',
       description: 'Define criteria for this rule',
       conditions: [
-        { operator: '>=', value: 1000, metric: 'sales', period: 'current' }
+        { field: 'sales', operator: '>=', value: 1000 }
       ],
-      action: 'qualify',
-      active: true
+      impactType: 'PERCENTAGE',
+      impactValue: 10,
+      active: true,
+      action: 'qualify'
     });
     
     setRules(newRules);
@@ -40,10 +42,9 @@ export const useCustomRules = (
     const newRules = [...rules];
     
     newRules[ruleIndex].conditions.push({
+      field: 'sales',
       operator: '>=',
-      value: 1000,
-      metric: 'sales',
-      period: 'current'
+      value: 1000
     });
     
     setRules(newRules);
@@ -68,29 +69,21 @@ export const useCustomRules = (
     onUpdateRules(newRules);
   };
 
-  const updateCustomRule = (ruleIndex: number, field: keyof CustomRule, value: string | boolean) => {
+  const updateCustomRule = (ruleIndex: number, field: keyof CustomRule, value: any) => {
     const newRules = [...rules];
     
-    // Type assertion to handle the specific field types
-    if (field === 'name' || field === 'description' || field === 'action') {
-      (newRules[ruleIndex][field] as string) = value as string;
-    } else if (field === 'active') {
-      (newRules[ruleIndex][field] as boolean) = value as boolean;
-    }
+    // Set the value directly
+    newRules[ruleIndex][field] = value;
     
     setRules(newRules);
     onUpdateRules(newRules);
   };
 
-  const updateCustomRuleCondition = (ruleIndex: number, conditionIndex: number, field: keyof RuleCondition, value: string | number) => {
+  const updateCustomRuleCondition = (ruleIndex: number, conditionIndex: number, field: keyof RuleCondition, value: any) => {
     const newRules = [...rules];
     
-    // Handle all available fields in RuleCondition
-    if (field === 'metric' || field === 'field' || field === 'operator' || field === 'period') {
-      (newRules[ruleIndex].conditions[conditionIndex][field] as string) = value as string;
-    } else if (field === 'value') {
-      (newRules[ruleIndex].conditions[conditionIndex][field] as number) = value as number;
-    }
+    // Set the value directly
+    newRules[ruleIndex].conditions[conditionIndex][field] = value;
     
     setRules(newRules);
     onUpdateRules(newRules);

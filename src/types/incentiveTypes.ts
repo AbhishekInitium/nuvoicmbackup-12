@@ -19,6 +19,7 @@ export interface CommissionStructure {
 }
 
 export interface PrimaryMetric {
+  id?: string; // Add id as optional property
   field: string;
   operator: string;
   value: string | number;
@@ -29,6 +30,8 @@ export interface RuleCondition {
   field: string;
   operator: string;
   value: string | number;
+  metric?: string; // Add metric as optional property
+  period?: string; // Add period as optional property
 }
 
 export interface Adjustment {
@@ -62,10 +65,15 @@ export interface CustomRule {
   impactType: string; // e.g., PERCENTAGE, MONETARY
   impactValue: number;
   conditions: RuleCondition[];
+  active?: boolean;   // Add active as optional property
+  action?: string;    // Add action as optional property
+  factor?: number;    // Add factor as optional property
+  value?: number;     // Add value as optional property
 }
 
 export interface CreditLevel {
-  role: string;
+  role?: string;
+  name?: string;      // Add name as optional property
   percentage: number;
   description?: string;
 }

@@ -119,7 +119,7 @@ const MeasurementRules: React.FC<MeasurementRulesProps> = ({
   const handleAddPrimaryMetric = () => {
     console.log("Adding new primary metric");
     const newMetric: PrimaryMetric = {
-      id: uuidv4(),
+      id: uuidv4(), // Include id
       field: qualificationFields.length > 0 ? qualificationFields[0] : "default_field",
       operator: ">",
       value: 0,
@@ -306,7 +306,6 @@ const MeasurementRules: React.FC<MeasurementRulesProps> = ({
         onUpdateExclusion={handleUpdateExclusion}
         onRemoveExclusion={handleRemoveExclusion}
         onAddExclusion={handleAddExclusion}
-        currencySymbol={currencySymbol}
         isReadOnly={isReadOnly}
       />
     </div>

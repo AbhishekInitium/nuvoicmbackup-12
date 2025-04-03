@@ -14,6 +14,7 @@ interface ExclusionsListProps {
   onUpdateExclusion: (index: number, field: keyof Exclusion, value: string | number) => void;
   onRemoveExclusion: (index: number) => void;
   onAddExclusion: () => void;
+  currencySymbol?: string;
   isReadOnly?: boolean;
 }
 
@@ -24,6 +25,7 @@ const ExclusionsList: React.FC<ExclusionsListProps> = ({
   onUpdateExclusion,
   onRemoveExclusion,
   onAddExclusion,
+  currencySymbol = '$',
   isReadOnly = false
 }) => {
   return (
@@ -44,7 +46,7 @@ const ExclusionsList: React.FC<ExclusionsListProps> = ({
       {exclusions.length === 0 ? (
         <EmptyRulesState
           message="No exclusion rules defined"
-          description="Add exclusions to prevent certain transactions from qualifying"
+          description="Add exclusions to filter out specific transactions"
           buttonText="Add Exclusion"
           onAction={!isReadOnly ? onAddExclusion : undefined}
         />
@@ -57,6 +59,7 @@ const ExclusionsList: React.FC<ExclusionsListProps> = ({
               exclusionIndex={index}
               dbFields={dbFields}
               kpiMetadata={kpiMetadata}
+              currencySymbol={currencySymbol}
               onUpdateExclusion={onUpdateExclusion}
               onRemoveExclusion={onRemoveExclusion}
               isReadOnly={isReadOnly}

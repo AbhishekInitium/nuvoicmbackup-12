@@ -12,11 +12,13 @@ import { useToast } from '@/hooks/use-toast';
 interface SchemeStructureSectionsProps {
   plan: IncentivePlan;
   updatePlan: (section: string, value: any) => void;
+  isReadOnly?: boolean; // Add isReadOnly prop
 }
 
 const SchemeStructureSections: React.FC<SchemeStructureSectionsProps> = ({ 
   plan, 
-  updatePlan 
+  updatePlan,
+  isReadOnly = false
 }) => {
   const [schemeConfigs, setSchemeConfigs] = useState<SchemeAdminConfig[]>([]);
   const [selectedScheme, setSelectedScheme] = useState<SchemeAdminConfig | null>(null);
@@ -77,7 +79,7 @@ const SchemeStructureSections: React.FC<SchemeStructureSectionsProps> = ({
   };
 
   return (
-    <SectionPanel title="2. Scheme Structure">
+    <SectionPanel title="Scheme Structure">
       <div className="space-y-8">
         {/* 1. Revenue base for Calculation */}
         <RevenueBaseSelector
@@ -86,23 +88,24 @@ const SchemeStructureSections: React.FC<SchemeStructureSectionsProps> = ({
           schemeConfigs={schemeConfigs}
           onSchemeSelect={handleSchemeSelection}
           isLoading={isLoading}
+          isReadOnly={isReadOnly}
         />
         
-        {/* 2. Qualifying Criteria, 3. Adjustments + Exclusions */}
+        {/* Measurement Rules */}
         <MeasurementRules 
-          measurementRules={plan.measurementRules}
-          revenueBase={plan.revenueBase}
-          currency={plan.currency}
-          updateMeasurementRules={(updatedRules) => updatePlan('measurementRules', updatedRules)}
+          plan={plan}
+          updatePlan={updatePlan}
           selectedScheme={selectedScheme}
+          isReadOnly={isReadOnly}
         />
         
-        {/* 4. Custom Rules */}
+        {/* Custom Rules */}
         <CustomRules 
           customRules={plan.customRules}
           currency={plan.currency}
           updateCustomRules={(rules) => updatePlan('customRules', rules)}
           selectedScheme={selectedScheme}
+          isReadOnly={isReadOnly}
         />
       </div>
     </SectionPanel>
