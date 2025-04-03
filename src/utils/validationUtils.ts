@@ -1,4 +1,3 @@
-
 import { IncentivePlan, Tier } from '@/types/incentiveTypes';
 
 /**
@@ -55,9 +54,6 @@ export const validatePlanFields = (plan: IncentivePlan): string[] => {
     
     // Validate individual credit rules
     plan.creditRules.levels.forEach((level, index) => {
-      if (!level.role || level.role.trim() === '') {
-        errors.push(`Credit role ${index + 1} must have a role name`);
-      }
       if (level.percentage <= 0) {
         errors.push(`Credit role ${index + 1} must have a positive percentage`);
       }
