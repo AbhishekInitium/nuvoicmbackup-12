@@ -4,8 +4,20 @@ import { Trash2 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { RuleCondition } from '@/types/incentiveTypes';
-import { OPERATORS, DB_FIELDS } from '@/constants/incentiveConstants';
 import { SchemeAdminConfig, KpiField } from '@/types/schemeAdminTypes';
+
+// Define operators directly in the component since they were missing from constants
+const OPERATORS = [
+  { value: '>', label: 'Greater than' },
+  { value: '>=', label: 'Greater than or equal to' },
+  { value: '<', label: 'Less than' },
+  { value: '<=', label: 'Less than or equal to' },
+  { value: '=', label: 'Equal to' },
+  { value: '!=', label: 'Not equal to' },
+  { value: 'contains', label: 'Contains' },
+  { value: 'startsWith', label: 'Starts with' },
+  { value: 'endsWith', label: 'Ends with' }
+];
 
 interface RuleConditionComponentProps {
   condition: RuleCondition;
@@ -32,9 +44,8 @@ const RuleConditionComponent: React.FC<RuleConditionComponentProps> = ({
       return availableFields;
     }
     
-    // Fallback to default fields from constant
-    const allFields = Object.values(DB_FIELDS).flat();
-    return [...new Set(allFields.map(field => field.value))];
+    // Fallback to a basic set of fields if no constants or availableFields
+    return ['sales', 'revenue', 'quantity', 'margin', 'product'];
   };
   
   const fieldOptions = getFieldOptions();
@@ -112,6 +123,12 @@ const RuleConditionComponent: React.FC<RuleConditionComponentProps> = ({
   const dataType = getFieldDataType(condition.field || '');
   const inputType = getInputTypeForDataType(dataType);
 
+  // Helper to find the operator label
+  const getOperatorLabel = (operatorValue: string): string => {
+    const op = OPERATORS.find(op => op.value === operatorValue);
+    return op ? op.label : operatorValue;
+  };
+
   return (
     <div className="flex items-center space-x-3">
       <Select 
@@ -119,7 +136,9 @@ const RuleConditionComponent: React.FC<RuleConditionComponentProps> = ({
         onValueChange={handleFieldSelect}
       >
         <SelectTrigger className="w-36">
-          <SelectValue placeholder="Select field" />
+          <SelectValue placeholder="Select field">
+            {condition.field}
+          </SelectValue>
         </SelectTrigger>
         <SelectContent>
           {fieldOptions.map(field => (
@@ -133,7 +152,9 @@ const RuleConditionComponent: React.FC<RuleConditionComponentProps> = ({
         onValueChange={(value) => onUpdate('operator', value)}
       >
         <SelectTrigger className="w-24">
-          <SelectValue placeholder="Operator" />
+          <SelectValue placeholder="Operator">
+            {getOperatorLabel(condition.operator || '>')}
+          </SelectValue>
         </SelectTrigger>
         <SelectContent>
           {OPERATORS.map(op => (

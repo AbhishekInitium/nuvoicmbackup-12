@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { CustomRule, RuleCondition } from '@/types/incentiveTypes';
@@ -9,10 +10,10 @@ export const useCustomRules = (
   const { toast } = useToast();
   const [rules, setRules] = useState<CustomRule[]>(initialRules);
 
-  // Helper function to get available fields (was missing)
+  // Helper function to get available fields
   const getAvailableFields = () => {
     // Return a default list of fields if no specific ones are provided
-    return ['sales', 'quantity', 'margin', 'revenue'];
+    return ['sales', 'quantity', 'margin', 'revenue', 'product', 'customer', 'region'];
   };
 
   // Custom rules management
@@ -82,7 +83,8 @@ export const useCustomRules = (
     const newRules = [...rules];
     
     // Handle all available fields in RuleCondition
-    if (field === 'field' || field === 'operator') {
+    if (field === 'field' || field === 'operator' || field === 'description' || 
+        field === 'sourceType' || field === 'sourceField' || field === 'dataType') {
       (newRules[ruleIndex].condition[field] as string) = value as string;
     } else if (field === 'value') {
       (newRules[ruleIndex].condition[field]) = value;
