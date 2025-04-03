@@ -11,6 +11,7 @@ interface RevenueBaseSelectorProps {
   onSchemeSelect?: (schemeId: string) => void;
   isLoading?: boolean;
   isReadOnly?: boolean;
+  selectedSchemeId?: string; // Added this prop to match what's being passed in SchemeStructureSections.tsx
 }
 
 const RevenueBaseSelector: React.FC<RevenueBaseSelectorProps> = ({ 
@@ -19,7 +20,8 @@ const RevenueBaseSelector: React.FC<RevenueBaseSelectorProps> = ({
   schemeConfigs = [],
   onSchemeSelect,
   isLoading = false,
-  isReadOnly = false
+  isReadOnly = false,
+  selectedSchemeId
 }) => {
   return (
     <div className="space-y-4">
@@ -38,6 +40,7 @@ const RevenueBaseSelector: React.FC<RevenueBaseSelectorProps> = ({
           ) : (
             <Select 
               onValueChange={(schemeId) => onSchemeSelect && onSchemeSelect(schemeId)}
+              value={selectedSchemeId}
             >
               <SelectTrigger className="w-full bg-white">
                 <SelectValue placeholder="Choose a scheme configuration" />
