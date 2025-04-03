@@ -38,13 +38,6 @@ const RuleConditionComponent: React.FC<RuleConditionComponentProps> = ({
   selectedScheme,
   kpiMetadata
 }) => {
-  // Log for debugging
-  useEffect(() => {
-    console.log('Field options:', availableFields);
-    console.log('Current field selection:', condition.field);
-    console.log('Current operator selection:', condition.operator);
-  }, [availableFields, condition.field, condition.operator]);
-
   // Get field options from DB_FIELDS or use provided availableFields
   const getFieldOptions = () => {
     if (availableFields && availableFields.length > 0) {
@@ -141,13 +134,10 @@ const RuleConditionComponent: React.FC<RuleConditionComponentProps> = ({
     <div className="flex items-center space-x-3">
       <Select 
         onValueChange={handleFieldSelect}
-        value={condition.field || undefined}
-        defaultValue={condition.field || undefined}
+        value={condition.field}
       >
         <SelectTrigger className="w-36">
-          <SelectValue placeholder="Select field">
-            {condition.field}
-          </SelectValue>
+          <SelectValue placeholder="Select field" />
         </SelectTrigger>
         <SelectContent className="bg-white z-50">
           {fieldOptions.map(field => (
@@ -158,13 +148,10 @@ const RuleConditionComponent: React.FC<RuleConditionComponentProps> = ({
       
       <Select 
         onValueChange={(value) => onUpdate('operator', value)}
-        value={condition.operator || undefined}
-        defaultValue={condition.operator || undefined}
+        value={condition.operator}
       >
         <SelectTrigger className="w-24">
-          <SelectValue placeholder="Operator">
-            {condition.operator ? getOperatorLabel(condition.operator) : "Operator"}
-          </SelectValue>
+          <SelectValue placeholder="Operator" />
         </SelectTrigger>
         <SelectContent className="bg-white z-50">
           {OPERATORS.map(op => (

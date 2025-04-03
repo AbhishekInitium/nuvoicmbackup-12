@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import { PrimaryMetric } from '@/types/incentiveTypes';
 import RuleCondition from './RuleCondition'; 
 import { SchemeAdminConfig, KpiField } from '@/types/schemeAdminTypes';
@@ -28,24 +28,13 @@ const PrimaryMetricSelector: React.FC<PrimaryMetricSelectorProps> = ({
   // Use the first metric as the current one
   const metric = primaryMetrics[0];
 
-  // Log updates for debugging
-  useEffect(() => {
-    console.log('Primary metric state:', metric);
-  }, [metric]);
-
-  // Debug log when updates happen
-  const handleUpdate = (field: keyof PrimaryMetric, value: string | number) => {
-    console.log(`Updating metric 0, field: ${field}, value: ${value}`);
-    onUpdateMetric(field, value);
-  };
-
   return (
     <div className="space-y-1">
       <RuleCondition
         condition={metric}
         availableFields={dbFields}
         currencySymbol={currencySymbol}
-        onUpdate={handleUpdate}
+        onUpdate={onUpdateMetric}
         onRemove={onRemoveMetric}
         selectedScheme={selectedScheme}
         kpiMetadata={kpiMetadata}
