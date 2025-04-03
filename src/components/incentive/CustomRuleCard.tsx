@@ -1,118 +1,137 @@
 
 import React from 'react';
-import { Trash2, Check, Plus } from 'lucide-react';
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import GlassCard from '../ui-custom/GlassCard';
-import { CustomRule, RuleCondition } from '@/types/incentiveTypes';
-import RuleConditionComponent from './RuleCondition';
-import { SchemeAdminConfig } from '@/types/schemeAdminTypes';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Pencil, Save, Trash2, X } from 'lucide-react';
+import { CustomRule } from '@/types/incentiveTypes';
+import RuleCondition from './RuleCondition';
+import { SchemeAdminConfig, KpiField } from '@/types/schemeAdminTypes';
 
 interface CustomRuleCardProps {
   rule: CustomRule;
-  ruleIndex: number;
-  currencySymbol: string;
-  availableFields?: string[];
-  onUpdateRule: (field: keyof CustomRule, value: string | boolean) => void;
-  onUpdateCondition: (conditionIndex: number, field: keyof RuleCondition, value: string | number) => void;
-  onAddCondition: () => void;
-  onRemoveCondition: (conditionIndex: number) => void;
-  onRemoveRule: () => void;
+  availableFields: string[];
+  currency: string;
+  onUpdate: (field: keyof CustomRule, value: any) => void;
+  onRemove: () => void;
   selectedScheme?: SchemeAdminConfig | null;
+  kpiMetadata?: Record<string, KpiField>;
 }
 
 const CustomRuleCard: React.FC<CustomRuleCardProps> = ({
   rule,
-  ruleIndex,
-  currencySymbol,
-  availableFields = [],
-  onUpdateRule,
-  onUpdateCondition,
-  onAddCondition,
-  onRemoveCondition,
-  onRemoveRule,
-  selectedScheme
+  availableFields,
+  currency,
+  onUpdate,
+  onRemove,
+  selectedScheme,
+  kpiMetadata
 }) => {
-  return (
-    <GlassCard className="p-6">
-      <div className="flex justify-between items-start mb-4">
-        <div className="flex-1">
-          <div className="flex items-center mb-2">
-            <div className={`h-3 w-3 rounded-full ${rule.active ? 'bg-green-500' : 'bg-app-gray-300'} mr-2`}></div>
-            <Input 
-              type="text" 
-              value={rule.name}
-              className="text-lg font-medium border-none px-0 h-auto focus-visible:ring-0"
-              onChange={(e) => onUpdateRule('name', e.target.value)}
-            />
-          </div>
-          <Textarea 
-            value={rule.description || ''}
-            className="mt-1 resize-none border-none p-0 focus-visible:ring-0 text-app-gray-500"
-            onChange={(e) => onUpdateRule('description', e.target.value)}
-          />
-        </div>
-        <div className="flex items-center space-x-2">
-          <button 
-            className={`p-1 rounded-full ${rule.active ? 'bg-green-100 text-green-600' : 'bg-app-gray-100 text-app-gray-500'} hover:bg-opacity-80 transition-colors duration-200`}
-            onClick={() => onUpdateRule('active', !rule.active)}
-          >
-            <Check size={18} />
-          </button>
-          <button 
-            className="p-1 rounded-full hover:bg-app-gray-100 text-app-gray-500 hover:text-app-red transition-colors duration-200"
-            onClick={onRemoveRule}
-          >
-            <Trash2 size={18} />
-          </button>
-        </div>
-      </div>
+  const [isEditing, setIsEditing] = React.useState(false);
+  const [localName, setLocalName] = React.useState(rule.name || '');
+  
+  const handleSave = () => {
+    onUpdate('name', localName);
+    setIsEditing(false);
+  };
+  
+  const handleCancel = () => {
+    setLocalName(rule.name || '');
+    setIsEditing(false);
+  };
+  
+  // Get currency symbol from currency code
+  const getCurrencySymbol = (currencyCode: string): string => {
+    switch (currencyCode.toUpperCase()) {
+      case 'USD': return '$';
+      case 'EUR': return '€';
+      case 'GBP': return '£';
+      case 'JPY': return '¥';
+      default: return currencyCode;
+    }
+  };
+  
+  const currencySymbol = getCurrencySymbol(currency);
+  
+  // Handle condition update
+  const handleConditionUpdate = (field: string, value: string | number) => {
+    const updatedCondition = { ...rule.condition, [field]: value };
+    onUpdate('condition', updatedCondition);
+    
+    // If this is a field update and we have metadata, also update description and other metadata
+    if (field === 'field' && kpiMetadata && kpiMetadata[value as string]) {
+      const metadata = kpiMetadata[value as string];
       
-      <div className="mt-6">
-        <div className="flex justify-between items-center mb-3">
-          <h4 className="text-sm font-medium text-app-gray-700">Conditions</h4>
-          <button 
-            className="text-sm text-app-blue hover:text-app-blue-dark flex items-center"
-            onClick={onAddCondition}
-          >
-            <Plus size={14} className="mr-1" /> Add Condition
-          </button>
+      if (metadata.description && !rule.name) {
+        // Only update name if it's empty (or auto-generate a name based on description)
+        setLocalName(metadata.description);
+        onUpdate('name', metadata.description);
+      }
+    }
+  };
+
+  return (
+    <div className="bg-white border rounded-lg p-4 shadow-sm">
+      <div className="space-y-4">
+        <div className="flex justify-between items-start">
+          {isEditing ? (
+            <div className="w-full">
+              <Input
+                value={localName}
+                onChange={(e) => setLocalName(e.target.value)}
+                placeholder="Custom Rule Name"
+                className="mb-2"
+              />
+              <div className="flex space-x-2">
+                <Button size="sm" onClick={handleSave} className="h-8">
+                  <Save size={16} className="mr-1" /> Save
+                </Button>
+                <Button size="sm" variant="outline" onClick={handleCancel} className="h-8">
+                  <X size={16} className="mr-1" /> Cancel
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <>
+              <div>
+                <h4 className="text-lg font-medium">{rule.name || 'Unnamed Rule'}</h4>
+                {rule.description && <p className="text-sm text-gray-500 mt-1">{rule.description}</p>}
+              </div>
+              <div className="flex space-x-2">
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => setIsEditing(true)}
+                  className="h-8"
+                >
+                  <Pencil size={16} />
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={onRemove}
+                  className="h-8 text-red-500 hover:text-red-700"
+                >
+                  <Trash2 size={16} />
+                </Button>
+              </div>
+            </>
+          )}
         </div>
         
-        <div className="space-y-4">
-          {rule.conditions.map((condition, condIndex) => (
-            <RuleConditionComponent
-              key={condIndex}
-              condition={condition}
-              currencySymbol={currencySymbol}
-              availableFields={availableFields}
-              onUpdate={(field, value) => onUpdateCondition(condIndex, field, value)}
-              onRemove={() => onRemoveCondition(condIndex)}
-              selectedScheme={selectedScheme}
-            />
-          ))}
+        <div>
+          <p className="text-sm text-gray-500 mb-2">Rule Condition:</p>
+          <RuleCondition
+            condition={rule.condition}
+            availableFields={availableFields}
+            currencySymbol={currencySymbol}
+            onUpdate={handleConditionUpdate}
+            onRemove={onRemove}
+            selectedScheme={selectedScheme}
+            kpiMetadata={kpiMetadata}
+          />
         </div>
       </div>
-      
-      <div className="mt-6">
-        <h4 className="text-sm font-medium text-app-gray-700 mb-3">Rule Action</h4>
-        <Select 
-          value={rule.action || 'qualify'}
-          onValueChange={(value) => onUpdateRule('action', value)}
-        >
-          <SelectTrigger className="w-full">
-            <SelectValue placeholder="Select action" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="qualify">Qualify for Commission</SelectItem>
-            <SelectItem value="disqualify">Disqualify from Commission</SelectItem>
-            <SelectItem value="boost">Apply Bonus Multiplier</SelectItem>
-            <SelectItem value="cap">Apply Commission Cap</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-    </GlassCard>
+    </div>
   );
 };
 

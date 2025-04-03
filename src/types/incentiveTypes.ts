@@ -1,13 +1,38 @@
 
-export interface CommissionStructure {
-  tiers: Tier[];
+// Add this to the existing file
+import { DataSourceType, KpiField } from './schemeAdminTypes';
+
+export interface RuleCondition {
+  field: string;
+  operator: string;
+  value: string | number;
+  description?: string;
+  // Added metadata fields
+  sourceType?: DataSourceType;
+  sourceField?: string;
+  dataType?: string;
 }
 
-export interface Tier {
-  from: number;
-  to: number;
-  rate: number;
+export interface PrimaryMetric extends RuleCondition {
+  // PrimaryMetric already extends RuleCondition, so it inherits the new fields
+}
+
+export interface Adjustment {
+  type: 'percentage' | 'fixed';
+  value: number;
   description?: string;
+  condition: RuleCondition;
+}
+
+export interface Exclusion {
+  description?: string;
+  condition: RuleCondition;
+}
+
+export interface CustomRule {
+  name?: string;
+  description?: string;
+  condition: RuleCondition;
 }
 
 export interface MeasurementRules {
@@ -17,84 +42,47 @@ export interface MeasurementRules {
   exclusions: Exclusion[];
 }
 
-export interface PrimaryMetric {
-  field: string;
-  operator: string;
-  value: any;
-  description?: string;
+export interface CreditRule {
+  level: number;
+  role: string;
+  percent: number;
 }
 
-export interface Adjustment {
+export interface CommissionTier {
   id: string;
-  description: string;
-  impact: number;
-  type: 'ADDITION' | 'PERCENTAGE_BOOST' | 'REDUCTION';
-  // Additional fields needed by components
-  field?: string;
-  operator?: string;
-  value?: any;
-  factor?: number;
+  from: number;
+  to?: number;
+  rate: number;
+  base?: 'revenue' | 'margin' | 'quantity';
 }
 
-export interface Exclusion {
-  field: string;
-  operator: string;
-  value: any;
-  description: string;
-}
-
-export interface CreditRules {
-  levels: CreditLevel[];
-}
-
-export interface CreditLevel {
+export interface IncentivePlan {
+  _id?: string; // MongoDB document ID
+  schemeId: string;
   name: string;
-  percentage: number;
-  description?: string;
-}
-
-export interface RuleCondition {
-  field?: string;
-  metric?: string;
-  operator: string;
-  value: any;
-  // Additional fields used in components
-  period?: string;
-}
-
-export interface CustomRule {
-  name: string;
-  description?: string;
-  conditions: RuleCondition[];
-  action: string;
-  factor?: number;
-  value?: number;
-  active: boolean;
+  description: string;
+  effectiveStart?: string;
+  effectiveEnd?: string;
+  currency: string;
+  revenueBase: string;
+  sourceType?: DataSourceType; // Added field for source type
+  participants: string[];
+  salesQuota: number | string;
+  commissionStructure: {
+    tiers: CommissionTier[];
+  };
+  measurementRules: MeasurementRules;
+  creditRules: {
+    levels: CreditRule[];
+  };
+  customRules: CustomRule[];
+  metadata?: PlanMetadata;
+  kpiMetadata?: Record<string, KpiField>; // Added field to store KPI metadata
 }
 
 export interface PlanMetadata {
   createdAt: string;
-  updatedAt: string;
-  version: number;
-  status: string;
-}
-
-export interface Metadata extends PlanMetadata {} // For backward compatibility
-
-export interface IncentivePlan {
-  _id?: string;  // MongoDB document ID
-  name: string;
-  schemeId: string;
-  description: string;
-  effectiveStart: string;
-  effectiveEnd: string;
-  currency: string;
-  revenueBase: string;
-  participants: string[];
-  salesQuota: number;
-  commissionStructure: CommissionStructure;
-  measurementRules: MeasurementRules;
-  creditRules: CreditRules;
-  customRules: CustomRule[];
-  metadata?: PlanMetadata;
+  updatedAt?: string;
+  version?: number;
+  status?: string;
 }

@@ -6,7 +6,7 @@ import RevenueBaseSelector from './RevenueBaseSelector';
 import MeasurementRules from './MeasurementRules';
 import CustomRules from './CustomRules';
 import { getSchemeAdminConfigs, getSchemeAdminConfig } from '@/services/database/mongoDBService';
-import { SchemeAdminConfig } from '@/types/schemeAdminTypes';
+import { SchemeAdminConfig, KpiField } from '@/types/schemeAdminTypes';
 import { useToast } from '@/hooks/use-toast';
 
 interface SchemeStructureSectionsProps {
@@ -62,6 +62,9 @@ const SchemeStructureSections: React.FC<SchemeStructureSectionsProps> = ({
           updatePlan('sourceType', selectedConfig.baseData.source);
         }
         
+        // Enhance the plan with full KPI metadata
+        enhancePlanWithKpiMetadata(selectedConfig);
+        
         toast({
           title: "Scheme Configuration Loaded",
           description: `Loaded configuration: ${selectedConfig.adminName}`,
@@ -79,6 +82,25 @@ const SchemeStructureSections: React.FC<SchemeStructureSectionsProps> = ({
       });
       setIsLoading(false);
     }
+  };
+
+  // Helper function to enhance the plan with KPI metadata
+  const enhancePlanWithKpiMetadata = (config: SchemeAdminConfig) => {
+    // Create an object to easily look up KPIs by name from all categories
+    const kpiLookup: Record<string, KpiField> = {};
+    
+    // Add all KPIs from the config to the lookup object
+    [
+      ...(config.qualificationFields || []),
+      ...(config.adjustmentFields || []),
+      ...(config.exclusionFields || []),
+      ...(config.customRules || [])
+    ].forEach(kpi => {
+      kpiLookup[kpi.kpi] = kpi;
+    });
+    
+    // Store the KPI lookup in the plan for later use
+    updatePlan('kpiMetadata', kpiLookup);
   };
 
   return (
@@ -100,6 +122,7 @@ const SchemeStructureSections: React.FC<SchemeStructureSectionsProps> = ({
           currency={plan.currency}
           updateMeasurementRules={(updatedRules) => updatePlan('measurementRules', updatedRules)}
           selectedScheme={selectedScheme}
+          kpiMetadata={plan.kpiMetadata}
         />
         
         {/* 4. Custom Rules */}
@@ -108,6 +131,7 @@ const SchemeStructureSections: React.FC<SchemeStructureSectionsProps> = ({
           currency={plan.currency}
           updateCustomRules={(rules) => updatePlan('customRules', rules)}
           selectedScheme={selectedScheme}
+          kpiMetadata={plan.kpiMetadata}
         />
       </div>
     </SectionPanel>

@@ -5,7 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { RuleCondition } from '@/types/incentiveTypes';
 import { OPERATORS, DB_FIELDS } from '@/constants/incentiveConstants';
-import { SchemeAdminConfig } from '@/types/schemeAdminTypes';
+import { SchemeAdminConfig, KpiField } from '@/types/schemeAdminTypes';
 
 interface RuleConditionComponentProps {
   condition: RuleCondition;
@@ -14,6 +14,7 @@ interface RuleConditionComponentProps {
   onUpdate: (field: keyof RuleCondition, value: string | number) => void;
   onRemove: () => void;
   selectedScheme?: SchemeAdminConfig | null;
+  kpiMetadata?: Record<string, KpiField>;
 }
 
 const RuleConditionComponent: React.FC<RuleConditionComponentProps> = ({
@@ -22,7 +23,8 @@ const RuleConditionComponent: React.FC<RuleConditionComponentProps> = ({
   availableFields = [],
   onUpdate,
   onRemove,
-  selectedScheme
+  selectedScheme,
+  kpiMetadata
 }) => {
   // Get field options from DB_FIELDS or use provided availableFields
   const getFieldOptions = () => {
@@ -39,18 +41,58 @@ const RuleConditionComponent: React.FC<RuleConditionComponentProps> = ({
 
   // Get data type for the selected field
   const getFieldDataType = (fieldName: string): string => {
-    if (!selectedScheme) return 'Char10'; // Default to text if no scheme
+    // First check the kpiMetadata (most accurate and complete)
+    if (kpiMetadata && kpiMetadata[fieldName]) {
+      return kpiMetadata[fieldName].dataType;
+    }
     
-    // Look for the field in all KPI collections
-    const allKpis = [
-      ...(selectedScheme.qualificationFields || []),
-      ...(selectedScheme.adjustmentFields || []),
-      ...(selectedScheme.exclusionFields || []),
-      ...(selectedScheme.customRules || [])
-    ];
+    // Fallback to scheme config if available
+    if (selectedScheme) {
+      // Look for the field in all KPI collections
+      const allKpis = [
+        ...(selectedScheme.qualificationFields || []),
+        ...(selectedScheme.adjustmentFields || []),
+        ...(selectedScheme.exclusionFields || []),
+        ...(selectedScheme.customRules || [])
+      ];
+      
+      const fieldConfig = allKpis.find(kpi => kpi.kpi === fieldName);
+      if (fieldConfig) {
+        return fieldConfig.dataType;
+      }
+    }
     
-    const fieldConfig = allKpis.find(kpi => kpi.kpi === fieldName);
-    return fieldConfig?.dataType || 'Char10'; // Default to text if not found
+    // Default to text if not found
+    return 'Char10';
+  };
+
+  // Handle field selection with metadata
+  const handleFieldSelect = (fieldName: string) => {
+    // First update the field name
+    onUpdate('field', fieldName);
+    
+    // If we have metadata for this field, copy all the relevant properties
+    if (kpiMetadata && kpiMetadata[fieldName]) {
+      const metadata = kpiMetadata[fieldName];
+      
+      // Update other properties with metadata
+      if (metadata.description) {
+        onUpdate('description', metadata.description);
+      }
+      
+      if (metadata.sourceType) {
+        onUpdate('sourceType', metadata.sourceType);
+      }
+      
+      if (metadata.sourceField) {
+        onUpdate('sourceField', metadata.sourceField);
+      }
+      
+      // Include the dataType in the condition for future reference
+      if (metadata.dataType) {
+        onUpdate('dataType', metadata.dataType);
+      }
+    }
   };
 
   // Determine input type based on data type
@@ -74,7 +116,7 @@ const RuleConditionComponent: React.FC<RuleConditionComponentProps> = ({
     <div className="flex items-center space-x-3">
       <Select 
         value={condition.field || ''}
-        onValueChange={(value) => onUpdate('field', value)}
+        onValueChange={handleFieldSelect}
       >
         <SelectTrigger className="w-36">
           <SelectValue placeholder="Select field" />

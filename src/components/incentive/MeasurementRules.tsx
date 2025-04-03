@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { PlusCircle } from 'lucide-react';
 import ActionButton from '../ui-custom/ActionButton';
@@ -8,7 +9,7 @@ import AdjustmentsList from './AdjustmentsList';
 import ExclusionsList from './ExclusionsList';
 import EmptyRulesState from './EmptyRulesState';
 import { getCurrencySymbol } from '@/utils/incentiveUtils';
-import { SchemeAdminConfig } from '@/types/schemeAdminTypes';
+import { SchemeAdminConfig, KpiField } from '@/types/schemeAdminTypes';
 
 interface MeasurementRulesProps {
   measurementRules: MeasurementRulesType;
@@ -16,6 +17,7 @@ interface MeasurementRulesProps {
   currency: string;
   updateMeasurementRules: (rules: MeasurementRulesType) => void;
   selectedScheme?: SchemeAdminConfig | null;
+  kpiMetadata?: Record<string, KpiField>;
 }
 
 const MeasurementRules: React.FC<MeasurementRulesProps> = ({
@@ -23,7 +25,8 @@ const MeasurementRules: React.FC<MeasurementRulesProps> = ({
   revenueBase,
   currency,
   updateMeasurementRules,
-  selectedScheme
+  selectedScheme,
+  kpiMetadata
 }) => {
   const currencySymbol = getCurrencySymbol(currency);
   const {
@@ -100,6 +103,7 @@ const MeasurementRules: React.FC<MeasurementRulesProps> = ({
                 onUpdateMetric={(field, value) => updatePrimaryMetric(index, field, value)}
                 onRemoveMetric={() => removePrimaryMetric(index)}
                 selectedScheme={selectedScheme}
+                kpiMetadata={kpiMetadata}
               />
             ))}
           </div>
@@ -115,6 +119,7 @@ const MeasurementRules: React.FC<MeasurementRulesProps> = ({
         onAddAdjustment={addAdjustment}
         currencySymbol={currencySymbol}
         selectedScheme={selectedScheme}
+        kpiMetadata={kpiMetadata}
       />
 
       {/* Exclusions */}
@@ -125,6 +130,7 @@ const MeasurementRules: React.FC<MeasurementRulesProps> = ({
         onRemoveExclusion={removeExclusion}
         onAddExclusion={addExclusion}
         selectedScheme={selectedScheme}
+        kpiMetadata={kpiMetadata}
       />
     </div>
   );
