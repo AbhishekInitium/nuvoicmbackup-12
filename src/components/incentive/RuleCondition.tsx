@@ -133,8 +133,8 @@ const RuleConditionComponent: React.FC<RuleConditionComponentProps> = ({
   return (
     <div className="flex items-center space-x-3">
       <Select 
+        value={condition.field || ""}
         onValueChange={handleFieldSelect}
-        value={condition.field || undefined}
       >
         <SelectTrigger className="w-36">
           <SelectValue placeholder="Select field">
@@ -149,8 +149,8 @@ const RuleConditionComponent: React.FC<RuleConditionComponentProps> = ({
       </Select>
       
       <Select 
+        value={condition.operator || ""}
         onValueChange={(value) => onUpdate('operator', value)}
-        value={condition.operator || undefined}
       >
         <SelectTrigger className="w-24">
           <SelectValue placeholder="Operator">
