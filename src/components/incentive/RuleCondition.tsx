@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Trash2 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
@@ -38,6 +38,13 @@ const RuleConditionComponent: React.FC<RuleConditionComponentProps> = ({
   selectedScheme,
   kpiMetadata
 }) => {
+  // Log for debugging
+  useEffect(() => {
+    console.log('Field options:', availableFields);
+    console.log('Current field selection:', condition.field);
+    console.log('Current operator selection:', condition.operator);
+  }, [availableFields, condition.field, condition.operator]);
+
   // Get field options from DB_FIELDS or use provided availableFields
   const getFieldOptions = () => {
     if (availableFields && availableFields.length > 0) {
@@ -135,10 +142,11 @@ const RuleConditionComponent: React.FC<RuleConditionComponentProps> = ({
       <Select 
         onValueChange={handleFieldSelect}
         value={condition.field || undefined}
+        defaultValue={condition.field || undefined}
       >
         <SelectTrigger className="w-36">
           <SelectValue placeholder="Select field">
-            {condition.field || "Select field"}
+            {condition.field}
           </SelectValue>
         </SelectTrigger>
         <SelectContent className="bg-white z-50">
@@ -151,6 +159,7 @@ const RuleConditionComponent: React.FC<RuleConditionComponentProps> = ({
       <Select 
         onValueChange={(value) => onUpdate('operator', value)}
         value={condition.operator || undefined}
+        defaultValue={condition.operator || undefined}
       >
         <SelectTrigger className="w-24">
           <SelectValue placeholder="Operator">
