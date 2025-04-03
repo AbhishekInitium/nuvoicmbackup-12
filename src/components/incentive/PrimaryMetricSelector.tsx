@@ -34,6 +34,7 @@ const PrimaryMetricSelector: React.FC<PrimaryMetricSelectorProps> = ({
   const getInputType = (): string => {
     if (metric.field && kpiMetadata && kpiMetadata[metric.field]) {
       const dataType = kpiMetadata[metric.field].dataType;
+      console.log(`PrimaryMetricSelector - Getting input type for ${metric.field} with dataType ${dataType}`);
       
       switch(dataType?.toLowerCase()) {
         case 'number':
@@ -62,9 +63,11 @@ const PrimaryMetricSelector: React.FC<PrimaryMetricSelectorProps> = ({
 
   const inputType = getInputType();
   
-  // Log the available fields for debugging
-  console.log("Primary Metric - Available fields:", dbFields);
-  console.log("Primary Metric - KPI Metadata:", kpiMetadata);
+  // Debug logs
+  console.log("PrimaryMetricSelector - Available fields:", dbFields);
+  console.log("PrimaryMetricSelector - KPI Metadata:", kpiMetadata);
+  console.log("PrimaryMetricSelector - Current metric:", metric);
+  console.log("PrimaryMetricSelector - Input type:", inputType);
 
   return (
     <GlassCard variant="outlined" className="p-4">
@@ -76,10 +79,10 @@ const PrimaryMetricSelector: React.FC<PrimaryMetricSelectorProps> = ({
               value={metric.field}
               onValueChange={(value) => onUpdateMetric('field', value)}
             >
-              <SelectTrigger className="w-full">
+              <SelectTrigger className="w-full bg-white">
                 <SelectValue placeholder="Select field" />
               </SelectTrigger>
-              <SelectContent className="bg-white">
+              <SelectContent className="bg-white z-50">
                 {dbFields.length > 0 ? (
                   dbFields.map(field => {
                     // Get the display name from metadata if available
@@ -103,10 +106,10 @@ const PrimaryMetricSelector: React.FC<PrimaryMetricSelectorProps> = ({
               value={metric.operator}
               onValueChange={(value) => onUpdateMetric('operator', value)}
             >
-              <SelectTrigger className="w-full">
+              <SelectTrigger className="w-full bg-white">
                 <SelectValue placeholder="Operator" />
               </SelectTrigger>
-              <SelectContent className="bg-white">
+              <SelectContent className="bg-white z-50">
                 {OPERATORS.map(op => (
                   <SelectItem key={op.value} value={op.value}>{op.label}</SelectItem>
                 ))}

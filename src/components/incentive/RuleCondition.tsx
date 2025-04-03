@@ -26,7 +26,7 @@ const RuleConditionComponent: React.FC<RuleConditionComponentProps> = ({
 }) => {
   const [inputType, setInputType] = useState<string>("text");
   
-  // Get field options from DB_FIELDS or use provided availableFields
+  // Get field options from availableFields or fallback to DB_FIELDS
   const getFieldOptions = () => {
     if (availableFields && availableFields.length > 0) {
       return availableFields;
@@ -39,10 +39,15 @@ const RuleConditionComponent: React.FC<RuleConditionComponentProps> = ({
   
   const fieldOptions = getFieldOptions();
 
+  console.log("RuleCondition - Available fields:", availableFields);
+  console.log("RuleCondition - KPI metadata:", kpiMetadata);
+  console.log("RuleCondition - Current condition:", condition);
+
   // Set input type based on field data type
   useEffect(() => {
     if (condition.field && kpiMetadata && kpiMetadata[condition.field]) {
       const dataType = kpiMetadata[condition.field].dataType;
+      console.log(`Setting input type for ${condition.field} with dataType ${dataType}`);
       
       // Determine input type based on the dataType
       switch(dataType?.toLowerCase()) {
@@ -78,10 +83,10 @@ const RuleConditionComponent: React.FC<RuleConditionComponentProps> = ({
         value={condition.field || ''}
         onValueChange={(value) => onUpdate('field', value)}
       >
-        <SelectTrigger className="w-36">
+        <SelectTrigger className="w-36 bg-white">
           <SelectValue placeholder="Select field" />
         </SelectTrigger>
-        <SelectContent className="bg-white">
+        <SelectContent className="bg-white z-50">
           {fieldOptions.length > 0 ? (
             fieldOptions.map(field => {
               // Get the display name from metadata if available
@@ -102,10 +107,10 @@ const RuleConditionComponent: React.FC<RuleConditionComponentProps> = ({
         value={condition.operator || '>'}
         onValueChange={(value) => onUpdate('operator', value)}
       >
-        <SelectTrigger className="w-24">
+        <SelectTrigger className="w-24 bg-white">
           <SelectValue placeholder="Operator" />
         </SelectTrigger>
-        <SelectContent className="bg-white">
+        <SelectContent className="bg-white z-50">
           {OPERATORS.map(op => (
             <SelectItem key={op.value} value={op.value}>{op.label}</SelectItem>
           ))}

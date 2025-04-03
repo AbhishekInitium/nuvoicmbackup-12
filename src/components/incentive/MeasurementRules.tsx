@@ -2,34 +2,38 @@
 import React from 'react';
 import { PlusCircle } from 'lucide-react';
 import ActionButton from '../ui-custom/ActionButton';
-import { MeasurementRules as MeasurementRulesType } from '@/types/incentiveTypes';
+import { MeasurementRules as MeasurementRulesType, IncentivePlan } from '@/types/incentiveTypes';
 import { useMeasurementRules } from '@/hooks/useMeasurementRules';
 import PrimaryMetricSelector from './PrimaryMetricSelector';
 import AdjustmentsList from './AdjustmentsList';
 import ExclusionsList from './ExclusionsList';
 import EmptyRulesState from './EmptyRulesState';
 import { getCurrencySymbol } from '@/utils/incentiveUtils';
-import { SchemeAdminConfig, KpiField } from '@/types/schemeAdminTypes';
+import { SchemeAdminConfig } from '@/types/schemeAdminTypes';
 
 interface MeasurementRulesProps {
-  measurementRules: MeasurementRulesType;
-  revenueBase: string;
-  currency: string;
-  updateMeasurementRules: (rules: MeasurementRulesType) => void;
+  plan: IncentivePlan;
+  updatePlan: (field: string, value: any) => void;
+  isReadOnly?: boolean;
   selectedScheme?: SchemeAdminConfig | null;
 }
 
 const MeasurementRules: React.FC<MeasurementRulesProps> = ({
-  measurementRules,
-  revenueBase,
-  currency,
-  updateMeasurementRules,
+  plan,
+  updatePlan,
+  isReadOnly = false,
   selectedScheme
 }) => {
+  const currency = plan.currency;
   const currencySymbol = getCurrencySymbol(currency);
+  
+  // Use the selected scheme from the plan if not directly provided
+  const schemeConfig = selectedScheme || plan.selectedSchemeConfig;
+
   const {
     rules,
     getDbFields,
+    getKpiMetadata,
     addPrimaryMetric,
     updatePrimaryMetric,
     removePrimaryMetric,
@@ -39,137 +43,96 @@ const MeasurementRules: React.FC<MeasurementRulesProps> = ({
     addExclusion,
     updateExclusion,
     removeExclusion
-  } = useMeasurementRules(measurementRules, revenueBase, updateMeasurementRules);
+  } = useMeasurementRules(
+    plan.measurementRules, 
+    plan.revenueBase, 
+    (updatedRules) => updatePlan('measurementRules', updatedRules),
+    schemeConfig
+  );
 
-  // Get fields from the selected scheme configuration if available
-  const getQualificationFields = () => {
-    if (!selectedScheme?.qualificationFields?.length) return getDbFields();
-    
-    // Extract KPI names from qualification fields
-    return selectedScheme.qualificationFields.map(field => field.kpi);
-  };
-
-  // Get KPI metadata as a lookup object for field properties
-  const getKpiMetadata = () => {
-    if (!selectedScheme) return {};
-    
-    // Create a dictionary of KPI metadata keyed by KPI name
-    const metadata: Record<string, KpiField> = {};
-    
-    // Include qualification fields in the metadata
-    if (selectedScheme.qualificationFields?.length) {
-      selectedScheme.qualificationFields.forEach(field => {
-        metadata[field.kpi] = field;
-      });
-    }
-    
-    // Include adjustment fields in the metadata
-    if (selectedScheme.adjustmentFields?.length) {
-      selectedScheme.adjustmentFields.forEach(field => {
-        metadata[field.kpi] = field;
-      });
-    }
-    
-    // Include exclusion fields in the metadata
-    if (selectedScheme.exclusionFields?.length) {
-      selectedScheme.exclusionFields.forEach(field => {
-        metadata[field.kpi] = field;
-      });
-    }
-    
-    // Include custom rule fields in the metadata
-    if (selectedScheme.customRules?.length) {
-      selectedScheme.customRules.forEach(field => {
-        metadata[field.kpi] = field;
-      });
-    }
-    
-    return metadata;
-  };
-
-  // Get fields for adjustments
-  const getAdjustmentFields = () => {
-    if (!selectedScheme?.adjustmentFields?.length) return getDbFields();
-    
-    // Use adjustment fields if available
-    return selectedScheme.adjustmentFields.map(field => field.kpi);
-  };
-
-  // Get fields for exclusions
-  const getExclusionFields = () => {
-    if (!selectedScheme?.exclusionFields?.length) return getDbFields();
-    
-    // Use exclusion fields if available
-    return selectedScheme.exclusionFields.map(field => field.kpi);
-  };
-
-  // Get full KPI metadata for all field types
+  // Debug logs
+  console.log("MeasurementRules Component - Plan:", plan);
+  console.log("MeasurementRules Component - Selected scheme:", schemeConfig);
+  
+  // Get fields for each category
+  const qualificationFields = getDbFields('qualification');
+  const adjustmentFields = getDbFields('adjustment');
+  const exclusionFields = getDbFields('exclusion');
   const kpiMetadata = getKpiMetadata();
 
   return (
-    <div className="space-y-8">
-      {/* Primary Metrics Section */}
-      <div>
-        <div className="flex justify-between items-center mb-4">
-          <label className="text-sm font-medium text-app-gray-700">
-            Qualifying Criteria
-          </label>
-          <ActionButton
-            variant="outline"
-            size="sm"
-            onClick={addPrimaryMetric}
-          >
-            <PlusCircle size={16} className="mr-1" /> Add Criteria
-          </ActionButton>
+    <SectionPanel title="3. Measurement Rules" defaultExpanded={true}>
+      <div className="space-y-8">
+        {/* Primary Metrics Section */}
+        <div>
+          <div className="flex justify-between items-center mb-4">
+            <label className="text-sm font-medium text-app-gray-700">
+              Qualifying Criteria
+            </label>
+            {!isReadOnly && (
+              <ActionButton
+                variant="outline"
+                size="sm"
+                onClick={addPrimaryMetric}
+              >
+                <PlusCircle size={16} className="mr-1" /> Add Criteria
+              </ActionButton>
+            )}
+          </div>
+
+          {rules.primaryMetrics.length === 0 ? (
+            <EmptyRulesState
+              message="No qualifying criteria defined"
+              description="Add criteria to determine when a transaction qualifies for incentive"
+              buttonText="Add Qualifying Criteria"
+              onAction={!isReadOnly ? addPrimaryMetric : undefined}
+            />
+          ) : (
+            <div className="space-y-4">
+              {rules.primaryMetrics.map((metric, index) => (
+                <PrimaryMetricSelector
+                  key={index}
+                  primaryMetrics={[metric]}
+                  dbFields={qualificationFields}
+                  currencySymbol={currencySymbol}
+                  kpiMetadata={kpiMetadata}
+                  onAddMetric={() => {}}
+                  onUpdateMetric={!isReadOnly ? (field, value) => updatePrimaryMetric(index, field, value) : () => {}}
+                  onRemoveMetric={!isReadOnly ? () => removePrimaryMetric(index) : () => {}}
+                />
+              ))}
+            </div>
+          )}
         </div>
 
-        {rules.primaryMetrics.length === 0 ? (
-          <EmptyRulesState
-            message="No qualifying criteria defined"
-            description="Add criteria to determine when a transaction qualifies for incentive"
-            buttonText="Add Qualifying Criteria"
-            onAction={addPrimaryMetric}
-          />
-        ) : (
-          <div className="space-y-4">
-            {rules.primaryMetrics.map((metric, index) => (
-              <PrimaryMetricSelector
-                key={index}
-                primaryMetrics={[metric]}
-                dbFields={getQualificationFields()}
-                currencySymbol={currencySymbol}
-                kpiMetadata={kpiMetadata}
-                onAddMetric={() => {}}
-                onUpdateMetric={(field, value) => updatePrimaryMetric(index, field, value)}
-                onRemoveMetric={() => removePrimaryMetric(index)}
-              />
-            ))}
-          </div>
-        )}
+        {/* Adjustments */}
+        <AdjustmentsList
+          adjustments={rules.adjustments}
+          dbFields={adjustmentFields}
+          kpiMetadata={kpiMetadata}
+          onUpdateAdjustment={!isReadOnly ? updateAdjustment : () => {}}
+          onRemoveAdjustment={!isReadOnly ? removeAdjustment : () => {}}
+          onAddAdjustment={!isReadOnly ? addAdjustment : undefined}
+          currencySymbol={currencySymbol}
+          isReadOnly={isReadOnly}
+        />
+
+        {/* Exclusions */}
+        <ExclusionsList
+          exclusions={rules.exclusions}
+          dbFields={exclusionFields}
+          kpiMetadata={kpiMetadata}
+          onUpdateExclusion={!isReadOnly ? updateExclusion : () => {}}
+          onRemoveExclusion={!isReadOnly ? removeExclusion : () => {}}
+          onAddExclusion={!isReadOnly ? addExclusion : undefined}
+          isReadOnly={isReadOnly}
+        />
       </div>
-
-      {/* Adjustments */}
-      <AdjustmentsList
-        adjustments={rules.adjustments}
-        dbFields={getAdjustmentFields()}
-        kpiMetadata={kpiMetadata}
-        onUpdateAdjustment={updateAdjustment}
-        onRemoveAdjustment={removeAdjustment}
-        onAddAdjustment={addAdjustment}
-        currencySymbol={currencySymbol}
-      />
-
-      {/* Exclusions */}
-      <ExclusionsList
-        exclusions={rules.exclusions}
-        dbFields={getExclusionFields()}
-        kpiMetadata={kpiMetadata}
-        onUpdateExclusion={updateExclusion}
-        onRemoveExclusion={removeExclusion}
-        onAddExclusion={addExclusion}
-      />
-    </div>
+    </SectionPanel>
   );
 };
+
+// Import SectionPanel for the component
+import SectionPanel from '../ui-custom/SectionPanel';
 
 export default MeasurementRules;

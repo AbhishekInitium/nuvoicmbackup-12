@@ -1,9 +1,9 @@
-
 import React, { useState, useEffect } from 'react';
 import { useS4HanaData } from '@/hooks/useS4HanaData';
 import { IncentivePlan, PlanMetadata } from '@/types/incentiveTypes';
 import { useIncentivePlan } from '@/hooks/useIncentivePlan';
 import { IncentiveStatus } from '@/services/incentive/types/incentiveServiceTypes';
+import { SchemeAdminConfig } from '@/types/schemeAdminTypes';
 
 // Import refactored components
 import IncentiveDesignerHeader from './incentive/IncentiveDesignerHeader';
@@ -47,18 +47,17 @@ const IncentivePlanDesigner: React.FC<IncentivePlanDesignerProps> = ({
   const [versionNumber, setVersionNumber] = useState<number>(1);
   const [documentId, setDocumentId] = useState<string>('');
   const [showVersionHistory, setShowVersionHistory] = useState(false);
+  const [selectedSchemeConfig, setSelectedSchemeConfig] = useState<SchemeAdminConfig | null>(null);
   
   useEffect(() => {
     if (initialPlan) {
-      // Set the scheme ID from the initial plan
       setSchemeId(initialPlan.schemeId || generateTimestampId());
-      
-      // Set the version number for editing (current version + 1) or new (1)
       setVersionNumber(isEditMode ? (initialPlan.metadata?.version || 0) + 1 : 1);
-      
-      // Store the MongoDB document ID if available
       if (initialPlan._id) {
         setDocumentId(initialPlan._id);
+      }
+      if (initialPlan.selectedSchemeConfig) {
+        setSelectedSchemeConfig(initialPlan.selectedSchemeConfig);
       }
     } else {
       setSchemeId(generateTimestampId());
@@ -72,6 +71,19 @@ const IncentivePlanDesigner: React.FC<IncentivePlanDesignerProps> = ({
     createNewScheme,
     copyExistingScheme
   } = useIncentivePlan(initialPlan, undefined, refetchPlans);
+
+  useEffect(() => {
+    if (plan?.selectedSchemeConfig) {
+      setSelectedSchemeConfig(plan.selectedSchemeConfig);
+    }
+  }, [plan]);
+
+  const handleUpdatePlan = (field: string, value: any) => {
+    if (field === 'selectedSchemeConfig') {
+      setSelectedSchemeConfig(value);
+    }
+    updatePlan(field, value);
+  };
 
   useEffect(() => {
     refetchPlans();
@@ -95,28 +107,23 @@ const IncentivePlanDesigner: React.FC<IncentivePlanDesignerProps> = ({
   });
 
   const handleEditVersion = (selectedVersion: IncentivePlan) => {
-    // When a specific version is selected for editing, load it and create a new version
-    // Keep the schemeId but increment the version
     setSchemeId(selectedVersion.schemeId);
     setVersionNumber((selectedVersion.metadata?.version || 0) + 1);
-    
-    // Set status from metadata or default to 'DRAFT'
     const status = (selectedVersion.metadata?.status || 'DRAFT') as IncentiveStatus;
-    
-    // Copy all data from the selected version
     copyExistingScheme({
       ...selectedVersion,
-      name: selectedVersion.name, // Keep original name (no "Copy of" prefix)
-      status: status, // Add this top-level status property required by IncentivePlanWithStatus
+      name: selectedVersion.name,
+      status: status,
       metadata: {
-        createdAt: selectedVersion.metadata?.createdAt || new Date().toISOString(), // Ensure createdAt is not optional
+        createdAt: selectedVersion.metadata?.createdAt || new Date().toISOString(),
         updatedAt: new Date().toISOString(),
-        version: (selectedVersion.metadata?.version || 0) + 1, // New version number
-        status: selectedVersion.metadata?.status || 'DRAFT' // Ensure status is not optional
+        version: (selectedVersion.metadata?.version || 0) + 1,
+        status: selectedVersion.metadata?.status || 'DRAFT'
       }
     });
-    
-    // Return to the editing view
+    if (selectedVersion.selectedSchemeConfig) {
+      setSelectedSchemeConfig(selectedVersion.selectedSchemeConfig);
+    }
     setShowVersionHistory(false);
   };
 
@@ -124,7 +131,6 @@ const IncentivePlanDesigner: React.FC<IncentivePlanDesignerProps> = ({
     return <div className="flex justify-center items-center h-screen">Loading plans...</div>;
   }
 
-  // Show version history view when requested
   if (showVersionHistory && schemeId) {
     return (
       <div className="py-12 sm:py-16 px-4 md:px-8 max-w-4xl mx-auto">
@@ -152,7 +158,6 @@ const IncentivePlanDesigner: React.FC<IncentivePlanDesignerProps> = ({
             hideSchemeButtons={isReadOnly}
           />
           
-          {/* Version history button - only show for existing schemes */}
           {isEditMode && schemeId && !isReadOnly && (
             <Button 
               variant="outline" 
@@ -186,7 +191,7 @@ const IncentivePlanDesigner: React.FC<IncentivePlanDesignerProps> = ({
         
         <SchemeStructureSection 
           plan={plan}
-          updatePlan={updatePlan}
+          updatePlan={handleUpdatePlan}
           isReadOnly={isReadOnly}
         />
         
@@ -194,6 +199,7 @@ const IncentivePlanDesigner: React.FC<IncentivePlanDesignerProps> = ({
           plan={plan}
           updatePlan={updatePlan}
           isReadOnly={isReadOnly}
+          selectedScheme={selectedSchemeConfig}
         />
         
         <CreditDistributionSection 

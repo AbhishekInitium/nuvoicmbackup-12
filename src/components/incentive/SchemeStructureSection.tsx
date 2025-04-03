@@ -4,10 +4,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import SectionPanel from '../ui-custom/SectionPanel';
-import { getSchemeAdminConfigs } from '@/services/database/mongoDBService';
+import { getSchemeAdminConfigs, getSchemeAdminConfig } from '@/services/database/mongoDBService';
 import { SchemeAdminConfig } from '@/types/schemeAdminTypes';
 import { IncentivePlan } from '@/types/incentiveTypes';
-import { Calculator } from 'lucide-react';
+import { Calculator, Loader2 } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 interface SchemeStructureSectionProps {
   plan: IncentivePlan;
@@ -24,6 +25,7 @@ const SchemeStructureSection: React.FC<SchemeStructureSectionProps> = ({
   const [selectedConfig, setSelectedConfig] = useState<SchemeAdminConfig | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [calculationField, setCalculationField] = useState(plan.calculationField || "");
+  const { toast } = useToast();
 
   useEffect(() => {
     fetchConfigurations();
@@ -34,6 +36,7 @@ const SchemeStructureSection: React.FC<SchemeStructureSectionProps> = ({
     try {
       const adminConfigs = await getSchemeAdminConfigs();
       setConfigs(adminConfigs);
+      console.log("Fetched scheme configs:", adminConfigs);
       
       // If we have a revenue base set in the plan, find the matching config
       if (plan.revenueBase && adminConfigs.length > 0) {
@@ -42,10 +45,40 @@ const SchemeStructureSection: React.FC<SchemeStructureSectionProps> = ({
         );
         if (matchingConfig) {
           setSelectedConfig(matchingConfig);
+          console.log("Found matching config based on revenue base:", matchingConfig);
+          // Load the full config details to make sure we have all the KPIs
+          loadFullConfig(matchingConfig._id || '');
         }
       }
     } catch (error) {
       console.error("Failed to fetch scheme configurations:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load scheme configurations",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const loadFullConfig = async (configId: string) => {
+    try {
+      setIsLoading(true);
+      const fullConfig = await getSchemeAdminConfig(configId);
+      console.log("Loaded full config details:", fullConfig);
+      setSelectedConfig(fullConfig);
+      
+      // Update the parent plan with this scheme config
+      updatePlan('selectedSchemeConfig', fullConfig);
+      updatePlan('revenueBase', fullConfig.calculationBase);
+    } catch (error) {
+      console.error("Failed to load full scheme configuration:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load scheme configuration details",
+        variant: "destructive"
+      });
     } finally {
       setIsLoading(false);
     }
@@ -54,9 +87,8 @@ const SchemeStructureSection: React.FC<SchemeStructureSectionProps> = ({
   const handleConfigChange = (configId: string) => {
     const config = configs.find(c => c._id === configId);
     if (config) {
-      setSelectedConfig(config);
-      // Update the revenue base in the plan based on the selected config
-      updatePlan('revenueBase', config.calculationBase);
+      // Load the full config with all KPI details
+      loadFullConfig(configId);
     }
   };
 
@@ -77,21 +109,30 @@ const SchemeStructureSection: React.FC<SchemeStructureSectionProps> = ({
             <Select
               value={selectedConfig?._id}
               onValueChange={handleConfigChange}
-              disabled={isReadOnly || isLoading}
+              disabled={isReadOnly || isLoading || !!selectedConfig}
             >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select a configuration" />
+              <SelectTrigger className="w-full bg-white">
+                <SelectValue placeholder={isLoading ? "Loading..." : "Select a configuration"} />
               </SelectTrigger>
-              <SelectContent>
-                {configs.map(config => (
-                  <SelectItem key={config._id} value={config._id || ''}>
-                    {config.adminName} ({config.calculationBase})
-                  </SelectItem>
-                ))}
+              <SelectContent className="bg-white">
+                {isLoading ? (
+                  <div className="flex items-center justify-center p-2">
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Loading...
+                  </div>
+                ) : (
+                  configs.map(config => (
+                    <SelectItem key={config._id} value={config._id || ''}>
+                      {config.adminName} ({config.calculationBase})
+                    </SelectItem>
+                  ))
+                )}
               </SelectContent>
             </Select>
             <p className="mt-1 text-xs text-app-gray-500">
-              Select the KPI configuration for this scheme
+              {selectedConfig 
+                ? "Configuration selected - cannot be changed" 
+                : "Select the KPI configuration for this scheme (can only be set once)"}
             </p>
           </div>
 
@@ -108,7 +149,7 @@ const SchemeStructureSection: React.FC<SchemeStructureSectionProps> = ({
           </div>
         </div>
 
-        {/* Added new Calculation Field */}
+        {/* Calculation Field */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <Label className="text-sm font-medium text-app-gray-700 mb-2 flex items-center">

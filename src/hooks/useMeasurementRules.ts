@@ -1,15 +1,14 @@
-
 import { useState, useEffect } from 'react';
 import { DB_FIELDS } from '@/constants/incentiveConstants';
 import { MeasurementRules, Adjustment, Exclusion, PrimaryMetric } from '@/types/incentiveTypes';
 import { v4 as uuidv4 } from 'uuid';
-import { KpiField } from '@/types/schemeAdminTypes';
+import { KpiField, SchemeAdminConfig } from '@/types/schemeAdminTypes';
 
 export const useMeasurementRules = (
   initialRules: MeasurementRules | null | undefined,
   revenueBase: string,
   onUpdateRules: (rules: MeasurementRules) => void,
-  selectedScheme?: any // Accept selected scheme data
+  selectedScheme?: SchemeAdminConfig | null
 ) => {
   // Create a default rules object if initialRules is null or undefined
   const defaultRules: MeasurementRules = {
@@ -33,6 +32,11 @@ export const useMeasurementRules = (
 
   const [rules, setRules] = useState<MeasurementRules>(normalizedInitialRules);
 
+  // Debug log the selected scheme
+  useEffect(() => {
+    console.log("useMeasurementRules - Selected scheme:", selectedScheme);
+  }, [selectedScheme]);
+
   // Update rules if initialRules changes
   useEffect(() => {
     // Re-normalize rules when initialRules changes
@@ -54,7 +58,10 @@ export const useMeasurementRules = (
 
   // Helper function to get KPI fields from selected scheme based on category
   const getKpiFieldsByCategory = (category: 'qualification' | 'adjustment' | 'exclusion' | 'custom'): string[] => {
-    if (!selectedScheme) return [];
+    if (!selectedScheme) {
+      console.log(`No selected scheme for category ${category}`);
+      return [];
+    }
     
     let fields: KpiField[] = [];
     
@@ -73,6 +80,7 @@ export const useMeasurementRules = (
         break;
     }
     
+    console.log(`Fields for category ${category}:`, fields);
     return fields.map(field => field.kpi);
   };
 
@@ -83,12 +91,29 @@ export const useMeasurementRules = (
     const metadata: Record<string, KpiField> = {};
     
     // Add all KPIs from all categories
-    ['qualificationFields', 'adjustmentFields', 'exclusionFields', 'customRules'].forEach(categoryField => {
-      const fields = selectedScheme[categoryField] || [];
-      fields.forEach((field: KpiField) => {
+    if (selectedScheme.qualificationFields?.length) {
+      selectedScheme.qualificationFields.forEach((field: KpiField) => {
         metadata[field.kpi] = field;
       });
-    });
+    }
+    
+    if (selectedScheme.adjustmentFields?.length) {
+      selectedScheme.adjustmentFields.forEach((field: KpiField) => {
+        metadata[field.kpi] = field;
+      });
+    }
+    
+    if (selectedScheme.exclusionFields?.length) {
+      selectedScheme.exclusionFields.forEach((field: KpiField) => {
+        metadata[field.kpi] = field;
+      });
+    }
+    
+    if (selectedScheme.customRules?.length) {
+      selectedScheme.customRules.forEach((field: KpiField) => {
+        metadata[field.kpi] = field;
+      });
+    }
     
     return metadata;
   };
@@ -98,17 +123,15 @@ export const useMeasurementRules = (
     // If we have a selected scheme and category, use the appropriate fields from it
     if (selectedScheme && category) {
       const fields = getKpiFieldsByCategory(category);
-      
-      // Debug logs
-      console.log(`Fields for ${category}:`, fields);
-      console.log(`KPI Metadata:`, getKpiMetadata());
-      
+      console.log(`getDbFields for ${category}:`, fields);
       return fields;
     }
     
     // Fallback to using constant DB fields
     const fields = DB_FIELDS[revenueBase as keyof typeof DB_FIELDS] || [];
-    return fields.map(field => field.value);
+    const fieldValues = fields.map(field => field.value);
+    console.log(`Fallback fields for ${revenueBase}:`, fieldValues);
+    return fieldValues;
   };
 
   // Primary Metric handlers
@@ -154,7 +177,6 @@ export const useMeasurementRules = (
   };
 
   const removePrimaryMetric = (index: number) => {
-    // Allow removing even if it's the last one
     const newMetrics = [...rules.primaryMetrics];
     newMetrics.splice(index, 1);
     
