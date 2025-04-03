@@ -30,17 +30,13 @@ const TierRow: React.FC<TierRowProps> = ({
               const value = e.target.value.replace(/[^0-9]/g, '');
               updateTier(index, 'from', value ? parseInt(value) : 0);
             }}
+            disabled={index > 0} // First tier's "from" can be edited, others are derived
             placeholder="Enter amount"
           />
           <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
             <span className="text-app-gray-400">{currencySymbol}</span>
           </div>
         </div>
-        {index > 0 && (
-          <p className="text-xs text-app-gray-500 mt-1">
-            Default: Previous tier's "To" value
-          </p>
-        )}
       </td>
       <td className="px-6 py-4 whitespace-nowrap">
         <div className="relative">
@@ -58,11 +54,6 @@ const TierRow: React.FC<TierRowProps> = ({
             <span className="text-app-gray-400">{currencySymbol}</span>
           </div>
         </div>
-        {(
-          <p className="text-xs text-app-gray-500 mt-1">
-            Default: "From" value + 100
-          </p>
-        )}
       </td>
       <td className="px-6 py-4 whitespace-nowrap">
         <div className="relative">

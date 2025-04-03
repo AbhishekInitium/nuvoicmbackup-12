@@ -3,11 +3,11 @@ import React from 'react';
 import { PlusCircle } from 'lucide-react';
 import ActionButton from '../ui-custom/ActionButton';
 
-interface EmptyRulesStateProps {
+export interface EmptyRulesStateProps {
   message: string;
   description: string;
   buttonText: string;
-  onAction?: () => void;
+  onAction: () => void;
 }
 
 const EmptyRulesState: React.FC<EmptyRulesStateProps> = ({
@@ -16,32 +16,17 @@ const EmptyRulesState: React.FC<EmptyRulesStateProps> = ({
   buttonText,
   onAction
 }) => {
-  const handleAction = () => {
-    console.log("EmptyRulesState - Action button clicked");
-    if (typeof onAction === 'function') {
-      onAction();
-    }
-  };
-
   return (
-    <div className="border border-dashed border-gray-300 rounded-lg p-8 text-center">
-      <div className="space-y-3">
-        <p className="text-lg font-medium text-gray-700">{message}</p>
-        <p className="text-gray-500">{description}</p>
-        
-        {onAction && (
-          <div className="mt-4">
-            <ActionButton 
-              variant="outline" 
-              size="md" 
-              onClick={handleAction}
-              type="button"
-            >
-              <PlusCircle className="mr-1 h-4 w-4" /> {buttonText}
-            </ActionButton>
-          </div>
-        )}
-      </div>
+    <div className="flex flex-col items-center justify-center py-12 px-4 border-2 border-dashed border-app-gray-200 rounded-lg">
+      <h3 className="text-lg font-medium text-app-gray-700 mb-2">{message}</h3>
+      <p className="text-sm text-app-gray-500 text-center max-w-md mb-6">{description}</p>
+      <ActionButton
+        variant="outline"
+        size="sm"
+        onClick={onAction}
+      >
+        <PlusCircle size={16} className="mr-1" /> {buttonText}
+      </ActionButton>
     </div>
   );
 };

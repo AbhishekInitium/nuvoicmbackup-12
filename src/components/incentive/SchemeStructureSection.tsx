@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
@@ -121,7 +120,7 @@ const SchemeStructureSection: React.FC<SchemeStructureSectionProps> = ({
                   </div>
                 ) : (
                   configs.map(config => (
-                    <SelectItem key={config._id} value={config._id || 'default-config-id'}>
+                    <SelectItem key={config._id} value={config._id || ''}>
                       {config.adminName} ({config.calculationBase})
                     </SelectItem>
                   ))

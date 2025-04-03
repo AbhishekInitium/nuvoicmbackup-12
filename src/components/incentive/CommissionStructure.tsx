@@ -12,14 +12,12 @@ interface CommissionStructureProps {
   tiers: Tier[];
   currency: string;
   updateCommissionStructure: (tiers: Tier[]) => void;
-  isReadOnly?: boolean;
 }
 
 const CommissionStructure: React.FC<CommissionStructureProps> = ({ 
   tiers, 
   currency,
-  updateCommissionStructure,
-  isReadOnly = false
+  updateCommissionStructure 
 }) => {
   const currencySymbol = getCurrencySymbol(currency);
   const { tiers: tierState, addTier, removeTier, updateTier } = useCommissionTiers(
@@ -32,15 +30,13 @@ const CommissionStructure: React.FC<CommissionStructureProps> = ({
       <div>
         <div className="flex justify-between items-center mb-4">
           <label className="text-sm font-medium text-app-gray-700">Tiered Commission Structure</label>
-          {!isReadOnly && (
-            <ActionButton 
-              variant="outline"
-              size="sm"
-              onClick={addTier}
-            >
-              <PlusCircle size={16} className="mr-1" /> Add Tier
-            </ActionButton>
-          )}
+          <ActionButton 
+            variant="outline"
+            size="sm"
+            onClick={addTier}
+          >
+            <PlusCircle size={16} className="mr-1" /> Add Tier
+          </ActionButton>
         </div>
         
         {tierState.length === 0 ? (

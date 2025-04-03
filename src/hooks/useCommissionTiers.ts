@@ -20,13 +20,9 @@ export const useCommissionTiers = (
 
   // Add new tier with empty/default values
   const addTier = () => {
-    // Set default values based on the last tier's "to" value if it exists
-    const lastTier = tiers.length > 0 ? tiers[tiers.length - 1] : null;
-    const defaultFrom = lastTier ? lastTier.to : 0;
-    
     const newTier: Tier = {
-      from: defaultFrom,
-      to: defaultFrom + 100,  // Default to 100 more than the "from" value
+      from: 0,
+      to: 0,
       rate: 0,
       description: ''
     };
@@ -34,6 +30,8 @@ export const useCommissionTiers = (
     const newTiers = [...tiers, newTier];
     setTiers(newTiers);
     onUpdateCommissionStructure({ tiers: newTiers });
+    
+    // Toast notification removed
   };
 
   // Remove tier

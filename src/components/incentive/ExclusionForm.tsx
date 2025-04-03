@@ -126,11 +126,11 @@ const ExclusionForm: React.FC<ExclusionFormProps> = ({
                       ? kpiMetadata[field].description || field 
                       : field;
                     return (
-                      <SelectItem key={field} value={field || "default-field"}>{displayName}</SelectItem>
+                      <SelectItem key={field} value={field}>{displayName}</SelectItem>
                     );
                   })
                 ) : (
-                  <SelectItem value="no-fields-available">No fields available</SelectItem>
+                  <SelectItem value="no-fields" disabled>No fields available</SelectItem>
                 )}
               </SelectContent>
             </Select>
@@ -154,7 +154,7 @@ const ExclusionForm: React.FC<ExclusionFormProps> = ({
               </SelectTrigger>
               <SelectContent className="bg-white">
                 {operators.map(op => (
-                  <SelectItem key={op.value} value={op.value || "default-operator"}>{op.label}</SelectItem>
+                  <SelectItem key={op.value} value={op.value}>{op.label}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
