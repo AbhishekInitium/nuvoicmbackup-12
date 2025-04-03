@@ -10,7 +10,7 @@ interface RevenueBaseSelectorProps {
   schemeConfigs?: SchemeAdminConfig[];
   onSchemeSelect?: (schemeId: string) => void;
   isLoading?: boolean;
-  disabled?: boolean;
+  isReadOnly?: boolean;
 }
 
 const RevenueBaseSelector: React.FC<RevenueBaseSelectorProps> = ({ 
@@ -19,7 +19,7 @@ const RevenueBaseSelector: React.FC<RevenueBaseSelectorProps> = ({
   schemeConfigs = [],
   onSchemeSelect,
   isLoading = false,
-  disabled = false
+  isReadOnly = false
 }) => {
   return (
     <div className="space-y-4">
@@ -31,32 +31,38 @@ const RevenueBaseSelector: React.FC<RevenueBaseSelectorProps> = ({
           <label className="text-sm text-app-gray-500 mb-2 block">
             Select from saved scheme configurations:
           </label>
-          <Select 
-            onValueChange={(schemeId) => onSchemeSelect && onSchemeSelect(schemeId)}
-            disabled={isLoading}
-          >
-            <SelectTrigger className="w-full bg-white">
-              <SelectValue placeholder="Choose a scheme configuration" />
-            </SelectTrigger>
-            <SelectContent>
-              {isLoading ? (
-                <div className="flex items-center justify-center py-2">
-                  <Loader2 className="w-4 h-4 animate-spin mr-2" /> 
-                  Loading configurations...
-                </div>
-              ) : schemeConfigs.length === 0 ? (
-                <div className="px-2 py-2 text-sm text-app-gray-500">
-                  No scheme configurations available
-                </div>
-              ) : (
-                schemeConfigs.map((config) => (
-                  <SelectItem key={config._id} value={config._id || ''}>
-                    {config.adminName} - {config.calculationBase}
-                  </SelectItem>
-                ))
-              )}
-            </SelectContent>
-          </Select>
+          {isReadOnly ? (
+            <div className="h-10 px-4 py-2 rounded-md border border-gray-300 bg-gray-50 text-gray-700">
+              {revenueBase || "None selected"}
+            </div>
+          ) : (
+            <Select 
+              onValueChange={(schemeId) => onSchemeSelect && onSchemeSelect(schemeId)}
+              disabled={isLoading}
+            >
+              <SelectTrigger className="w-full bg-white">
+                <SelectValue placeholder="Choose a scheme configuration" />
+              </SelectTrigger>
+              <SelectContent>
+                {isLoading ? (
+                  <div className="flex items-center justify-center py-2">
+                    <Loader2 className="w-4 h-4 animate-spin mr-2" /> 
+                    Loading configurations...
+                  </div>
+                ) : schemeConfigs.length === 0 ? (
+                  <div className="px-2 py-2 text-sm text-app-gray-500">
+                    No scheme configurations available
+                  </div>
+                ) : (
+                  schemeConfigs.map((config) => (
+                    <SelectItem key={config._id} value={config._id || ''}>
+                      {config.adminName} - {config.calculationBase}
+                    </SelectItem>
+                  ))
+                )}
+              </SelectContent>
+            </Select>
+          )}
         </div>
 
         {/* Current Revenue Base Display */}

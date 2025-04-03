@@ -91,7 +91,7 @@ const SchemeStructureSection: React.FC<SchemeStructureSectionProps> = ({
               <Select 
                 value={selectedConfig?._id || ""} 
                 onValueChange={handleConfigChange}
-                disabled={isLoading || isReadOnly}
+                disabled={isLoading}
               >
                 <SelectTrigger id="configSelect">
                   <SelectValue placeholder="Select scheme configuration" />

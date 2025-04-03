@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useS4HanaData } from '@/hooks/useS4HanaData';
 import { IncentivePlan, PlanMetadata } from '@/types/incentiveTypes';
@@ -225,6 +224,7 @@ const IncentivePlanDesigner: React.FC<IncentivePlanDesignerProps> = ({
             currency={plan.currency}
             updateCommissionStructure={(tiers) => updatePlan('commissionStructure', { tiers })}
             isReadOnly={isReadOnly}
+            hasConfigSelected={!!selectedSchemeConfig}
           />
         </div>
         
