@@ -1,11 +1,11 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Trash2 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Adjustment } from '@/types/incentiveTypes';
 import GlassCard from '../ui-custom/GlassCard';
-import { OPERATORS } from '@/constants/incentiveConstants';
+import { getOperatorsByDataType } from '@/constants/operatorConstants';
 import { KpiField } from '@/types/schemeAdminTypes';
 
 interface AdjustmentFormProps {
@@ -29,12 +29,14 @@ const AdjustmentForm: React.FC<AdjustmentFormProps> = ({
   onRemoveAdjustment,
   isReadOnly = false
 }) => {
+  const [dataType, setDataType] = useState<string | undefined>(undefined);
+
   // Determine input type based on field data type
   const getInputType = (): string => {
     if (adjustment.field && kpiMetadata && kpiMetadata[adjustment.field]) {
-      const dataType = kpiMetadata[adjustment.field].dataType;
+      const fieldDataType = kpiMetadata[adjustment.field].dataType;
       
-      switch(dataType?.toLowerCase()) {
+      switch(fieldDataType?.toLowerCase()) {
         case 'number':
         case 'decimal':
         case 'integer':
@@ -59,7 +61,17 @@ const AdjustmentForm: React.FC<AdjustmentFormProps> = ({
     return 'text';
   };
 
+  // Update data type when field changes
+  useEffect(() => {
+    if (adjustment.field && kpiMetadata && kpiMetadata[adjustment.field]) {
+      setDataType(kpiMetadata[adjustment.field].dataType);
+    }
+  }, [adjustment.field, kpiMetadata]);
+
   const inputType = getInputType();
+  
+  // Get operators based on data type
+  const operators = getOperatorsByDataType(dataType);
 
   return (
     <GlassCard className="p-4">
@@ -129,7 +141,7 @@ const AdjustmentForm: React.FC<AdjustmentFormProps> = ({
                 <SelectValue placeholder="Operator" />
               </SelectTrigger>
               <SelectContent className="bg-white">
-                {OPERATORS.map(op => (
+                {operators.map(op => (
                   <SelectItem key={op.value} value={op.value}>{op.label}</SelectItem>
                 ))}
               </SelectContent>

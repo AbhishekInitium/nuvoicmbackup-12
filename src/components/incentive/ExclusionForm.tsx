@@ -1,11 +1,11 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Trash2 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Exclusion } from '@/types/incentiveTypes';
 import GlassCard from '../ui-custom/GlassCard';
-import { OPERATORS } from '@/constants/incentiveConstants';
+import { getOperatorsByDataType } from '@/constants/operatorConstants';
 import { KpiField } from '@/types/schemeAdminTypes';
 
 interface ExclusionFormProps {
@@ -27,12 +27,21 @@ const ExclusionForm: React.FC<ExclusionFormProps> = ({
   onRemoveExclusion,
   isReadOnly = false
 }) => {
+  const [dataType, setDataType] = useState<string | undefined>(undefined);
+
+  // Update data type when field changes
+  useEffect(() => {
+    if (exclusion.field && kpiMetadata && kpiMetadata[exclusion.field]) {
+      setDataType(kpiMetadata[exclusion.field].dataType);
+    }
+  }, [exclusion.field, kpiMetadata]);
+
   // Determine input type based on field data type
   const getInputType = (): string => {
     if (exclusion.field && kpiMetadata && kpiMetadata[exclusion.field]) {
-      const dataType = kpiMetadata[exclusion.field].dataType;
+      const fieldDataType = kpiMetadata[exclusion.field].dataType;
       
-      switch(dataType?.toLowerCase()) {
+      switch(fieldDataType?.toLowerCase()) {
         case 'number':
         case 'decimal':
         case 'integer':
@@ -59,9 +68,14 @@ const ExclusionForm: React.FC<ExclusionFormProps> = ({
 
   const inputType = getInputType();
   
+  // Get operators based on data type
+  const operators = getOperatorsByDataType(dataType);
+  
   // Add logging to debug available fields
   console.log(`Exclusion Form #${exclusionIndex} - Available fields:`, dbFields);
   console.log(`Exclusion Form #${exclusionIndex} - KPI Metadata:`, kpiMetadata);
+  console.log(`Exclusion Form #${exclusionIndex} - Data Type:`, dataType);
+  console.log(`Exclusion Form #${exclusionIndex} - Available operators:`, operators);
 
   return (
     <GlassCard className="p-4">
@@ -135,7 +149,7 @@ const ExclusionForm: React.FC<ExclusionFormProps> = ({
                 <SelectValue placeholder="Operator" />
               </SelectTrigger>
               <SelectContent className="bg-white">
-                {OPERATORS.map(op => (
+                {operators.map(op => (
                   <SelectItem key={op.value} value={op.value}>{op.label}</SelectItem>
                 ))}
               </SelectContent>
