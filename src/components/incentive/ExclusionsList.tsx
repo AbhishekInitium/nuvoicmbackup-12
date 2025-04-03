@@ -14,6 +14,7 @@ interface ExclusionsListProps {
   onUpdateExclusion: (index: number, field: keyof Exclusion, value: string | number) => void;
   onRemoveExclusion: (index: number) => void;
   onAddExclusion: () => void;
+  isReadOnly?: boolean;
 }
 
 const ExclusionsList: React.FC<ExclusionsListProps> = ({
@@ -22,19 +23,22 @@ const ExclusionsList: React.FC<ExclusionsListProps> = ({
   kpiMetadata,
   onUpdateExclusion,
   onRemoveExclusion,
-  onAddExclusion
+  onAddExclusion,
+  isReadOnly = false
 }) => {
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <h3 className="text-sm font-medium text-app-gray-700">Exclusion Rules</h3>
-        <ActionButton
-          variant="outline"
-          size="sm"
-          onClick={onAddExclusion}
-        >
-          <PlusCircle size={16} className="mr-1" /> Add Exclusion
-        </ActionButton>
+        {!isReadOnly && (
+          <ActionButton
+            variant="outline"
+            size="sm"
+            onClick={onAddExclusion}
+          >
+            <PlusCircle size={16} className="mr-1" /> Add Exclusion
+          </ActionButton>
+        )}
       </div>
       
       {exclusions.length === 0 ? (
@@ -42,7 +46,7 @@ const ExclusionsList: React.FC<ExclusionsListProps> = ({
           message="No exclusion rules defined"
           description="Add exclusions to prevent certain transactions from qualifying"
           buttonText="Add Exclusion"
-          onAction={onAddExclusion}
+          onAction={!isReadOnly ? onAddExclusion : undefined}
         />
       ) : (
         <div className="space-y-4">
@@ -55,6 +59,7 @@ const ExclusionsList: React.FC<ExclusionsListProps> = ({
               kpiMetadata={kpiMetadata}
               onUpdateExclusion={onUpdateExclusion}
               onRemoveExclusion={onRemoveExclusion}
+              isReadOnly={isReadOnly}
             />
           ))}
         </div>

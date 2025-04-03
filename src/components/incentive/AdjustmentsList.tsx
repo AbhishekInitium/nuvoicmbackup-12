@@ -15,6 +15,7 @@ interface AdjustmentsListProps {
   onRemoveAdjustment: (index: number) => void;
   onAddAdjustment: () => void;
   currencySymbol: string;
+  isReadOnly?: boolean;
 }
 
 const AdjustmentsList: React.FC<AdjustmentsListProps> = ({
@@ -24,19 +25,22 @@ const AdjustmentsList: React.FC<AdjustmentsListProps> = ({
   onUpdateAdjustment,
   onRemoveAdjustment,
   onAddAdjustment,
-  currencySymbol
+  currencySymbol,
+  isReadOnly = false
 }) => {
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <h3 className="text-sm font-medium text-app-gray-700">Adjustment Rules</h3>
-        <ActionButton
-          variant="outline"
-          size="sm"
-          onClick={onAddAdjustment}
-        >
-          <PlusCircle size={16} className="mr-1" /> Add Adjustment
-        </ActionButton>
+        {!isReadOnly && (
+          <ActionButton
+            variant="outline"
+            size="sm"
+            onClick={onAddAdjustment}
+          >
+            <PlusCircle size={16} className="mr-1" /> Add Adjustment
+          </ActionButton>
+        )}
       </div>
       
       {adjustments.length === 0 ? (
@@ -44,7 +48,7 @@ const AdjustmentsList: React.FC<AdjustmentsListProps> = ({
           message="No adjustment rules defined"
           description="Add adjustments to modify base commission values"
           buttonText="Add Adjustment"
-          onAction={onAddAdjustment}
+          onAction={!isReadOnly ? onAddAdjustment : undefined}
         />
       ) : (
         <div className="space-y-4">
@@ -58,6 +62,7 @@ const AdjustmentsList: React.FC<AdjustmentsListProps> = ({
               currencySymbol={currencySymbol}
               onUpdateAdjustment={onUpdateAdjustment}
               onRemoveAdjustment={onRemoveAdjustment}
+              isReadOnly={isReadOnly}
             />
           ))}
         </div>

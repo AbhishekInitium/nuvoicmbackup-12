@@ -10,7 +10,8 @@ import IncentiveDesignerHeader from './incentive/IncentiveDesignerHeader';
 import DesignerActionButtons from './incentive/DesignerActionButtons';
 import SectionPanel from './ui-custom/SectionPanel';
 import BasicInformation from './incentive/BasicInformation';
-import SchemeStructureSections from './incentive/SchemeStructureSections';
+import SchemeStructureSection from './incentive/SchemeStructureSection';
+import MeasurementRules from './incentive/MeasurementRules';
 import PayoutStructureSection from './incentive/PayoutStructureSection';
 import CreditDistributionSection from './incentive/CreditDistributionSection';
 import SavePlanButton from './incentive/SavePlanButton';
@@ -24,12 +25,14 @@ import { History } from 'lucide-react';
 interface IncentivePlanDesignerProps {
   initialPlan?: IncentivePlan | null;
   isEditMode?: boolean;
+  isReadOnly?: boolean;
   onBack?: () => void;
 }
 
 const IncentivePlanDesigner: React.FC<IncentivePlanDesignerProps> = ({ 
   initialPlan = null,
   isEditMode = false,
+  isReadOnly = false,
   onBack
 }) => {
   const { 
@@ -146,11 +149,11 @@ const IncentivePlanDesigner: React.FC<IncentivePlanDesignerProps> = ({
             showExistingSchemes={showExistingSchemes}
             setShowExistingSchemes={setShowExistingSchemes}
             copyExistingScheme={copyExistingScheme}
-            hideSchemeButtons={true}
+            hideSchemeButtons={isReadOnly}
           />
           
           {/* Version history button - only show for existing schemes */}
-          {isEditMode && schemeId && (
+          {isEditMode && schemeId && !isReadOnly && (
             <Button 
               variant="outline" 
               onClick={() => setShowVersionHistory(true)} 
@@ -177,32 +180,44 @@ const IncentivePlanDesigner: React.FC<IncentivePlanDesignerProps> = ({
             schemeId={schemeId}
             version={versionNumber}
             isEditMode={isEditMode}
+            isReadOnly={isReadOnly}
           />
         </SectionPanel>
         
-        <SchemeStructureSections 
+        <SchemeStructureSection 
           plan={plan}
           updatePlan={updatePlan}
+          isReadOnly={isReadOnly}
+        />
+        
+        <MeasurementRules
+          plan={plan}
+          updatePlan={updatePlan}
+          isReadOnly={isReadOnly}
         />
         
         <CreditDistributionSection 
           levels={plan.creditRules.levels}
           updateCreditRules={(levels) => updatePlan('creditRules', { levels })}
+          isReadOnly={isReadOnly}
         />
         
         <PayoutStructureSection 
           tiers={plan.commissionStructure.tiers}
           currency={plan.currency}
           updateCommissionStructure={(tiers) => updatePlan('commissionStructure', { tiers })}
+          isReadOnly={isReadOnly}
         />
         
-        <div className="mt-10 flex justify-end space-x-4">
-          <SavePlanButton 
-            onClick={handleSave}
-            isLoading={isSaving}
-            isEditMode={isEditMode}
-          />
-        </div>
+        {!isReadOnly && (
+          <div className="mt-10 flex justify-end space-x-4">
+            <SavePlanButton 
+              onClick={handleSave}
+              isLoading={isSaving}
+              isEditMode={isEditMode}
+            />
+          </div>
+        )}
       </div>
     </div>
   );
