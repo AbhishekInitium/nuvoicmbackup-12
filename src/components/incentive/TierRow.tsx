@@ -30,7 +30,6 @@ const TierRow: React.FC<TierRowProps> = ({
               const value = e.target.value.replace(/[^0-9]/g, '');
               updateTier(index, 'from', value ? parseInt(value) : 0);
             }}
-            disabled={index > 0} // First tier's "from" can be edited, others are derived
             placeholder="Enter amount"
           />
           <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
