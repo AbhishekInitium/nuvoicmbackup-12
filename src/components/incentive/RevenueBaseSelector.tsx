@@ -41,7 +41,7 @@ const RevenueBaseSelector: React.FC<RevenueBaseSelectorProps> = ({
             <SelectContent>
               {isLoading ? (
                 <div className="flex items-center justify-center py-2">
-                  <Loader2 className="h-4 w-4 animate-spin mr-2" /> 
+                  <Loader2 className="w-4 h-4 animate-spin mr-2" /> 
                   Loading configurations...
                 </div>
               ) : schemeConfigs.length === 0 ? (
@@ -51,7 +51,7 @@ const RevenueBaseSelector: React.FC<RevenueBaseSelectorProps> = ({
               ) : (
                 schemeConfigs.map((config) => (
                   <SelectItem key={config._id} value={config._id || ''}>
-                    {config.adminName} - {config.calculationBase} ({config.baseData?.source})
+                    {config.adminName} - {config.calculationBase}
                   </SelectItem>
                 ))
               )}

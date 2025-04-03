@@ -10,16 +10,12 @@ import {
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { UseFormReturn } from 'react-hook-form';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { DataSourceType } from '@/types/schemeAdminTypes';
 
 interface ConfigurationFormProps {
   form: UseFormReturn<{
     adminId: string;
     adminName: string;
     calculationBase: string;
-    baseDataSourceType: DataSourceType;
-    baseSourceField: string;
   }, any, undefined>;
 }
 
@@ -66,56 +62,6 @@ export const ConfigurationForm: React.FC<ConfigurationFormProps> = ({ form }) =>
             </FormItem>
           )}
         />
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
-            name="baseDataSourceType"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Source Type</FormLabel>
-                <Select
-                  onValueChange={field.onChange}
-                  defaultValue={field.value}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select a source type" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="SAP">SAP</SelectItem>
-                    <SelectItem value="Excel">Excel</SelectItem>
-                    <SelectItem value="API">API</SelectItem>
-                    <SelectItem value="Custom">Custom</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormDescription>
-                  Data source for the calculation base
-                </FormDescription>
-              </FormItem>
-            )}
-          />
-          
-          <FormField
-            control={form.control}
-            name="baseSourceField"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Source Field</FormLabel>
-                <FormControl>
-                  <Input 
-                    {...field} 
-                    placeholder="e.g., VBAP-NETWR" 
-                  />
-                </FormControl>
-                <FormDescription>
-                  Field mapping in the source system
-                </FormDescription>
-              </FormItem>
-            )}
-          />
-        </div>
       </div>
     </Card>
   );

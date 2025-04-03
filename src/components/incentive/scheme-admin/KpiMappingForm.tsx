@@ -43,9 +43,7 @@ export const KpiMappingForm: React.FC<KpiMappingFormProps> = ({
     defaultValues: {
       adminId: initialConfig.adminId || uuidv4(),
       adminName: initialConfig.adminName || "",
-      calculationBase: initialConfig.calculationBase || "",
-      baseDataSourceType: initialConfig.baseData?.source || "Excel",
-      baseSourceField: initialConfig.baseField || ""
+      calculationBase: initialConfig.calculationBase || ""
     }
   });
 
@@ -55,8 +53,6 @@ export const KpiMappingForm: React.FC<KpiMappingFormProps> = ({
       console.log("Setting form values from initialConfig:", {
         adminName: initialConfig.adminName,
         calculationBase: initialConfig.calculationBase,
-        baseDataSourceType: initialConfig.baseData?.source,
-        baseSourceField: initialConfig.baseField,
         _id: initialConfig._id,
         isEditMode: isEditMode
       });
@@ -65,9 +61,7 @@ export const KpiMappingForm: React.FC<KpiMappingFormProps> = ({
       form.reset({
         adminId: initialConfig.adminId || uuidv4(),
         adminName: initialConfig.adminName || "",
-        calculationBase: initialConfig.calculationBase || "",
-        baseDataSourceType: initialConfig.baseData?.source || "Excel",
-        baseSourceField: initialConfig.baseField || ""
+        calculationBase: initialConfig.calculationBase || ""
       });
       
       // Update KPI data state with the new values
@@ -89,10 +83,6 @@ export const KpiMappingForm: React.FC<KpiMappingFormProps> = ({
         adminId: formValues.adminId,
         adminName: formValues.adminName,
         calculationBase: formValues.calculationBase,
-        baseField: formValues.baseSourceField,
-        baseData: {
-          source: formValues.baseDataSourceType
-        },
         qualificationFields: kpiData.qualificationFields,
         adjustmentFields: kpiData.adjustmentFields,
         exclusionFields: kpiData.exclusionFields,
@@ -216,10 +206,9 @@ export const KpiMappingForm: React.FC<KpiMappingFormProps> = ({
       createdAt: initialConfig.createdAt || new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       calculationBase: formValues.calculationBase,
-      baseField: formValues.baseSourceField, // Updated to use the new field
-      baseData: {
-        source: formValues.baseDataSourceType, // Use the new source type field
-        connectionDetails: initialConfig.baseData?.connectionDetails || ""
+      baseField: initialConfig.baseField || "",
+      baseData: initialConfig.baseData || {
+        source: "Excel" 
       },
       qualificationFields: kpiData.qualificationFields,
       adjustmentFields: kpiData.adjustmentFields,
