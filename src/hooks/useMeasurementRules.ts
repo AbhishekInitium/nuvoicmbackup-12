@@ -1,6 +1,5 @@
 
 import { useState, useEffect } from 'react';
-import { DB_FIELDS } from '@/constants/incentiveConstants';
 import { MeasurementRules, Adjustment, Exclusion, PrimaryMetric, RuleCondition } from '@/types/incentiveTypes';
 
 export const useMeasurementRules = (
@@ -32,17 +31,20 @@ export const useMeasurementRules = (
 
   // Helper function to get database fields based on revenue base
   const getDbFields = () => {
-    const fields = DB_FIELDS[revenueBase as keyof typeof DB_FIELDS] || [];
-    return fields.map(field => field.value);
+    // Return empty array initially - fields will come from configurations
+    if (!revenueBase) return [];
+    
+    // Basic default set of fields based on revenue base
+    const baseFields = ['sales', 'quantity', 'margin', 'revenue'];
+    return baseFields;
   };
 
   // Primary Metric handlers
   const addPrimaryMetric = () => {
-    const defaultField = getDbFields()[0] || '';
     const newMetric: PrimaryMetric = {
-      field: defaultField,
-      operator: '>',
-      value: 0,
+      field: '', // Empty field, will be populated when user selects a value
+      operator: '', // Empty operator initially
+      value: '', // Empty value initially
       description: 'New qualifying criteria'
     };
     
@@ -97,11 +99,10 @@ export const useMeasurementRules = (
 
   // Adjustment handlers
   const addAdjustment = () => {
-    const defaultField = getDbFields()[0] || '';
     const defaultCondition: RuleCondition = {
-      field: defaultField,
-      operator: '>',
-      value: 0
+      field: '', // Empty field initially
+      operator: '', // Empty operator initially
+      value: '' // Empty value initially
     };
     
     const newAdjustment: Adjustment = {
@@ -151,11 +152,10 @@ export const useMeasurementRules = (
 
   // Exclusion handlers
   const addExclusion = () => {
-    const defaultField = getDbFields()[0] || '';
     const defaultCondition: RuleCondition = {
-      field: defaultField,
-      operator: '>',
-      value: 0
+      field: '', // Empty field initially
+      operator: '', // Empty operator initially 
+      value: '' // Empty value initially
     };
     
     const newExclusion: Exclusion = {

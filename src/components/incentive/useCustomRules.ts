@@ -24,9 +24,9 @@ export const useCustomRules = (
       name: 'New Custom Rule',
       description: 'Define criteria for this rule',
       condition: {
-        field: 'sales',
-        operator: '>=',
-        value: 1000
+        field: '', // Empty field, will be populated when user selects a value
+        operator: '', // Empty operator initially
+        value: '' // Empty value initially
       },
       action: 'qualify',
       active: true

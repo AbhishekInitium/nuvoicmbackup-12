@@ -125,6 +125,7 @@ const RuleConditionComponent: React.FC<RuleConditionComponentProps> = ({
 
   // Helper to find the operator label
   const getOperatorLabel = (operatorValue: string): string => {
+    if (!operatorValue) return '';
     const op = OPERATORS.find(op => op.value === operatorValue);
     return op ? op.label : operatorValue;
   };
@@ -137,7 +138,7 @@ const RuleConditionComponent: React.FC<RuleConditionComponentProps> = ({
       >
         <SelectTrigger className="w-36">
           <SelectValue placeholder="Select field">
-            {condition.field}
+            {condition.field || ''}
           </SelectValue>
         </SelectTrigger>
         <SelectContent>
@@ -148,12 +149,12 @@ const RuleConditionComponent: React.FC<RuleConditionComponentProps> = ({
       </Select>
       
       <Select 
-        value={condition.operator || '>'}
+        value={condition.operator || ''}
         onValueChange={(value) => onUpdate('operator', value)}
       >
         <SelectTrigger className="w-24">
           <SelectValue placeholder="Operator">
-            {getOperatorLabel(condition.operator || '>')}
+            {getOperatorLabel(condition.operator || '')}
           </SelectValue>
         </SelectTrigger>
         <SelectContent>
