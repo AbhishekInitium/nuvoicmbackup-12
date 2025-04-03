@@ -130,6 +130,11 @@ const RuleConditionComponent: React.FC<RuleConditionComponentProps> = ({
     return op ? op.label : operatorValue;
   };
 
+  // Debug the values to ensure they're being set correctly
+  console.log('Field value:', condition.field);
+  console.log('Operator value:', condition.operator);
+  console.log('Available fields:', fieldOptions);
+
   return (
     <div className="flex items-center space-x-3">
       <Select 
@@ -137,14 +142,18 @@ const RuleConditionComponent: React.FC<RuleConditionComponentProps> = ({
         onValueChange={handleFieldSelect}
       >
         <SelectTrigger className="w-36">
-          <SelectValue placeholder="Select field">
+          <SelectValue>
             {condition.field || "Select field"}
           </SelectValue>
         </SelectTrigger>
-        <SelectContent className="bg-white z-50">
-          {fieldOptions.map(field => (
-            <SelectItem key={field} value={field}>{field}</SelectItem>
-          ))}
+        <SelectContent className="bg-white z-[100]">
+          {fieldOptions.length === 0 ? (
+            <div className="px-2 py-2 text-sm text-gray-500">No fields available</div>
+          ) : (
+            fieldOptions.map(field => (
+              <SelectItem key={field} value={field}>{field}</SelectItem>
+            ))
+          )}
         </SelectContent>
       </Select>
       
@@ -153,11 +162,11 @@ const RuleConditionComponent: React.FC<RuleConditionComponentProps> = ({
         onValueChange={(value) => onUpdate('operator', value)}
       >
         <SelectTrigger className="w-24">
-          <SelectValue placeholder="Operator">
+          <SelectValue>
             {condition.operator ? getOperatorLabel(condition.operator) : "Operator"}
           </SelectValue>
         </SelectTrigger>
-        <SelectContent className="bg-white z-50">
+        <SelectContent className="bg-white z-[100]">
           {OPERATORS.map(op => (
             <SelectItem key={op.value} value={op.value}>{op.label}</SelectItem>
           ))}
