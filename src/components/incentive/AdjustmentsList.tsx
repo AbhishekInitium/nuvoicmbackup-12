@@ -2,10 +2,10 @@
 import React from 'react';
 import { PlusCircle } from 'lucide-react';
 import { Adjustment } from '@/types/incentiveTypes';
-import ActionButton from '../ui-custom/ActionButton';
 import { SchemeAdminConfig, KpiField } from '@/types/schemeAdminTypes';
 import EmptyRulesState from './EmptyRulesState';
 import AdjustmentForm from './AdjustmentForm';
+import { Button } from '../ui/button';
 
 interface AdjustmentsListProps {
   adjustments: Adjustment[];
@@ -30,19 +30,6 @@ const AdjustmentsList: React.FC<AdjustmentsListProps> = ({
 }) => {
   return (
     <div>
-      <div className="flex justify-between items-center mb-4">
-        <label className="text-sm font-medium text-app-gray-700">
-          Adjustments
-        </label>
-        <ActionButton
-          variant="outline"
-          size="sm"
-          onClick={onAddAdjustment}
-        >
-          <PlusCircle size={16} className="mr-1" /> Add Adjustment
-        </ActionButton>
-      </div>
-      
       {adjustments.length === 0 ? (
         <EmptyRulesState
           message="No adjustments defined"
@@ -51,7 +38,7 @@ const AdjustmentsList: React.FC<AdjustmentsListProps> = ({
           onAction={onAddAdjustment}
         />
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-4 bg-gray-50 p-4 rounded-md">
           {adjustments.map((adjustment, index) => (
             <AdjustmentForm
               key={index}

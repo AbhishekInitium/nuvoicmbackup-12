@@ -1,6 +1,5 @@
 
 import React, { useEffect } from 'react';
-import { Trash2 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { RuleCondition } from '@/types/incentiveTypes';
@@ -49,13 +48,6 @@ const RuleConditionComponent: React.FC<RuleConditionComponentProps> = ({
   };
   
   const fieldOptions = getFieldOptions();
-
-  // Log to debug available options and current selection
-  useEffect(() => {
-    console.log('Field options:', fieldOptions);
-    console.log('Current field selection:', condition.field);
-    console.log('Current operator selection:', condition.operator);
-  }, [fieldOptions, condition.field, condition.operator]);
 
   // Get data type for the selected field
   const getFieldDataType = (fieldName: string): string => {
@@ -146,12 +138,12 @@ const RuleConditionComponent: React.FC<RuleConditionComponentProps> = ({
   };
 
   return (
-    <div className="flex items-center space-x-3">
+    <div className="flex flex-wrap items-center gap-3">
       <Select 
         value={condition.field || ""}
         onValueChange={handleFieldSelect}
       >
-        <SelectTrigger className="w-36 bg-white">
+        <SelectTrigger className="w-40 bg-white">
           <SelectValue>
             {condition.field || "Select field"}
           </SelectValue>
@@ -171,7 +163,7 @@ const RuleConditionComponent: React.FC<RuleConditionComponentProps> = ({
         value={condition.operator || ""}
         onValueChange={handleOperatorSelect}
       >
-        <SelectTrigger className="w-24 bg-white">
+        <SelectTrigger className="w-40 bg-white">
           <SelectValue>
             {condition.operator ? getOperatorLabel(condition.operator) : "Operator"}
           </SelectValue>
@@ -199,13 +191,6 @@ const RuleConditionComponent: React.FC<RuleConditionComponentProps> = ({
           }
         }}
       />
-      
-      <button 
-        className="p-1 rounded-full hover:bg-app-gray-100 text-app-gray-500 hover:text-app-red"
-        onClick={onRemove}
-      >
-        <Trash2 size={16} />
-      </button>
     </div>
   );
 };

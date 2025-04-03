@@ -1,8 +1,6 @@
 
 import React from 'react';
-import { PlusCircle } from 'lucide-react';
 import { Exclusion } from '@/types/incentiveTypes';
-import ActionButton from '../ui-custom/ActionButton';
 import { SchemeAdminConfig, KpiField } from '@/types/schemeAdminTypes';
 import EmptyRulesState from './EmptyRulesState';
 import ExclusionForm from './ExclusionForm';
@@ -28,19 +26,6 @@ const ExclusionsList: React.FC<ExclusionsListProps> = ({
 }) => {
   return (
     <div>
-      <div className="flex justify-between items-center mb-4">
-        <label className="text-sm font-medium text-app-gray-700">
-          Exclusions
-        </label>
-        <ActionButton
-          variant="outline"
-          size="sm"
-          onClick={onAddExclusion}
-        >
-          <PlusCircle size={16} className="mr-1" /> Add Exclusion
-        </ActionButton>
-      </div>
-      
       {exclusions.length === 0 ? (
         <EmptyRulesState
           message="No exclusions defined"
@@ -49,7 +34,7 @@ const ExclusionsList: React.FC<ExclusionsListProps> = ({
           onAction={onAddExclusion}
         />
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-4 bg-gray-50 p-4 rounded-md">
           {exclusions.map((exclusion, index) => (
             <ExclusionForm
               key={index}

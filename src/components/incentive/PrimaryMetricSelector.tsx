@@ -3,6 +3,8 @@ import React from 'react';
 import { PrimaryMetric } from '@/types/incentiveTypes';
 import RuleCondition from './RuleCondition'; 
 import { SchemeAdminConfig, KpiField } from '@/types/schemeAdminTypes';
+import { Button } from '@/components/ui/button';
+import { Trash2 } from 'lucide-react';
 
 interface PrimaryMetricSelectorProps {
   primaryMetrics: PrimaryMetric[];
@@ -37,19 +39,32 @@ const PrimaryMetricSelector: React.FC<PrimaryMetricSelectorProps> = ({
         <p className="text-sm text-app-gray-500 italic">No qualification criteria defined</p>
       ) : (
         primaryMetrics.map((metric, index) => (
-          <div key={index} className="space-y-1">
-            <RuleCondition
-              condition={metric}
-              availableFields={dbFields}
-              currencySymbol={currencySymbol}
-              onUpdate={(field, value) => handleMetricUpdate(index, field, value)}
-              onRemove={() => onRemoveMetric(index)}
-              selectedScheme={selectedScheme}
-              kpiMetadata={kpiMetadata}
-            />
+          <div key={index} className="flex flex-col space-y-2">
+            <div className="flex justify-between items-start">
+              <div className="flex-grow">
+                <RuleCondition
+                  condition={metric}
+                  availableFields={dbFields}
+                  currencySymbol={currencySymbol}
+                  onUpdate={(field, value) => handleMetricUpdate(index, field, value)}
+                  onRemove={() => onRemoveMetric(index)}
+                  selectedScheme={selectedScheme}
+                  kpiMetadata={kpiMetadata}
+                />
+              </div>
+              
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => onRemoveMetric(index)}
+                className="text-app-gray-500 hover:text-app-red ml-2"
+              >
+                <Trash2 size={16} />
+              </Button>
+            </div>
             
             {metric.description && (
-              <p className="text-xs text-app-gray-500 ml-1">
+              <p className="text-xs text-app-gray-500 mt-1 ml-1">
                 {metric.description}
               </p>
             )}
