@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Trash2 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
@@ -50,6 +50,13 @@ const RuleConditionComponent: React.FC<RuleConditionComponentProps> = ({
   
   const fieldOptions = getFieldOptions();
 
+  // Log to debug available options and current selection
+  useEffect(() => {
+    console.log('Field options:', fieldOptions);
+    console.log('Current field selection:', condition.field);
+    console.log('Current operator selection:', condition.operator);
+  }, [fieldOptions, condition.field, condition.operator]);
+
   // Get data type for the selected field
   const getFieldDataType = (fieldName: string): string => {
     // First check the kpiMetadata (most accurate and complete)
@@ -79,6 +86,8 @@ const RuleConditionComponent: React.FC<RuleConditionComponentProps> = ({
 
   // Handle field selection with metadata
   const handleFieldSelect = (fieldName: string) => {
+    console.log('Field selected:', fieldName);
+    
     // First update the field name
     onUpdate('field', fieldName);
     
@@ -106,6 +115,12 @@ const RuleConditionComponent: React.FC<RuleConditionComponentProps> = ({
     }
   };
 
+  // Handle operator selection with logging
+  const handleOperatorSelect = (operatorValue: string) => {
+    console.log('Operator selected:', operatorValue);
+    onUpdate('operator', operatorValue);
+  };
+
   // Determine input type based on data type
   const getInputTypeForDataType = (dataType: string) => {
     switch(dataType) {
@@ -130,11 +145,6 @@ const RuleConditionComponent: React.FC<RuleConditionComponentProps> = ({
     return op ? op.label : operatorValue;
   };
 
-  // Debug the values to ensure they're being set correctly
-  console.log('Field value:', condition.field);
-  console.log('Operator value:', condition.operator);
-  console.log('Available fields:', fieldOptions);
-
   return (
     <div className="flex items-center space-x-3">
       <Select 
@@ -142,7 +152,7 @@ const RuleConditionComponent: React.FC<RuleConditionComponentProps> = ({
         onValueChange={handleFieldSelect}
       >
         <SelectTrigger className="w-36 bg-white">
-          <SelectValue>
+          <SelectValue placeholder="Select field">
             {condition.field || "Select field"}
           </SelectValue>
         </SelectTrigger>
@@ -159,10 +169,10 @@ const RuleConditionComponent: React.FC<RuleConditionComponentProps> = ({
       
       <Select 
         value={condition.operator || ""}
-        onValueChange={(value) => onUpdate('operator', value)}
+        onValueChange={handleOperatorSelect}
       >
         <SelectTrigger className="w-24 bg-white">
-          <SelectValue>
+          <SelectValue placeholder="Operator">
             {condition.operator ? getOperatorLabel(condition.operator) : "Operator"}
           </SelectValue>
         </SelectTrigger>
