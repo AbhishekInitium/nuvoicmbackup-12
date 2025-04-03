@@ -152,7 +152,7 @@ const RuleConditionComponent: React.FC<RuleConditionComponentProps> = ({
         onValueChange={handleFieldSelect}
       >
         <SelectTrigger className="w-36 bg-white">
-          <SelectValue placeholder="Select field">
+          <SelectValue>
             {condition.field || "Select field"}
           </SelectValue>
         </SelectTrigger>
@@ -172,7 +172,7 @@ const RuleConditionComponent: React.FC<RuleConditionComponentProps> = ({
         onValueChange={handleOperatorSelect}
       >
         <SelectTrigger className="w-24 bg-white">
-          <SelectValue placeholder="Operator">
+          <SelectValue>
             {condition.operator ? getOperatorLabel(condition.operator) : "Operator"}
           </SelectValue>
         </SelectTrigger>
