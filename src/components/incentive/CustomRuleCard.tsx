@@ -34,11 +34,8 @@ const CustomRuleCard: React.FC<CustomRuleCardProps> = ({
   onRemoveCondition,
   onRemoveRule
 }) => {
-  // Filter out empty fields
-  const filteredFields = availableFields.filter(field => field.trim() !== '');
-  
   // Debug logs
-  console.log("CustomRuleCard - Available fields:", filteredFields);
+  console.log("CustomRuleCard - Available fields:", availableFields);
   console.log("CustomRuleCard - KPI metadata:", kpiMetadata);
 
   return (
@@ -126,7 +123,7 @@ const CustomRuleCard: React.FC<CustomRuleCardProps> = ({
                 key={index}
                 condition={condition}
                 currencySymbol={currencySymbol}
-                availableFields={filteredFields} 
+                availableFields={availableFields} 
                 kpiMetadata={kpiMetadata}
                 onUpdate={(field, value) => onUpdateCondition(index, field, value)}
                 onRemove={() => onRemoveCondition(index)}

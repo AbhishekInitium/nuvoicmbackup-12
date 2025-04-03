@@ -1,11 +1,11 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Trash2 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Exclusion } from '@/types/incentiveTypes';
 import GlassCard from '../ui-custom/GlassCard';
-import { OPERATORS } from '@/constants/incentiveConstants';
+import { getOperatorsByDataType } from '@/constants/operatorConstants';
 import { KpiField } from '@/types/schemeAdminTypes';
 
 interface ExclusionFormProps {
@@ -27,19 +27,33 @@ const ExclusionForm: React.FC<ExclusionFormProps> = ({
   onRemoveExclusion,
   isReadOnly = false
 }) => {
-  // Filter out empty string values
-  const filteredFields = dbFields.filter(field => field.trim() !== '');
-  
+  const [dataType, setDataType] = useState<string | undefined>(undefined);
+
+  // Safety check to ensure we have valid fields
+  const safeDbFields = dbFields && dbFields.length > 0 ? 
+    dbFields.filter(field => field !== undefined && field !== "") :
+    ["default_field"]; // Fallback to prevent empty values
+
+  // Update data type when field changes
+  useEffect(() => {
+    if (exclusion.field && kpiMetadata && kpiMetadata[exclusion.field]) {
+      const fieldDataType = kpiMetadata[exclusion.field].dataType;
+      setDataType(fieldDataType);
+      console.log(`ExclusionForm - Setting data type for ${exclusion.field} with dataType ${fieldDataType}`);
+    }
+  }, [exclusion.field, kpiMetadata]);
+
   // Determine input type based on field data type
   const getInputType = (): string => {
     if (exclusion.field && kpiMetadata && kpiMetadata[exclusion.field]) {
-      const dataType = kpiMetadata[exclusion.field].dataType;
+      const fieldDataType = kpiMetadata[exclusion.field].dataType;
       
-      switch(dataType?.toLowerCase()) {
+      switch(fieldDataType?.toLowerCase()) {
         case 'number':
         case 'decimal':
         case 'integer':
         case 'int8':
+        case 'float':
           return 'number';
         case 'date':
           return 'date';
@@ -52,6 +66,7 @@ const ExclusionForm: React.FC<ExclusionFormProps> = ({
         case 'char':
         case 'char10':
         case 'string':
+        case 'text':
         default:
           return 'text';
       }
@@ -62,12 +77,14 @@ const ExclusionForm: React.FC<ExclusionFormProps> = ({
 
   const inputType = getInputType();
   
-  // Add logging to debug available fields
-  console.log(`Exclusion Form #${exclusionIndex} - Available fields:`, filteredFields);
-  console.log(`Exclusion Form #${exclusionIndex} - KPI Metadata:`, kpiMetadata);
+  // Get operators based on data type
+  const operators = getOperatorsByDataType(dataType);
   
-  // Use a default field if current field is empty
-  const safeFieldValue = exclusion.field || 'default-field';
+  // Add logging to debug available fields
+  console.log(`Exclusion Form #${exclusionIndex} - Available fields:`, dbFields);
+  console.log(`Exclusion Form #${exclusionIndex} - KPI Metadata:`, kpiMetadata);
+  console.log(`Exclusion Form #${exclusionIndex} - Data Type:`, dataType);
+  console.log(`Exclusion Form #${exclusionIndex} - Available operators:`, operators);
 
   return (
     <GlassCard className="p-4">
@@ -99,7 +116,7 @@ const ExclusionForm: React.FC<ExclusionFormProps> = ({
             </div>
           ) : (
             <Select 
-              value={safeFieldValue}
+              value={exclusion.field}
               onValueChange={(value) => onUpdateExclusion(exclusionIndex, 'field', value)}
               disabled={isReadOnly}
             >
@@ -107,14 +124,14 @@ const ExclusionForm: React.FC<ExclusionFormProps> = ({
                 <SelectValue placeholder="Select field" />
               </SelectTrigger>
               <SelectContent className="bg-white">
-                {filteredFields.length > 0 ? (
-                  filteredFields.map(field => {
+                {safeDbFields.length > 0 ? (
+                  safeDbFields.map((field, index) => {
                     // Get the display name from metadata if available
                     const displayName = kpiMetadata && kpiMetadata[field] 
                       ? kpiMetadata[field].description || field 
                       : field;
                     return (
-                      <SelectItem key={field} value={field}>{displayName}</SelectItem>
+                      <SelectItem key={index} value={field}>{displayName}</SelectItem>
                     );
                   })
                 ) : (
@@ -141,7 +158,7 @@ const ExclusionForm: React.FC<ExclusionFormProps> = ({
                 <SelectValue placeholder="Operator" />
               </SelectTrigger>
               <SelectContent className="bg-white">
-                {OPERATORS.map(op => (
+                {operators.map(op => (
                   <SelectItem key={op.value} value={op.value}>{op.label}</SelectItem>
                 ))}
               </SelectContent>

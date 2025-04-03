@@ -1,54 +1,62 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Trash2 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { PrimaryMetric } from '@/types/incentiveTypes';
 import GlassCard from '../ui-custom/GlassCard';
-import { OPERATORS } from '@/constants/incentiveConstants';
+import { getOperatorsByDataType } from '@/constants/operatorConstants';
 import { KpiField } from '@/types/schemeAdminTypes';
 
 interface PrimaryMetricSelectorProps {
-  primaryMetrics: PrimaryMetric[];
+  metric: PrimaryMetric;
+  metricIndex: number;
   dbFields: string[];
-  currencySymbol: string;
   kpiMetadata?: Record<string, KpiField>;
-  onAddMetric: () => void;
-  onUpdateMetric: (field: keyof PrimaryMetric, value: string | number) => void;
-  onRemoveMetric: () => void;
+  onUpdateMetric: (index: number, field: keyof PrimaryMetric, value: string | number) => void;
+  onRemoveMetric: (index: number) => void;
+  isReadOnly?: boolean;
 }
 
 const PrimaryMetricSelector: React.FC<PrimaryMetricSelectorProps> = ({
-  primaryMetrics,
+  metric,
+  metricIndex,
   dbFields,
-  currencySymbol,
   kpiMetadata,
-  onAddMetric,
   onUpdateMetric,
-  onRemoveMetric
+  onRemoveMetric,
+  isReadOnly = false
 }) => {
-  // Since we're working with a single metric at a time
-  const metric = primaryMetrics[0];
+  const [inputType, setInputType] = useState<string>("text");
+  const [dataType, setDataType] = useState<string | undefined>(undefined);
   
-  // Filter out empty strings from dbFields
-  const filteredFields = dbFields.filter(field => field.trim() !== '');
+  // Safety check to ensure we have a valid field
+  const safeDbFields = dbFields && dbFields.length > 0 ? 
+    dbFields.filter(field => field !== undefined && field !== "") :
+    ["default_field"]; // Fallback to prevent empty values
   
-  // Determine input type based on field data type
-  const getInputType = (): string => {
+  // Update data type when field changes
+  useEffect(() => {
     if (metric.field && kpiMetadata && kpiMetadata[metric.field]) {
-      const dataType = kpiMetadata[metric.field].dataType;
-      console.log(`PrimaryMetricSelector - Getting input type for ${metric.field} with dataType ${dataType}`);
+      const fieldDataType = kpiMetadata[metric.field].dataType;
+      setDataType(fieldDataType);
+      console.log(`PrimaryMetricSelector - Getting input type for ${metric.field} with dataType ${fieldDataType}`);
       
-      switch(dataType?.toLowerCase()) {
+      // Determine input type based on data type
+      switch(fieldDataType?.toLowerCase()) {
         case 'number':
         case 'decimal':
         case 'integer':
         case 'int8':
-          return 'number';
+        case 'float':
+          setInputType('number');
+          break;
         case 'date':
-          return 'date';
+          setInputType('date');
+          break;
         case 'boolean':
-          return 'checkbox';
+          setInputType('checkbox');
+          break;
         case 'char1':
         case 'char2':
         case 'char3':
@@ -56,75 +64,108 @@ const PrimaryMetricSelector: React.FC<PrimaryMetricSelectorProps> = ({
         case 'char':
         case 'char10':
         case 'string':
+        case 'text':
         default:
-          return 'text';
+          setInputType('text');
+          break;
       }
     }
-    
-    return 'text';
-  };
-
-  const inputType = getInputType();
+  }, [metric.field, kpiMetadata]);
   
-  // Debug logs
-  console.log("PrimaryMetricSelector - Available fields:", filteredFields);
+  // Get operators based on data type
+  const operators = getOperatorsByDataType(dataType);
+  
+  // For debugging
+  console.log("PrimaryMetricSelector - Available fields:", dbFields);
   console.log("PrimaryMetricSelector - KPI Metadata:", kpiMetadata);
   console.log("PrimaryMetricSelector - Current metric:", metric);
   console.log("PrimaryMetricSelector - Input type:", inputType);
-
-  // Use a default field if the current field is empty
-  const safeFieldValue = metric.field || 'default-field';
-
+  console.log("PrimaryMetricSelector - Data type:", dataType);
+  console.log("PrimaryMetricSelector - Operators:", operators);
+  
   return (
-    <GlassCard variant="outlined" className="p-4">
-      <div className="flex justify-between items-start">
-        <div className="flex-1 grid grid-cols-1 sm:grid-cols-12 gap-4">
-          <div className="sm:col-span-3">
-            <label className="block text-sm font-medium text-app-gray-700 mb-2">Field</label>
+    <GlassCard className="p-4">
+      <div className="flex justify-between items-start mb-4">
+        <Input 
+          type="text" 
+          value={metric.description}
+          onChange={(e) => onUpdateMetric(metricIndex, 'description', e.target.value)}
+          className="text-lg font-medium border-none px-0 h-auto focus-visible:ring-0"
+          placeholder="Criteria Description"
+          disabled={isReadOnly}
+        />
+        {!isReadOnly && (
+          <button 
+            className="p-1 rounded-full hover:bg-app-gray-100 text-app-gray-500 hover:text-app-red transition-colors duration-200"
+            onClick={() => onRemoveMetric(metricIndex)}
+          >
+            <Trash2 size={18} />
+          </button>
+        )}
+      </div>
+      
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div>
+          <label className="block text-sm font-medium text-app-gray-700 mb-2">Field</label>
+          {isReadOnly ? (
+            <div className="h-10 px-4 py-2 rounded-md border border-gray-300 bg-gray-50 text-gray-700">
+              {metric.field}
+            </div>
+          ) : (
             <Select 
-              value={safeFieldValue}
-              onValueChange={(value) => onUpdateMetric('field', value)}
+              value={metric.field}
+              onValueChange={(value) => onUpdateMetric(metricIndex, 'field', value)}
+              disabled={isReadOnly}
             >
-              <SelectTrigger className="w-full bg-white">
+              <SelectTrigger>
                 <SelectValue placeholder="Select field" />
               </SelectTrigger>
-              <SelectContent className="bg-white z-50">
-                {filteredFields.length > 0 ? (
-                  filteredFields.map(field => {
-                    // Get the display name from metadata if available
-                    const displayName = kpiMetadata && kpiMetadata[field] 
-                      ? kpiMetadata[field].description || field 
-                      : field;
-                    return (
-                      <SelectItem key={field} value={field}>{displayName}</SelectItem>
-                    );
-                  })
-                ) : (
-                  <SelectItem value="no-fields" disabled>No fields available</SelectItem>
-                )}
+              <SelectContent className="bg-white">
+                {safeDbFields.map((field, index) => {
+                  // Get the display name from metadata if available
+                  const displayName = kpiMetadata && kpiMetadata[field] 
+                    ? kpiMetadata[field].description || field 
+                    : field;
+                  return (
+                    <SelectItem key={index} value={field}>{displayName}</SelectItem>
+                  );
+                })}
               </SelectContent>
             </Select>
-          </div>
-          
-          <div className="sm:col-span-3">
-            <label className="block text-sm font-medium text-app-gray-700 mb-2">Operator</label>
+          )}
+        </div>
+        
+        <div>
+          <label className="block text-sm font-medium text-app-gray-700 mb-2">Operator</label>
+          {isReadOnly ? (
+            <div className="h-10 px-4 py-2 rounded-md border border-gray-300 bg-gray-50 text-gray-700">
+              {metric.operator}
+            </div>
+          ) : (
             <Select 
               value={metric.operator}
-              onValueChange={(value) => onUpdateMetric('operator', value)}
+              onValueChange={(value) => onUpdateMetric(metricIndex, 'operator', value)}
+              disabled={isReadOnly}
             >
-              <SelectTrigger className="w-full bg-white">
+              <SelectTrigger>
                 <SelectValue placeholder="Operator" />
               </SelectTrigger>
-              <SelectContent className="bg-white z-50">
-                {OPERATORS.map(op => (
+              <SelectContent className="bg-white">
+                {operators.map((op) => (
                   <SelectItem key={op.value} value={op.value}>{op.label}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
-          </div>
-          
-          <div className="sm:col-span-3">
-            <label className="block text-sm font-medium text-app-gray-700 mb-2">Value</label>
+          )}
+        </div>
+        
+        <div>
+          <label className="block text-sm font-medium text-app-gray-700 mb-2">Value</label>
+          {isReadOnly ? (
+            <div className="h-10 px-4 py-2 rounded-md border border-gray-300 bg-gray-50 text-gray-700">
+              {metric.value}
+            </div>
+          ) : (
             <Input 
               type={inputType}
               value={metric.value}
@@ -134,32 +175,16 @@ const PrimaryMetricSelector: React.FC<PrimaryMetricSelectorProps> = ({
                 // Only try to parse as number if input type is number
                 if (inputType === 'number') {
                   const numValue = parseFloat(value);
-                  onUpdateMetric('value', isNaN(numValue) ? value : numValue);
+                  onUpdateMetric(metricIndex, 'value', isNaN(numValue) ? value : numValue);
                 } else {
-                  onUpdateMetric('value', value);
+                  onUpdateMetric(metricIndex, 'value', value);
                 }
               }}
               step={inputType === 'number' ? "0.01" : undefined}
+              disabled={isReadOnly}
             />
-          </div>
-          
-          <div className="sm:col-span-3">
-            <label className="block text-sm font-medium text-app-gray-700 mb-2">Description</label>
-            <Input 
-              type="text" 
-              value={metric.description}
-              onChange={(e) => onUpdateMetric('description', e.target.value)}
-              placeholder="Describe this criteria"
-            />
-          </div>
+          )}
         </div>
-        
-        <button 
-          className="p-1 rounded-full hover:bg-app-gray-100 text-app-gray-500 hover:text-app-red transition-colors duration-200 ml-3"
-          onClick={onRemoveMetric}
-        >
-          <Trash2 size={18} />
-        </button>
       </div>
     </GlassCard>
   );
