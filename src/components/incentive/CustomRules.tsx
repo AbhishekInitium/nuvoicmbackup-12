@@ -14,13 +14,15 @@ interface CustomRulesProps {
   currency: string;
   updateCustomRules: (rules: CustomRule[]) => void;
   selectedScheme?: SchemeAdminConfig | null;
+  isReadOnly?: boolean;
 }
 
 const CustomRules: React.FC<CustomRulesProps> = ({
   customRules,
   currency,
   updateCustomRules,
-  selectedScheme
+  selectedScheme,
+  isReadOnly = false
 }) => {
   const currencySymbol = getCurrencySymbol(currency);
   const { 
@@ -92,13 +94,15 @@ const CustomRules: React.FC<CustomRulesProps> = ({
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h3 className="text-lg font-medium">Custom Rules</h3>
-        <ActionButton
-          variant="outline"
-          size="sm"
-          onClick={addCustomRule}
-        >
-          <PlusCircle size={16} className="mr-1" /> Add Custom Rule
-        </ActionButton>
+        {!isReadOnly && (
+          <ActionButton
+            variant="outline"
+            size="sm"
+            onClick={addCustomRule}
+          >
+            <PlusCircle size={16} className="mr-1" /> Add Custom Rule
+          </ActionButton>
+        )}
       </div>
 
       {rules.length === 0 ? (
@@ -106,7 +110,7 @@ const CustomRules: React.FC<CustomRulesProps> = ({
           message="No custom rules defined"
           description="Add custom rules to handle specific business requirements"
           buttonText="Add Custom Rule"
-          onAction={addCustomRule}
+          onAction={!isReadOnly ? addCustomRule : undefined}
         />
       ) : (
         <div className="space-y-4">

@@ -16,6 +16,7 @@ interface ExclusionFormProps {
   onUpdateExclusion: (index: number, field: keyof Exclusion, value: string | number) => void;
   onRemoveExclusion: (index: number) => void;
   isReadOnly?: boolean;
+  currencySymbol?: string;
 }
 
 const ExclusionForm: React.FC<ExclusionFormProps> = ({

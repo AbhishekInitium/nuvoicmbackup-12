@@ -72,8 +72,8 @@ export const useCustomRules = (
   const updateCustomRule = (ruleIndex: number, field: keyof CustomRule, value: any) => {
     const newRules = [...rules];
     
-    // Set the value directly
-    newRules[ruleIndex][field] = value;
+    // We need to cast to avoid the type error
+    (newRules[ruleIndex][field] as any) = value;
     
     setRules(newRules);
     onUpdateRules(newRules);

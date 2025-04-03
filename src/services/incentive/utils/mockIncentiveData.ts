@@ -36,6 +36,9 @@ export const getMockIncentivePlans = (): IncentivePlanWithStatus[] => {
       adjustments: [{
         id: 'adj1',
         description: 'Default adjustment',
+        field: 'TotalAmount',
+        operator: '>',
+        value: 0,
         impact: 1.1,
         type: 'PERCENTAGE_BOOST'
       }],

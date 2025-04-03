@@ -1,3 +1,4 @@
+
 import { IncentivePlan } from '@/types/incentiveTypes';
 import { SelectedData } from './dataSelectionModule';
 import { LogEntry, addLogEntry } from './loggingModule';
@@ -20,7 +21,7 @@ export interface ParticipantResult {
   commissionAmount: number;
   tier: string;
   appliedRate: number;
-  adjustments: AdjustmentApplication[];
+  adjustments: AdjustmentRecord[];
   customRulesApplied: string[];
   exclusionsApplied: string[];
   qualifiedRecords: number;
@@ -29,6 +30,12 @@ export interface ParticipantResult {
 }
 
 export interface AdjustmentRecord {
+  adjustmentId: string;
+  description: string;
+  impact: number;
+}
+
+export interface AdjustmentApplication {
   adjustmentId: string;
   description: string;
   impact: number;
