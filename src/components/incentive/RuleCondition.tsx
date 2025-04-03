@@ -49,6 +49,7 @@ const RuleConditionComponent: React.FC<RuleConditionComponentProps> = ({
         case 'number':
         case 'decimal':
         case 'integer':
+        case 'int8':
           setInputType('number');
           break;
         case 'date':
@@ -62,34 +63,12 @@ const RuleConditionComponent: React.FC<RuleConditionComponentProps> = ({
         case 'char3':
         case 'char4':
         case 'char':
+        case 'char10':
         case 'string':
         default:
           setInputType('text');
           break;
       }
-      
-      /* // If we have metadata for this field, copy all the relevant properties
-      if (kpiMetadata && kpiMetadata[fieldName]) {
-        const metadata = kpiMetadata[fieldName];
-        
-        // Update other properties with metadata
-        if (metadata.description) {
-          onUpdate('description', metadata.description);
-        }
-        
-        if (metadata.sourceType) {
-          onUpdate('sourceType', metadata.sourceType);
-        }
-        
-        if (metadata.sourceField) {
-          onUpdate('sourceField', metadata.sourceField);
-        }
-        
-        // Include the dataType in the condition for future reference
-        if (metadata.dataType) {
-          onUpdate('dataType', metadata.dataType);
-        }
-      } */
     }
   }, [condition.field, kpiMetadata]);
 
@@ -103,9 +82,15 @@ const RuleConditionComponent: React.FC<RuleConditionComponentProps> = ({
           <SelectValue placeholder="Select field" />
         </SelectTrigger>
         <SelectContent>
-          {fieldOptions.map(field => (
-            <SelectItem key={field} value={field}>{field}</SelectItem>
-          ))}
+          {fieldOptions.map(field => {
+            // Get the display name from metadata if available
+            const displayName = kpiMetadata && kpiMetadata[field] 
+              ? kpiMetadata[field].description || field 
+              : field;
+            return (
+              <SelectItem key={field} value={field}>{displayName}</SelectItem>
+            );
+          })}
         </SelectContent>
       </Select>
       

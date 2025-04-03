@@ -39,6 +39,7 @@ const PrimaryMetricSelector: React.FC<PrimaryMetricSelectorProps> = ({
         case 'number':
         case 'decimal':
         case 'integer':
+        case 'int8':
           return 'number';
         case 'date':
           return 'date';
@@ -49,6 +50,7 @@ const PrimaryMetricSelector: React.FC<PrimaryMetricSelectorProps> = ({
         case 'char3':
         case 'char4':
         case 'char':
+        case 'char10':
         case 'string':
         default:
           return 'text';
@@ -74,9 +76,15 @@ const PrimaryMetricSelector: React.FC<PrimaryMetricSelectorProps> = ({
                 <SelectValue placeholder="Select field" />
               </SelectTrigger>
               <SelectContent>
-                {dbFields.map(field => (
-                  <SelectItem key={field} value={field}>{field}</SelectItem>
-                ))}
+                {dbFields.map(field => {
+                  // Get the display name from metadata if available
+                  const displayName = kpiMetadata && kpiMetadata[field] 
+                    ? kpiMetadata[field].description || field 
+                    : field;
+                  return (
+                    <SelectItem key={field} value={field}>{displayName}</SelectItem>
+                  );
+                })}
               </SelectContent>
             </Select>
           </div>

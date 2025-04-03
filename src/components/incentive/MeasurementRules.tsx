@@ -59,6 +59,19 @@ const MeasurementRules: React.FC<MeasurementRulesProps> = ({
       metadata[field.kpi] = field;
     });
     
+    // Also include adjustment and exclusion fields in the metadata
+    if (selectedScheme.adjustmentFields?.length) {
+      selectedScheme.adjustmentFields.forEach(field => {
+        metadata[field.kpi] = field;
+      });
+    }
+    
+    if (selectedScheme.exclusionFields?.length) {
+      selectedScheme.exclusionFields.forEach(field => {
+        metadata[field.kpi] = field;
+      });
+    }
+    
     return metadata;
   };
 
@@ -70,18 +83,6 @@ const MeasurementRules: React.FC<MeasurementRulesProps> = ({
     return selectedScheme.adjustmentFields.map(field => field.kpi);
   };
 
-  // Get adjustment fields metadata
-  const getAdjustmentMetadata = () => {
-    if (!selectedScheme?.adjustmentFields?.length) return {};
-    
-    const metadata: Record<string, KpiField> = {};
-    selectedScheme.adjustmentFields.forEach(field => {
-      metadata[field.kpi] = field;
-    });
-    
-    return metadata;
-  };
-
   // Get fields for exclusions
   const getExclusionFields = () => {
     if (!selectedScheme?.exclusionFields?.length) return getDbFields();
@@ -90,17 +91,8 @@ const MeasurementRules: React.FC<MeasurementRulesProps> = ({
     return selectedScheme.exclusionFields.map(field => field.kpi);
   };
 
-  // Get exclusion fields metadata
-  const getExclusionMetadata = () => {
-    if (!selectedScheme?.exclusionFields?.length) return {};
-    
-    const metadata: Record<string, KpiField> = {};
-    selectedScheme.exclusionFields.forEach(field => {
-      metadata[field.kpi] = field;
-    });
-    
-    return metadata;
-  };
+  // Get full KPI metadata for all field types
+  const kpiMetadata = getKpiMetadata();
 
   return (
     <div className="space-y-8">
@@ -134,7 +126,7 @@ const MeasurementRules: React.FC<MeasurementRulesProps> = ({
                 primaryMetrics={[metric]}
                 dbFields={getQualificationFields()}
                 currencySymbol={currencySymbol}
-                kpiMetadata={getKpiMetadata()}
+                kpiMetadata={kpiMetadata}
                 onAddMetric={() => {}}
                 onUpdateMetric={(field, value) => updatePrimaryMetric(index, field, value)}
                 onRemoveMetric={() => removePrimaryMetric(index)}
@@ -148,7 +140,7 @@ const MeasurementRules: React.FC<MeasurementRulesProps> = ({
       <AdjustmentsList
         adjustments={rules.adjustments}
         dbFields={getAdjustmentFields()}
-        kpiMetadata={getAdjustmentMetadata()}
+        kpiMetadata={kpiMetadata}
         onUpdateAdjustment={updateAdjustment}
         onRemoveAdjustment={removeAdjustment}
         onAddAdjustment={addAdjustment}
@@ -159,7 +151,7 @@ const MeasurementRules: React.FC<MeasurementRulesProps> = ({
       <ExclusionsList
         exclusions={rules.exclusions}
         dbFields={getExclusionFields()}
-        kpiMetadata={getExclusionMetadata()}
+        kpiMetadata={kpiMetadata}
         onUpdateExclusion={updateExclusion}
         onRemoveExclusion={removeExclusion}
         onAddExclusion={addExclusion}
