@@ -100,7 +100,7 @@ const MeasurementRules: React.FC<MeasurementRulesProps> = ({
                 dbFields={getQualificationFields()}
                 currencySymbol={currencySymbol}
                 onAddMetric={() => {}}
-                onUpdateMetric={(field, value) => updatePrimaryMetric(index, field, value)}
+                onUpdateMetric={(idx, field, value) => updatePrimaryMetric(index, field, value)}
                 onRemoveMetric={() => removePrimaryMetric(index)}
                 selectedScheme={selectedScheme}
                 kpiMetadata={kpiMetadata}
