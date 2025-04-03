@@ -28,7 +28,7 @@ export interface Adjustment {
   id: string;
   description: string;
   impact: number;
-  type: 'ADDITION' | 'PERCENTAGE_BOOST' | 'REDUCTION';
+  type: 'ADDITION' | 'PERCENTAGE_BOOST' | 'REDUCTION' | 'FLAT_AMOUNT' | 'TIER_OVERRIDE';
   // Additional fields needed by components
   field?: string;
   operator?: string;
