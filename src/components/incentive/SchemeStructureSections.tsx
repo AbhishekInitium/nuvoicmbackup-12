@@ -12,7 +12,7 @@ import { useToast } from '@/hooks/use-toast';
 interface SchemeStructureSectionsProps {
   plan: IncentivePlan;
   updatePlan: (section: string, value: any) => void;
-  isReadOnly?: boolean; // Add isReadOnly prop
+  isReadOnly?: boolean;
 }
 
 const SchemeStructureSections: React.FC<SchemeStructureSectionsProps> = ({ 
@@ -47,6 +47,29 @@ const SchemeStructureSections: React.FC<SchemeStructureSectionsProps> = ({
     fetchSchemeConfigs();
   }, [toast]);
 
+  // Load selectedScheme if plan already has one when editing
+  useEffect(() => {
+    const loadSelectedScheme = async () => {
+      if (plan.selectedSchemeConfig?._id) {
+        try {
+          setIsLoading(true);
+          const selectedConfig = await getSchemeAdminConfig(plan.selectedSchemeConfig._id);
+          
+          if (selectedConfig) {
+            console.log("Loaded scheme configuration:", selectedConfig);
+            setSelectedScheme(selectedConfig);
+          }
+          setIsLoading(false);
+        } catch (error) {
+          console.error("Error loading scheme configuration:", error);
+          setIsLoading(false);
+        }
+      }
+    };
+    
+    loadSelectedScheme();
+  }, [plan.selectedSchemeConfig]);
+
   // Handle scheme selection
   const handleSchemeSelection = async (schemeId: string) => {
     try {
@@ -58,6 +81,9 @@ const SchemeStructureSections: React.FC<SchemeStructureSectionsProps> = ({
         
         // Update the revenue base with the selected scheme's calculation base
         updatePlan('revenueBase', selectedConfig.calculationBase);
+        
+        // Also store the selected scheme config in the plan for future reference
+        updatePlan('selectedSchemeConfig', selectedConfig);
         
         toast({
           title: "Scheme Configuration Loaded",
@@ -89,6 +115,7 @@ const SchemeStructureSections: React.FC<SchemeStructureSectionsProps> = ({
           onSchemeSelect={handleSchemeSelection}
           isLoading={isLoading}
           isReadOnly={isReadOnly}
+          selectedSchemeId={plan.selectedSchemeConfig?._id}
         />
         
         {/* Measurement Rules */}

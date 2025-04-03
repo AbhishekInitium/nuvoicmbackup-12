@@ -23,9 +23,9 @@ const TierEditor: React.FC<TierEditorProps> = ({
 }) => {
   const currencySymbol = getCurrencySymbol(currency);
   
-  // Format the displayed value
+  // Format the displayed value to ensure 0 is shown as "0"
   const formatValue = (value: number): string => {
-    return value === 0 ? '0' : value.toString();
+    return value.toString(); // Converts all numbers including 0 to string
   };
 
   return (

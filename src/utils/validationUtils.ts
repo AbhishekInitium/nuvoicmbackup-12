@@ -1,3 +1,4 @@
+
 import { IncentivePlan, Tier } from '@/types/incentiveTypes';
 
 /**

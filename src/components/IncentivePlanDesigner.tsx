@@ -6,7 +6,7 @@ import { useIncentivePlan } from '@/hooks/useIncentivePlan';
 import { IncentiveStatus } from '@/services/incentive/types/incentiveServiceTypes';
 import { SchemeAdminConfig } from '@/types/schemeAdminTypes';
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, History } from "lucide-react";
 
 // Import refactored components
 import SectionPanel from './ui-custom/SectionPanel';
@@ -20,8 +20,8 @@ import SchemeVersionHistory from './incentive/SchemeVersionHistory';
 import { generateTimestampId } from '@/utils/idGenerators';
 import { useSaveIncentivePlan } from '@/hooks/useSaveIncentivePlan';
 import { Button } from './ui/button';
-import { History } from 'lucide-react';
 import { validatePlanFields } from '@/utils/validationUtils';
+import { getSchemeAdminConfig } from '@/services/database/mongoDBService';
 
 interface IncentivePlanDesignerProps {
   initialPlan?: IncentivePlan | null;
@@ -57,9 +57,23 @@ const IncentivePlanDesigner: React.FC<IncentivePlanDesignerProps> = ({
       if (initialPlan._id) {
         setDocumentId(initialPlan._id);
       }
-      if (initialPlan.selectedSchemeConfig) {
-        setSelectedSchemeConfig(initialPlan.selectedSchemeConfig);
-      }
+      
+      // Load selected scheme config if available
+      const loadSelectedScheme = async () => {
+        if (initialPlan.selectedSchemeConfig?._id) {
+          try {
+            const config = await getSchemeAdminConfig(initialPlan.selectedSchemeConfig._id);
+            if (config) {
+              console.log("Loaded scheme config in Designer:", config);
+              setSelectedSchemeConfig(config);
+            }
+          } catch (error) {
+            console.error("Error loading selected scheme config:", error);
+          }
+        }
+      };
+      
+      loadSelectedScheme();
     } else {
       setSchemeId(generateTimestampId());
       setVersionNumber(1);
@@ -73,6 +87,7 @@ const IncentivePlanDesigner: React.FC<IncentivePlanDesignerProps> = ({
     copyExistingScheme
   } = useIncentivePlan(initialPlan, undefined, refetchPlans);
 
+  // Update selected scheme config whenever plan changes
   useEffect(() => {
     if (plan?.selectedSchemeConfig) {
       setSelectedSchemeConfig(plan.selectedSchemeConfig);
@@ -118,10 +133,15 @@ const IncentivePlanDesigner: React.FC<IncentivePlanDesignerProps> = ({
     setSchemeId(selectedVersion.schemeId);
     setVersionNumber((selectedVersion.metadata?.version || 0) + 1);
     const status = (selectedVersion.metadata?.status || 'DRAFT') as IncentiveStatus;
+    
+    // Preserve the selected scheme config when editing a version
+    const configToPreserve = selectedVersion.selectedSchemeConfig;
+    
     copyExistingScheme({
       ...selectedVersion,
       name: selectedVersion.name,
       status: status,
+      selectedSchemeConfig: configToPreserve, // Ensure config is preserved
       metadata: {
         createdAt: selectedVersion.metadata?.createdAt || new Date().toISOString(),
         updatedAt: new Date().toISOString(),
@@ -129,9 +149,11 @@ const IncentivePlanDesigner: React.FC<IncentivePlanDesignerProps> = ({
         status: selectedVersion.metadata?.status || 'DRAFT'
       }
     });
-    if (selectedVersion.selectedSchemeConfig) {
-      setSelectedSchemeConfig(selectedVersion.selectedSchemeConfig);
+    
+    if (configToPreserve) {
+      setSelectedSchemeConfig(configToPreserve);
     }
+    
     setShowVersionHistory(false);
   };
 
