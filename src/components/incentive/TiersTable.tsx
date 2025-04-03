@@ -18,15 +18,6 @@ const TiersTable: React.FC<TiersTableProps> = ({
 }) => {
   return (
     <div className="space-y-3">
-      <div className="bg-blue-50 p-3 rounded-lg text-sm text-blue-700 border border-blue-200">
-        <p className="font-medium">Tier Calculation Logic:</p>
-        <ul className="list-disc pl-5 mt-1 space-y-1">
-          <li>New tier's "From" value starts at previous tier's "To" value</li>
-          <li>New tier's "To" value defaults to 100 more than its "From" value</li>
-          <li>All values can be manually edited to meet your requirements</li>
-        </ul>
-      </div>
-      
       <div className="overflow-hidden rounded-xl border border-app-gray-200">
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-app-gray-200">
