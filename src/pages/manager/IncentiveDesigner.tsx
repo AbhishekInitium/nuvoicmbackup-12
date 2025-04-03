@@ -11,6 +11,7 @@ import SchemeTable from '@/components/incentive/SchemeTable';
 import { getIncentiveSchemes } from '@/services/database/mongoDBService';
 import DesignerNavigation from '@/components/incentive/DesignerNavigation';
 import SchemeAdministratorScreen from '@/components/incentive/scheme-admin/SchemeAdministratorScreen';
+import { Button } from '@/components/ui/button';
 
 const IncentiveDesigner = () => {
   const { toast } = useToast();
