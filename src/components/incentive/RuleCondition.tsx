@@ -27,16 +27,11 @@ const RuleConditionComponent: React.FC<RuleConditionComponentProps> = ({
   const [inputType, setInputType] = useState<string>("text");
   const [dataType, setDataType] = useState<string | undefined>(undefined);
   
-  // Get field options from availableFields or fallback to empty array
-  const getFieldOptions = () => {
-    if (availableFields && availableFields.length > 0) {
-      return availableFields;
-    }
-    return [];
-  };
+  // Safety check to ensure we have a valid field
+  const safeFieldOptions = availableFields && availableFields.length > 0 ? 
+    availableFields.filter(field => field !== undefined && field !== "") :
+    ["default_field"]; // Fallback to prevent empty values
   
-  const fieldOptions = getFieldOptions();
-
   // Update data type when field changes
   useEffect(() => {
     if (condition.field && kpiMetadata && kpiMetadata[condition.field]) {
@@ -88,26 +83,22 @@ const RuleConditionComponent: React.FC<RuleConditionComponentProps> = ({
   return (
     <div className="flex items-center space-x-3">
       <Select 
-        value={condition.field || ''}
+        value={condition.field || safeFieldOptions[0]}
         onValueChange={(value) => onUpdate('field', value)}
       >
         <SelectTrigger className="w-36 bg-white">
           <SelectValue placeholder="Select field" />
         </SelectTrigger>
         <SelectContent className="bg-white z-50">
-          {fieldOptions.length > 0 ? (
-            fieldOptions.map(field => {
-              // Get the display name from metadata if available
-              const displayName = kpiMetadata && kpiMetadata[field] 
-                ? kpiMetadata[field].description || field 
-                : field;
-              return (
-                <SelectItem key={field} value={field}>{displayName}</SelectItem>
-              );
-            })
-          ) : (
-            <SelectItem value="no-fields" disabled>No fields available</SelectItem>
-          )}
+          {safeFieldOptions.map((field, index) => {
+            // Get the display name from metadata if available
+            const displayName = kpiMetadata && kpiMetadata[field] 
+              ? kpiMetadata[field].description || field 
+              : field;
+            return (
+              <SelectItem key={index} value={field}>{displayName}</SelectItem>
+            );
+          })}
         </SelectContent>
       </Select>
       

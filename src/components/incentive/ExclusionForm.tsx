@@ -29,6 +29,11 @@ const ExclusionForm: React.FC<ExclusionFormProps> = ({
 }) => {
   const [dataType, setDataType] = useState<string | undefined>(undefined);
 
+  // Safety check to ensure we have valid fields
+  const safeDbFields = dbFields && dbFields.length > 0 ? 
+    dbFields.filter(field => field !== undefined && field !== "") :
+    ["default_field"]; // Fallback to prevent empty values
+
   // Update data type when field changes
   useEffect(() => {
     if (exclusion.field && kpiMetadata && kpiMetadata[exclusion.field]) {
@@ -119,14 +124,14 @@ const ExclusionForm: React.FC<ExclusionFormProps> = ({
                 <SelectValue placeholder="Select field" />
               </SelectTrigger>
               <SelectContent className="bg-white">
-                {dbFields.length > 0 ? (
-                  dbFields.map(field => {
+                {safeDbFields.length > 0 ? (
+                  safeDbFields.map((field, index) => {
                     // Get the display name from metadata if available
                     const displayName = kpiMetadata && kpiMetadata[field] 
                       ? kpiMetadata[field].description || field 
                       : field;
                     return (
-                      <SelectItem key={field} value={field}>{displayName}</SelectItem>
+                      <SelectItem key={index} value={field}>{displayName}</SelectItem>
                     );
                   })
                 ) : (

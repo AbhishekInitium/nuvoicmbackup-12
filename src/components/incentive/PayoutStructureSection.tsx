@@ -8,12 +8,14 @@ interface PayoutStructureSectionProps {
   tiers: Tier[];
   currency: string;
   updateCommissionStructure: (tiers: Tier[]) => void;
+  isReadOnly?: boolean;
 }
 
 const PayoutStructureSection: React.FC<PayoutStructureSectionProps> = ({
   tiers,
   currency,
-  updateCommissionStructure
+  updateCommissionStructure,
+  isReadOnly = false
 }) => {
   return (
     <SectionPanel title="3. Rates and Payout Structure">
@@ -21,6 +23,7 @@ const PayoutStructureSection: React.FC<PayoutStructureSectionProps> = ({
         tiers={tiers} 
         currency={currency}
         updateCommissionStructure={updateCommissionStructure} 
+        isReadOnly={isReadOnly}
       />
     </SectionPanel>
   );

@@ -31,6 +31,11 @@ const AdjustmentForm: React.FC<AdjustmentFormProps> = ({
 }) => {
   const [dataType, setDataType] = useState<string | undefined>(undefined);
 
+  // Safety check to ensure we have valid fields
+  const safeDbFields = dbFields && dbFields.length > 0 ? 
+    dbFields.filter(field => field !== undefined && field !== "") :
+    ["default_field"]; // Fallback to prevent empty values
+
   // Update data type when field changes
   useEffect(() => {
     if (adjustment.field && kpiMetadata && kpiMetadata[adjustment.field]) {
@@ -120,13 +125,13 @@ const AdjustmentForm: React.FC<AdjustmentFormProps> = ({
                 <SelectValue placeholder="Select field" />
               </SelectTrigger>
               <SelectContent className="bg-white">
-                {dbFields.map(field => {
+                {safeDbFields.map((field, index) => {
                   // Get the display name from metadata if available
                   const displayName = kpiMetadata && kpiMetadata[field] 
                     ? kpiMetadata[field].description || field 
                     : field;
                   return (
-                    <SelectItem key={field} value={field}>{displayName}</SelectItem>
+                    <SelectItem key={index} value={field}>{displayName}</SelectItem>
                   );
                 })}
               </SelectContent>
