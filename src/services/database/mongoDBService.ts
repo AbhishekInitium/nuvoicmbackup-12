@@ -2,10 +2,11 @@
 import { IncentivePlan } from '@/types/incentiveTypes';
 import { IncentivePlanWithStatus } from '@/services/incentive/types/incentiveServiceTypes';
 import { SchemeAdminConfig } from '@/types/schemeAdminTypes';
-import { testMongoDBConnection, invokeMongoDBFunction } from './mongoDBProxy';
+import axios from 'axios';
 
-// Export the connection test function
-export { testMongoDBConnection };
+// Base URL for API requests
+const API_BASE_URL = 'http://localhost:3001/api/incentives';
+const ADMIN_API_URL = 'http://localhost:3001/api/admin';
 
 /**
  * Get all incentive schemes from the MongoDB database
@@ -13,9 +14,9 @@ export { testMongoDBConnection };
 export const getIncentiveSchemes = async (): Promise<IncentivePlan[]> => {
   try {
     console.log('Fetching incentive schemes from MongoDB...');
-    const result = await invokeMongoDBFunction<IncentivePlan[]>('getIncentiveSchemes');
-    console.log(`Fetched ${result.length} schemes from MongoDB`);
-    return result;
+    const response = await axios.get(API_BASE_URL);
+    console.log(`Fetched ${response.data.length} schemes from MongoDB`);
+    return response.data;
   } catch (error) {
     console.error('Error fetching incentive schemes:', error);
     throw new Error(`Failed to fetch incentive schemes: ${error instanceof Error ? error.message : String(error)}`);
@@ -29,11 +30,9 @@ export const getIncentiveSchemes = async (): Promise<IncentivePlan[]> => {
 export const getSchemeVersions = async (schemeId: string): Promise<IncentivePlan[]> => {
   try {
     console.log(`Fetching all versions of scheme with ID: ${schemeId}`);
-    const result = await invokeMongoDBFunction<IncentivePlan[]>('getSchemeVersions', {
-      schemeId
-    });
-    console.log(`Fetched ${result.length} versions of scheme ${schemeId}`);
-    return result;
+    const response = await axios.get(`${API_BASE_URL}/versions/${schemeId}`);
+    console.log(`Fetched ${response.data.length} versions of scheme ${schemeId}`);
+    return response.data;
   } catch (error) {
     console.error(`Error fetching scheme versions for ${schemeId}:`, error);
     throw new Error(`Failed to fetch scheme versions: ${error instanceof Error ? error.message : String(error)}`);
@@ -48,16 +47,25 @@ export const saveIncentiveScheme = async (scheme: IncentivePlan, status?: string
     console.log('Saving new incentive scheme to MongoDB...');
     console.log('Scheme data:', JSON.stringify(scheme, null, 2));
     
-    const result = await invokeMongoDBFunction<{ _id: string; success: boolean }>('saveIncentiveScheme', {
-      scheme,
-      status
-    });
+    // Ensure required metadata fields are included
+    const schemeToSave = {
+      ...scheme,
+      metadata: {
+        ...(scheme.metadata || {}),
+        createdAt: scheme.metadata?.createdAt || new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        version: scheme.metadata?.version || 1,
+        status: status || scheme.metadata?.status || 'DRAFT'
+      }
+    };
     
-    if (result.success && result._id) {
-      console.log(`Successfully saved scheme with MongoDB ID: ${result._id}`);
-      return result._id;
+    const response = await axios.post(API_BASE_URL, schemeToSave);
+    
+    if (response.status === 201 && response.data._id) {
+      console.log(`Successfully saved scheme with MongoDB ID: ${response.data._id}`);
+      return response.data._id;
     } else {
-      console.error("Unexpected response when saving scheme:", result);
+      console.error("Unexpected response when saving scheme:", response.status, response.data);
       throw new Error('Unexpected response from server');
     }
   } catch (error) {
@@ -66,25 +74,34 @@ export const saveIncentiveScheme = async (scheme: IncentivePlan, status?: string
   }
 };
 
-/**
- * Update an incentive scheme by creating a new version
- */
 export const updateIncentiveScheme = async (schemeId: string, updates: Partial<IncentivePlan>, status?: string): Promise<boolean> => {
   try {
     console.log(`Creating new version for scheme ${schemeId}`);
     console.log('Updates:', JSON.stringify(updates, null, 2));
     
-    const result = await invokeMongoDBFunction<{ _id: string; success: boolean }>('updateIncentiveScheme', {
-      schemeId,
-      updates,
-      status
-    });
+    const version = updates.metadata?.version || 1;
     
-    if (result.success && result._id) {
-      console.log(`Successfully created new version with MongoDB ID: ${result._id}`);
+    const updatedScheme = {
+      ...updates,
+      schemeId: schemeId,
+      metadata: {
+        ...(updates.metadata || {}),
+        createdAt: updates.metadata?.createdAt || new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        version: version,
+        status: status || updates.metadata?.status || 'DRAFT'
+      }
+    };
+    
+    console.log("Saving new version with metadata:", JSON.stringify(updatedScheme.metadata, null, 2));
+    
+    const response = await axios.post(`${API_BASE_URL}/${schemeId}/version`, updatedScheme);
+    
+    if (response.status === 201 && response.data._id) {
+      console.log(`Successfully created new version with MongoDB ID: ${response.data._id}`);
       return true;
     } else {
-      console.error("Failed to create new version: Unexpected response", result);
+      console.error("Failed to create new version: Unexpected response", response.status, response.data);
       return false;
     }
   } catch (error) {
@@ -99,9 +116,9 @@ export const updateIncentiveScheme = async (schemeId: string, updates: Partial<I
 export const getSchemeAdminConfigs = async (): Promise<SchemeAdminConfig[]> => {
   try {
     console.log('Fetching scheme admin configurations from MongoDB...');
-    const result = await invokeMongoDBFunction<SchemeAdminConfig[]>('getSchemeAdminConfigs');
-    console.log(`Fetched ${result.length} admin configurations from MongoDB`);
-    return result;
+    const response = await axios.get(ADMIN_API_URL);
+    console.log(`Fetched ${response.data.length} admin configurations from MongoDB`);
+    return response.data;
   } catch (error) {
     console.error('Error fetching scheme admin configurations:', error);
     throw new Error(`Failed to fetch admin configurations: ${error instanceof Error ? error.message : String(error)}`);
@@ -117,15 +134,34 @@ export const saveSchemeAdmin = async (config: SchemeAdminConfig): Promise<string
   try {
     console.log('Saving scheme admin configuration to MongoDB...');
     
-    const result = await invokeMongoDBFunction<{ _id: string; success: boolean }>('saveSchemeAdmin', {
-      config
-    });
+    // Ensure updated timestamp is set
+    const configToSave = {
+      ...config,
+      updatedAt: new Date().toISOString()
+    };
     
-    if (result.success && result._id) {
-      console.log(`Successfully ${config._id ? 'updated' : 'created'} admin config with ID: ${result._id}`);
-      return result._id;
+    // Check if this is an update or a new record
+    if (config._id) {
+      console.log(`Updating existing admin config with ID: ${config._id}`);
+      const response = await axios.put(`${ADMIN_API_URL}/${config._id}`, configToSave);
+      
+      if (response.status === 200) {
+        console.log(`Successfully updated admin config with ID: ${config._id}`);
+        return config._id;
+      } else {
+        throw new Error(`Unexpected response when updating admin config: ${response.status}`);
+      }
     } else {
-      throw new Error(`Unexpected response when ${config._id ? 'updating' : 'creating'} admin config`);
+      // This is a new config
+      console.log('Creating new admin config');
+      const response = await axios.post(ADMIN_API_URL, configToSave);
+      
+      if (response.status === 201 && response.data._id) {
+        console.log(`Successfully created admin config with MongoDB ID: ${response.data._id}`);
+        return response.data._id;
+      } else {
+        throw new Error(`Unexpected response when creating admin config: ${response.status}`);
+      }
     }
   } catch (error) {
     console.error('Error saving scheme admin configuration:', error);
@@ -139,10 +175,8 @@ export const saveSchemeAdmin = async (config: SchemeAdminConfig): Promise<string
 export const getSchemeAdminConfig = async (configId: string): Promise<SchemeAdminConfig> => {
   try {
     console.log(`Fetching scheme admin configuration with ID: ${configId}`);
-    const result = await invokeMongoDBFunction<SchemeAdminConfig>('getSchemeAdminConfig', {
-      configId
-    });
-    return result;
+    const response = await axios.get(`${ADMIN_API_URL}/${configId}`);
+    return response.data;
   } catch (error) {
     console.error(`Error fetching admin configuration ${configId}:`, error);
     throw new Error(`Failed to fetch admin configuration: ${error instanceof Error ? error.message : String(error)}`);
