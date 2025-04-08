@@ -3,10 +3,30 @@ import { IncentivePlan } from '@/types/incentiveTypes';
 import { IncentivePlanWithStatus } from '@/services/incentive/types/incentiveServiceTypes';
 import { SchemeAdminConfig } from '@/types/schemeAdminTypes';
 import axios from 'axios';
+import { supabase } from "@/integrations/supabase/client";
 
-// Base URL for API requests
+// Base URL for API requests - use local server when in development
 const API_BASE_URL = 'http://localhost:3001/api/incentives';
 const ADMIN_API_URL = 'http://localhost:3001/api/admin';
+
+// Check if MongoDB connection is working via Supabase
+export const testMongoDBConnection = async (): Promise<boolean> => {
+  try {
+    console.log('Testing MongoDB connection via Supabase...');
+    const { data, error } = await supabase.functions.invoke('connect-mongodb');
+    
+    if (error) {
+      console.error('Error connecting to MongoDB:', error);
+      return false;
+    }
+    
+    console.log('MongoDB connection test result:', data);
+    return data?.status === 'Connected';
+  } catch (error) {
+    console.error('Error testing MongoDB connection:', error);
+    return false;
+  }
+};
 
 /**
  * Get all incentive schemes from the MongoDB database

@@ -8,12 +8,14 @@ import { IncentivePlanWithStatus } from '@/services/incentive/types/incentiveSer
 import { DEFAULT_PLAN } from '@/constants/incentiveConstants';
 import { IncentivePlan } from '@/types/incentiveTypes';
 import SchemeTable from '@/components/incentive/SchemeTable';
-import { getIncentiveSchemes } from '@/services/database/mongoDBService';
+import { getIncentiveSchemes, testMongoDBConnection } from '@/services/database/mongoDBService';
 import DesignerNavigation from '@/components/incentive/DesignerNavigation';
 import SchemeAdministratorScreen from '@/components/incentive/scheme-admin/SchemeAdministratorScreen';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { AlertCircle, Database } from 'lucide-react';
 
 const IncentiveDesigner = () => {
   const { toast } = useToast();
@@ -26,10 +28,36 @@ const IncentiveDesigner = () => {
   const [isReadOnly, setIsReadOnly] = useState(false);
   const [showDesigner, setShowDesigner] = useState(false);
   const [showAdminScreen, setShowAdminScreen] = useState(false);
+  const [dbConnectionStatus, setDbConnectionStatus] = useState<'pending' | 'connected' | 'error'>('pending');
 
   useEffect(() => {
+    checkDatabaseConnection();
     loadSchemes();
   }, []);
+
+  const checkDatabaseConnection = async () => {
+    try {
+      const isConnected = await testMongoDBConnection();
+      setDbConnectionStatus(isConnected ? 'connected' : 'error');
+      
+      if (isConnected) {
+        toast({
+          title: "Database Connected",
+          description: "Successfully connected to MongoDB database",
+          variant: "default"
+        });
+      } else {
+        toast({
+          title: "Database Connection Error",
+          description: "Failed to connect to MongoDB database. Some features may not work.",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      console.error("Error checking database connection:", error);
+      setDbConnectionStatus('error');
+    }
+  };
 
   const loadSchemes = async () => {
     setIsLoading(true);
@@ -157,6 +185,27 @@ const IncentiveDesigner = () => {
           showBackToDashboard={!showDesigner && !showAdminScreen}
           title={showDesigner ? (isEditMode ? (isReadOnly ? "View Scheme" : "Edit Scheme") : "Create Scheme") : "Scheme Management"}
         />
+        
+        {dbConnectionStatus === 'error' && (
+          <Alert variant="destructive" className="mb-6 max-w-6xl mx-auto">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Database Connection Error</AlertTitle>
+            <AlertDescription>
+              Could not connect to the MongoDB database. Scheme data may not load correctly.
+              <div className="mt-2">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  className="flex items-center" 
+                  onClick={checkDatabaseConnection}
+                >
+                  <Database className="mr-2 h-4 w-4" />
+                  Retry Connection
+                </Button>
+              </div>
+            </AlertDescription>
+          </Alert>
+        )}
         
         {showAdminScreen ? (
           <SchemeAdministratorScreen onBack={handleBackToTable} />
