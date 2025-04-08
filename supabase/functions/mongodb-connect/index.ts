@@ -7,7 +7,13 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+console.log("Edge Function loaded and initialized");
+
 serve(async (req) => {
+  console.log("==== REQUEST RECEIVED ====");
+  console.log(`Request method: ${req.method}`);
+  console.log(`Request URL: ${req.url}`);
+  
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     console.log("Handling CORS preflight request")
@@ -17,13 +23,52 @@ serve(async (req) => {
   }
 
   try {
-    // Get MongoDB URI from environment secret
-    const MONGODB_URI = Deno.env.get('MONGODB_URI')
+    console.log("Processing request body...");
+    // Parse the incoming request
+    let requestBody;
+    try {
+      const bodyText = await req.text();
+      console.log("Request body text:", bodyText);
+      
+      if (!bodyText || bodyText.trim() === '') {
+        console.error("Empty request body received");
+        return new Response(JSON.stringify({ 
+          error: 'Empty request body' 
+        }), { 
+          status: 400,
+          headers: { 
+            ...corsHeaders, 
+            'Content-Type': 'application/json' 
+          }
+        });
+      }
+      
+      requestBody = JSON.parse(bodyText);
+      console.log("Parsed request body:", JSON.stringify(requestBody));
+    } catch (parseError) {
+      console.error("Failed to parse request body:", parseError);
+      return new Response(JSON.stringify({ 
+        error: 'Invalid JSON in request body',
+        details: parseError.message
+      }), { 
+        status: 400,
+        headers: { 
+          ...corsHeaders, 
+          'Content-Type': 'application/json' 
+        }
+      });
+    }
     
-    console.log("MongoDB Edge Function called")
+    const { operation, data } = requestBody;
+    console.log(`Received operation: ${operation}`);
+    
+    // Get MongoDB URI from environment secret
+    const MONGODB_URI = Deno.env.get('MONGODB_URI');
+    
+    console.log("MongoDB Edge Function called");
     
     if (!MONGODB_URI) {
-      console.error("MongoDB URI not configured in environment")
+      console.error("MongoDB URI not configured in environment");
       return new Response(JSON.stringify({ 
         error: 'MongoDB URI not configured' 
       }), { 
@@ -32,17 +77,17 @@ serve(async (req) => {
           ...corsHeaders, 
           'Content-Type': 'application/json' 
         }
-      })
+      });
     }
 
-    console.log("MongoDB URI found in environment variables")
+    console.log("MongoDB URI found in environment variables");
     
     // Parse the URI to extract database name
-    const uriParts = MONGODB_URI.match(/mongodb(?:\+srv)?:\/\/[^/]+\/([^?]+)/)
-    const databaseName = uriParts ? uriParts[1] : null
+    const uriParts = MONGODB_URI.match(/mongodb(?:\+srv)?:\/\/[^/]+\/([^?]+)/);
+    const databaseName = uriParts ? uriParts[1] : null;
 
     if (!databaseName) {
-      console.error("Failed to extract database name from URI")
+      console.error("Failed to extract database name from URI");
       return new Response(JSON.stringify({ 
         error: 'Invalid MongoDB URI format - could not extract database name' 
       }), { 
@@ -51,22 +96,22 @@ serve(async (req) => {
           ...corsHeaders, 
           'Content-Type': 'application/json' 
         }
-      })
+      });
     }
 
-    console.log(`Database name parsed: ${databaseName}`)
+    console.log(`Database name parsed: ${databaseName}`);
     
     // Create MongoDB client
-    console.log("Initializing MongoDB client")
-    const client = new MongoClient()
+    console.log("Initializing MongoDB client");
+    const client = new MongoClient();
     
     // Log connection attempt
-    console.log("Attempting to connect to MongoDB...")
+    console.log("Attempting to connect to MongoDB...");
     try {
-      await client.connect(MONGODB_URI)
-      console.log("Successfully connected to MongoDB")
+      await client.connect(MONGODB_URI);
+      console.log("Successfully connected to MongoDB");
     } catch (connError) {
-      console.error("MongoDB connection failed:", connError)
+      console.error("MongoDB connection failed:", connError);
       return new Response(JSON.stringify({ 
         error: `MongoDB connection failed: ${connError.message}`,
         details: connError
@@ -76,51 +121,31 @@ serve(async (req) => {
           ...corsHeaders, 
           'Content-Type': 'application/json' 
         }
-      })
+      });
     }
     
-    // Parse the incoming request
-    let requestBody;
-    try {
-      requestBody = await req.json();
-      console.log(`Received operation: ${requestBody.operation}`);
-    } catch (parseError) {
-      console.error("Failed to parse request body as JSON:", parseError);
-      return new Response(JSON.stringify({ 
-        error: 'Invalid JSON in request body' 
-      }), { 
-        status: 400,
-        headers: { 
-          ...corsHeaders, 
-          'Content-Type': 'application/json' 
-        }
-      })
-    }
-    
-    const { operation, data } = requestBody;
-
     // Initialize database
-    const db = client.database(databaseName)
-    console.log(`Using database: ${databaseName}`)
+    const db = client.database(databaseName);
+    console.log(`Using database: ${databaseName}`);
 
     // Perform operations based on the request
     switch (operation) {
       case 'getIncentiveSchemes':
-        console.log("Processing getIncentiveSchemes operation")
+        console.log("Processing getIncentiveSchemes operation");
         try {
-          const incentiveCollection = db.collection('incentiveschemes')
-          console.log("Fetching schemes from collection")
-          const schemes = await incentiveCollection.find().toArray()
-          console.log(`Retrieved ${schemes.length} schemes from MongoDB`)
+          const incentiveCollection = db.collection('incentiveschemes');
+          console.log("Fetching schemes from collection");
+          const schemes = await incentiveCollection.find().toArray();
+          console.log(`Retrieved ${schemes.length} schemes from MongoDB`);
           
           return new Response(JSON.stringify(schemes), {
             headers: { 
               ...corsHeaders, 
               'Content-Type': 'application/json' 
             }
-          })
+          });
         } catch (opError) {
-          console.error("Error in getIncentiveSchemes operation:", opError)
+          console.error("Error in getIncentiveSchemes operation:", opError);
           return new Response(JSON.stringify({ 
             error: `Operation failed: ${opError.message}`,
             operation: 'getIncentiveSchemes',
@@ -131,25 +156,25 @@ serve(async (req) => {
               ...corsHeaders, 
               'Content-Type': 'application/json' 
             }
-          })
+          });
         }
 
       case 'saveScheme':
-        console.log("Processing saveScheme operation")
+        console.log("Processing saveScheme operation");
         try {
-          const saveCollection = db.collection('incentiveschemes')
-          console.log("Attempting to save scheme to collection")
-          const saveResult = await saveCollection.insertOne(data)
-          console.log(`Successfully saved scheme with ID: ${saveResult.insertedId}`)
+          const saveCollection = db.collection('incentiveschemes');
+          console.log("Attempting to save scheme to collection");
+          const saveResult = await saveCollection.insertOne(data);
+          console.log(`Successfully saved scheme with ID: ${saveResult.insertedId}`);
           
           return new Response(JSON.stringify(saveResult), {
             headers: { 
               ...corsHeaders, 
               'Content-Type': 'application/json' 
             }
-          })
+          });
         } catch (opError) {
-          console.error("Error in saveScheme operation:", opError)
+          console.error("Error in saveScheme operation:", opError);
           return new Response(JSON.stringify({ 
             error: `Operation failed: ${opError.message}`,
             operation: 'saveScheme',
@@ -160,11 +185,11 @@ serve(async (req) => {
               ...corsHeaders, 
               'Content-Type': 'application/json' 
             }
-          })
+          });
         }
 
       default:
-        console.error(`Unsupported operation requested: ${operation}`)
+        console.error(`Unsupported operation requested: ${operation}`);
         return new Response(JSON.stringify({ 
           error: 'Unsupported operation',
           requestedOperation: operation 
@@ -174,10 +199,10 @@ serve(async (req) => {
             ...corsHeaders, 
             'Content-Type': 'application/json' 
           }
-        })
+        });
     }
   } catch (error) {
-    console.error('General error in MongoDB edge function:', error)
+    console.error('General error in MongoDB edge function:', error);
     
     return new Response(JSON.stringify({ 
       error: `Edge function error: ${error.message}`,
@@ -188,6 +213,6 @@ serve(async (req) => {
         ...corsHeaders, 
         'Content-Type': 'application/json' 
       }
-    })
+    });
   }
 })

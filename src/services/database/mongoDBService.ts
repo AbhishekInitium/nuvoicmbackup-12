@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { IncentivePlan } from '@/types/incentiveTypes';
 import { IncentivePlanWithStatus } from '@/services/incentive/types/incentiveServiceTypes';
@@ -14,16 +15,35 @@ const ADMIN_API_URL = 'http://localhost:3001/api/admin';
 export const getIncentiveSchemes = async (): Promise<IncentivePlan[]> => {
   try {
     console.log('Fetching incentive schemes from MongoDB via Supabase Edge Function...');
+    
+    // Add detailed debugging
+    console.log('Preparing to invoke mongodb-connect edge function with getIncentiveSchemes operation');
+    
     const { data, error } = await supabase.functions.invoke('mongodb-connect', {
-      body: JSON.stringify({ operation: 'getIncentiveSchemes' })
+      body: JSON.stringify({ operation: 'getIncentiveSchemes' }),
+      headers: {
+        'Content-Type': 'application/json',
+      }
     });
 
-    if (error) throw error;
+    console.log('Edge function invocation completed');
+    
+    if (error) {
+      console.error('Error response from edge function:', error);
+      throw error;
+    }
 
-    console.log(`Fetched ${data.length} schemes from MongoDB`);
-    return data;
+    console.log(`Fetched ${data ? data.length : 0} schemes from MongoDB`);
+    return data || [];
   } catch (error) {
     console.error('Error fetching incentive schemes:', error);
+    if (error instanceof Error) {
+      console.error('Error details:', {
+        name: error.name,
+        message: error.message,
+        stack: error.stack
+      });
+    }
     throw new Error(`Failed to fetch incentive schemes: ${error instanceof Error ? error.message : String(error)}`);
   }
 };
