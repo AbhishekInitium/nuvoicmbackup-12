@@ -15,7 +15,7 @@ serve(async (req) => {
 
   try {
     // Get MongoDB URI from environment variable
-    let MONGODB_URI = Deno.env.get('MONGODB_URI')
+    const MONGODB_URI = Deno.env.get('MONGODB_URI')
     
     if (!MONGODB_URI) {
       console.error("MONGODB_URI environment variable not set")
@@ -28,28 +28,33 @@ serve(async (req) => {
       )
     }
 
-    // Ensure port 3001 is used in the connection string
-    if (!MONGODB_URI.includes(':3001')) {
-      // If there's already a port defined in the URI, replace it
-      if (MONGODB_URI.match(/:[0-9]+\//)) {
-        MONGODB_URI = MONGODB_URI.replace(/:[0-9]+\//, ':3001/')
-      } 
-      // If no port defined but has a host, add the port
-      else if (MONGODB_URI.match(/\/\/[^\/]+\//)) {
-        MONGODB_URI = MONGODB_URI.replace(/\/\/([^\/]+)\//, '//$1:3001/')
-      }
-      console.log("Modified MongoDB URI to use port 3001")
-    }
-
-    console.log("Attempting to connect to MongoDB on port 3001...")
+    console.log("Attempting to connect to MongoDB...")
     
-    // Test the connection
+    // Connect directly using the URI which already includes the database name
     const client = new MongoClient()
     await client.connect(MONGODB_URI)
     
     // Get the database names to verify connection
     const dbNames = await client.listDatabases()
     console.log(`Connected successfully. Found ${dbNames.length} databases.`)
+    
+    // Parse URI to extract database name
+    let dbName = "NUVO_ICM_MAIN" // Default fallback
+    try {
+      // Extract database name from URI if present
+      const uriParts = MONGODB_URI.split('/')
+      if (uriParts.length > 3) {
+        const lastPart = uriParts[uriParts.length - 1]
+        // Handle potential query parameters
+        dbName = lastPart.split('?')[0]
+        console.log(`Using database from URI: ${dbName}`)
+      }
+    } catch (error) {
+      console.error("Could not extract database name from URI, using default:", error)
+    }
+    
+    // Use the database name from the URI
+    const db = client.database(dbName)
     
     // Perform MongoDB operations based on the request data
     const contentType = req.headers.get('content-type') || '';
@@ -63,14 +68,13 @@ serve(async (req) => {
       }
     }
     
-    const db = client.database("NUVO_ICM_MAIN");
     let result = null;
     
     // Execute the requested operation
     if (data.operation) {
       switch (data.operation) {
         case 'testConnection':
-          result = { connected: true, databases: dbNames.length };
+          result = { connected: true, databases: dbNames.length, dbName };
           break;
         case 'getIncentiveSchemes':
           result = await db.collection("incentiveSchemes").find().toArray();
@@ -162,7 +166,8 @@ serve(async (req) => {
       // No operation specified, just return connection info
       result = { 
         status: "Connected", 
-        message: "Successfully connected to MongoDB on port 3001",
+        message: "Successfully connected to MongoDB",
+        database: dbName,
         databases: dbNames.length
       };
     }
