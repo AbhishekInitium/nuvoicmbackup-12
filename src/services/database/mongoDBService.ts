@@ -1,4 +1,4 @@
-
+import { supabase } from '@/integrations/supabase/client';
 import { IncentivePlan } from '@/types/incentiveTypes';
 import { IncentivePlanWithStatus } from '@/services/incentive/types/incentiveServiceTypes';
 import { SchemeAdminConfig } from '@/types/schemeAdminTypes';
@@ -13,10 +13,15 @@ const ADMIN_API_URL = 'http://localhost:3001/api/admin';
  */
 export const getIncentiveSchemes = async (): Promise<IncentivePlan[]> => {
   try {
-    console.log('Fetching incentive schemes from MongoDB...');
-    const response = await axios.get(API_BASE_URL);
-    console.log(`Fetched ${response.data.length} schemes from MongoDB`);
-    return response.data;
+    console.log('Fetching incentive schemes from MongoDB via Supabase Edge Function...');
+    const { data, error } = await supabase.functions.invoke('mongodb-connect', {
+      body: JSON.stringify({ operation: 'getIncentiveSchemes' })
+    });
+
+    if (error) throw error;
+
+    console.log(`Fetched ${data.length} schemes from MongoDB`);
+    return data;
   } catch (error) {
     console.error('Error fetching incentive schemes:', error);
     throw new Error(`Failed to fetch incentive schemes: ${error instanceof Error ? error.message : String(error)}`);
@@ -44,30 +49,18 @@ export const getSchemeVersions = async (schemeId: string): Promise<IncentivePlan
  */
 export const saveIncentiveScheme = async (scheme: IncentivePlan, status?: string): Promise<string> => {
   try {
-    console.log('Saving new incentive scheme to MongoDB...');
-    console.log('Scheme data:', JSON.stringify(scheme, null, 2));
-    
-    // Ensure required metadata fields are included
-    const schemeToSave = {
-      ...scheme,
-      metadata: {
-        ...(scheme.metadata || {}),
-        createdAt: scheme.metadata?.createdAt || new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        version: scheme.metadata?.version || 1,
-        status: status || scheme.metadata?.status || 'DRAFT'
-      }
-    };
-    
-    const response = await axios.post(API_BASE_URL, schemeToSave);
-    
-    if (response.status === 201 && response.data._id) {
-      console.log(`Successfully saved scheme with MongoDB ID: ${response.data._id}`);
-      return response.data._id;
-    } else {
-      console.error("Unexpected response when saving scheme:", response.status, response.data);
-      throw new Error('Unexpected response from server');
-    }
+    console.log('Saving new incentive scheme to MongoDB via Supabase Edge Function...');
+    const { data, error } = await supabase.functions.invoke('mongodb-connect', {
+      body: JSON.stringify({ 
+        operation: 'saveScheme', 
+        data: scheme 
+      })
+    });
+
+    if (error) throw error;
+
+    console.log(`Successfully saved scheme with MongoDB ID: ${data.insertedId}`);
+    return data.insertedId;
   } catch (error) {
     console.error('Error saving incentive scheme:', error);
     throw new Error(`Failed to save scheme: ${error instanceof Error ? error.message : String(error)}`);
