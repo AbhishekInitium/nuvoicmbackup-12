@@ -1,4 +1,4 @@
-import { supabase } from '@/integrations/supabase/client';
+
 import { IncentivePlan } from '@/types/incentiveTypes';
 import { IncentivePlanWithStatus } from '@/services/incentive/types/incentiveServiceTypes';
 import { SchemeAdminConfig } from '@/types/schemeAdminTypes';
@@ -13,117 +13,13 @@ const ADMIN_API_URL = 'http://localhost:3001/api/admin';
  */
 export const getIncentiveSchemes = async (): Promise<IncentivePlan[]> => {
   try {
-    console.log('Fetching incentive schemes from MongoDB via Supabase Edge Function...');
-    
-    // Add detailed debugging
-    console.log('Preparing to invoke mongodb-connect edge function with getIncentiveSchemes operation');
-    
-    // First try a test operation to see if the edge function is working at all
-    try {
-      console.log('Sending test operation to verify edge function connectivity');
-      const testResponse = await supabase.functions.invoke('mongodb-connect', {
-        body: JSON.stringify({ operation: 'test' }),
-        headers: {
-          'Content-Type': 'application/json',
-        }
-      });
-
-      if (testResponse.error) {
-        console.error('Test operation failed:', testResponse.error);
-      } else {
-        console.log('Test operation successful:', testResponse.data);
-      }
-    } catch (testError) {
-      console.error('Error during test operation:', testError);
-    }
-    
-    // Now try the actual operation
-    const { data, error } = await supabase.functions.invoke('mongodb-connect', {
-      body: JSON.stringify({ operation: 'getIncentiveSchemes' }),
-      headers: {
-        'Content-Type': 'application/json',
-      }
-    });
-
-    console.log('Edge function invocation completed');
-    
-    if (error) {
-      console.error('Error response from edge function:', error);
-      console.error('Error details:', JSON.stringify(error));
-      throw error;
-    }
-
-    console.log(`Fetched ${data ? data.length : 0} schemes from MongoDB`);
-    return data || [];
+    console.log('Fetching incentive schemes from MongoDB...');
+    const response = await axios.get(API_BASE_URL);
+    console.log(`Fetched ${response.data.length} schemes from MongoDB`);
+    return response.data;
   } catch (error) {
     console.error('Error fetching incentive schemes:', error);
-    if (error instanceof Error) {
-      console.error('Error details:', {
-        name: error.name,
-        message: error.message,
-        stack: error.stack
-      });
-    } else {
-      console.error('Unknown error type:', String(error));
-    }
-    
-    // For demo purposes, return mock data if the edge function fails
-    console.log('Returning mock data for demo purposes');
-    return [
-      {
-        _id: "local_mock_001",
-        name: "Mock Sales Incentive Plan",
-        schemeId: "ICM_MOCK_001",
-        description: "Mock scheme for demo purposes",
-        effectiveStart: "2025-04-01",
-        effectiveEnd: "2025-12-31",
-        currency: "USD",
-        revenueBase: "salesOrders",
-        participants: ["Demo User"],
-        metadata: {
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-          version: 1,
-          status: "DRAFT"
-        },
-        commissionStructure: {
-          tiers: [
-            {
-              id: "tier1",
-              thresholdPct: 80,
-              commissionPct: 3
-            },
-            {
-              id: "tier2", 
-              thresholdPct: 100,
-              commissionPct: 6
-            }
-          ]
-        },
-        measurementRules: {
-          primaryMetrics: [
-            {
-              field: "TotalAmount",
-              operator: ">",
-              value: 1000,
-              description: "Minimum order value"
-            }
-          ],
-          minQualification: 0,
-          adjustments: [],
-          exclusions: []
-        },
-        creditRules: {
-          levels: [
-            {
-              role: "Sales Rep",
-              creditPct: 100
-            }
-          ]
-        },
-        customRules: []
-      }
-    ];
+    throw new Error(`Failed to fetch incentive schemes: ${error instanceof Error ? error.message : String(error)}`);
   }
 };
 
@@ -148,24 +44,33 @@ export const getSchemeVersions = async (schemeId: string): Promise<IncentivePlan
  */
 export const saveIncentiveScheme = async (scheme: IncentivePlan, status?: string): Promise<string> => {
   try {
-    console.log('Saving new incentive scheme to MongoDB via Supabase Edge Function...');
-    const { data, error } = await supabase.functions.invoke('mongodb-connect', {
-      body: JSON.stringify({ 
-        operation: 'saveScheme', 
-        data: scheme 
-      })
-    });
-
-    if (error) throw error;
-
-    console.log(`Successfully saved scheme with MongoDB ID: ${data.insertedId}`);
-    return data.insertedId;
+    console.log('Saving new incentive scheme to MongoDB...');
+    console.log('Scheme data:', JSON.stringify(scheme, null, 2));
+    
+    // Ensure required metadata fields are included
+    const schemeToSave = {
+      ...scheme,
+      metadata: {
+        ...(scheme.metadata || {}),
+        createdAt: scheme.metadata?.createdAt || new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        version: scheme.metadata?.version || 1,
+        status: status || scheme.metadata?.status || 'DRAFT'
+      }
+    };
+    
+    const response = await axios.post(API_BASE_URL, schemeToSave);
+    
+    if (response.status === 201 && response.data._id) {
+      console.log(`Successfully saved scheme with MongoDB ID: ${response.data._id}`);
+      return response.data._id;
+    } else {
+      console.error("Unexpected response when saving scheme:", response.status, response.data);
+      throw new Error('Unexpected response from server');
+    }
   } catch (error) {
     console.error('Error saving incentive scheme:', error);
-    // Generate a mock ID for demo purposes
-    const mockId = "local_mock_" + Date.now().toString();
-    console.log(`Generating mock ID for demo: ${mockId}`);
-    return mockId;
+    throw new Error(`Failed to save scheme: ${error instanceof Error ? error.message : String(error)}`);
   }
 };
 
