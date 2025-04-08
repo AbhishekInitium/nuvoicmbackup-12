@@ -19,6 +19,26 @@ export const getIncentiveSchemes = async (): Promise<IncentivePlan[]> => {
     // Add detailed debugging
     console.log('Preparing to invoke mongodb-connect edge function with getIncentiveSchemes operation');
     
+    // First try a test operation to see if the edge function is working at all
+    try {
+      console.log('Sending test operation to verify edge function connectivity');
+      const testResponse = await supabase.functions.invoke('mongodb-connect', {
+        body: JSON.stringify({ operation: 'test' }),
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+
+      if (testResponse.error) {
+        console.error('Test operation failed:', testResponse.error);
+      } else {
+        console.log('Test operation successful:', testResponse.data);
+      }
+    } catch (testError) {
+      console.error('Error during test operation:', testError);
+    }
+    
+    // Now try the actual operation
     const { data, error } = await supabase.functions.invoke('mongodb-connect', {
       body: JSON.stringify({ operation: 'getIncentiveSchemes' }),
       headers: {
@@ -30,6 +50,7 @@ export const getIncentiveSchemes = async (): Promise<IncentivePlan[]> => {
     
     if (error) {
       console.error('Error response from edge function:', error);
+      console.error('Error details:', JSON.stringify(error));
       throw error;
     }
 
@@ -43,6 +64,8 @@ export const getIncentiveSchemes = async (): Promise<IncentivePlan[]> => {
         message: error.message,
         stack: error.stack
       });
+    } else {
+      console.error('Unknown error type:', String(error));
     }
     throw new Error(`Failed to fetch incentive schemes: ${error instanceof Error ? error.message : String(error)}`);
   }

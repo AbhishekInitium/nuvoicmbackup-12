@@ -82,6 +82,20 @@ serve(async (req) => {
 
     console.log("MongoDB URI found in environment variables");
     
+    // Check if this is just a test request
+    if (operation === 'test') {
+      return new Response(JSON.stringify({ 
+        success: true,
+        message: 'Edge function is working correctly, test operation completed' 
+      }), { 
+        status: 200,
+        headers: { 
+          ...corsHeaders, 
+          'Content-Type': 'application/json' 
+        }
+      });
+    }
+    
     // Parse the URI to extract database name
     const uriParts = MONGODB_URI.match(/mongodb(?:\+srv)?:\/\/[^/]+\/([^?]+)/);
     const databaseName = uriParts ? uriParts[1] : null;
@@ -89,7 +103,8 @@ serve(async (req) => {
     if (!databaseName) {
       console.error("Failed to extract database name from URI");
       return new Response(JSON.stringify({ 
-        error: 'Invalid MongoDB URI format - could not extract database name' 
+        error: 'Invalid MongoDB URI format - could not extract database name',
+        uri_example: 'mongodb+srv://username:password@host/database'
       }), { 
         status: 400,
         headers: { 
@@ -101,20 +116,29 @@ serve(async (req) => {
 
     console.log(`Database name parsed: ${databaseName}`);
     
-    // Create MongoDB client
+    // Create MongoDB client with specific options
     console.log("Initializing MongoDB client");
     const client = new MongoClient();
     
     // Log connection attempt
     console.log("Attempting to connect to MongoDB...");
     try {
-      await client.connect(MONGODB_URI);
+      // Add connection options that might help with TLS issues
+      const connectOptions = {
+        tls: true,
+        tlsAllowInvalidCertificates: false,
+        retryWrites: true,
+      };
+      
+      console.log("Connecting with options:", JSON.stringify(connectOptions));
+      await client.connect(MONGODB_URI, connectOptions);
       console.log("Successfully connected to MongoDB");
     } catch (connError) {
       console.error("MongoDB connection failed:", connError);
       return new Response(JSON.stringify({ 
         error: `MongoDB connection failed: ${connError.message}`,
-        details: connError
+        details: connError instanceof Error ? connError.stack : String(connError),
+        uri_format: MONGODB_URI.replace(/\/\/([^:]+):[^@]+@/, "//[username]:[password]@")
       }), { 
         status: 500,
         headers: { 
@@ -149,7 +173,7 @@ serve(async (req) => {
           return new Response(JSON.stringify({ 
             error: `Operation failed: ${opError.message}`,
             operation: 'getIncentiveSchemes',
-            details: opError
+            details: opError instanceof Error ? opError.stack : String(opError)
           }), { 
             status: 500,
             headers: { 
@@ -157,6 +181,13 @@ serve(async (req) => {
               'Content-Type': 'application/json' 
             }
           });
+        } finally {
+          try {
+            await client.close();
+            console.log("MongoDB connection closed");
+          } catch (closeError) {
+            console.error("Error closing MongoDB connection:", closeError);
+          }
         }
 
       case 'saveScheme':
@@ -178,7 +209,7 @@ serve(async (req) => {
           return new Response(JSON.stringify({ 
             error: `Operation failed: ${opError.message}`,
             operation: 'saveScheme',
-            details: opError
+            details: opError instanceof Error ? opError.stack : String(opError)
           }), { 
             status: 500,
             headers: { 
@@ -186,6 +217,13 @@ serve(async (req) => {
               'Content-Type': 'application/json' 
             }
           });
+        } finally {
+          try {
+            await client.close();
+            console.log("MongoDB connection closed");
+          } catch (closeError) {
+            console.error("Error closing MongoDB connection:", closeError);
+          }
         }
 
       default:
@@ -206,7 +244,7 @@ serve(async (req) => {
     
     return new Response(JSON.stringify({ 
       error: `Edge function error: ${error.message}`,
-      stack: error.stack 
+      stack: error instanceof Error ? error.stack : String(error)
     }), { 
       status: 500,
       headers: { 
