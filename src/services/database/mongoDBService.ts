@@ -13,9 +13,7 @@ export { testMongoDBConnection };
 export const getIncentiveSchemes = async (): Promise<IncentivePlan[]> => {
   try {
     console.log('Fetching incentive schemes from MongoDB...');
-    const result = await invokeMongoDBFunction<IncentivePlan[]>('mongodb-operations', {
-      operation: 'getIncentiveSchemes'
-    });
+    const result = await invokeMongoDBFunction<IncentivePlan[]>('getIncentiveSchemes');
     console.log(`Fetched ${result.length} schemes from MongoDB`);
     return result;
   } catch (error) {
@@ -31,8 +29,7 @@ export const getIncentiveSchemes = async (): Promise<IncentivePlan[]> => {
 export const getSchemeVersions = async (schemeId: string): Promise<IncentivePlan[]> => {
   try {
     console.log(`Fetching all versions of scheme with ID: ${schemeId}`);
-    const result = await invokeMongoDBFunction<IncentivePlan[]>('mongodb-operations', {
-      operation: 'getSchemeVersions',
+    const result = await invokeMongoDBFunction<IncentivePlan[]>('getSchemeVersions', {
       schemeId
     });
     console.log(`Fetched ${result.length} versions of scheme ${schemeId}`);
@@ -51,8 +48,7 @@ export const saveIncentiveScheme = async (scheme: IncentivePlan, status?: string
     console.log('Saving new incentive scheme to MongoDB...');
     console.log('Scheme data:', JSON.stringify(scheme, null, 2));
     
-    const result = await invokeMongoDBFunction<{ _id: string; success: boolean }>('mongodb-operations', {
-      operation: 'saveIncentiveScheme',
+    const result = await invokeMongoDBFunction<{ _id: string; success: boolean }>('saveIncentiveScheme', {
       scheme,
       status
     });
@@ -70,13 +66,15 @@ export const saveIncentiveScheme = async (scheme: IncentivePlan, status?: string
   }
 };
 
+/**
+ * Update an incentive scheme by creating a new version
+ */
 export const updateIncentiveScheme = async (schemeId: string, updates: Partial<IncentivePlan>, status?: string): Promise<boolean> => {
   try {
     console.log(`Creating new version for scheme ${schemeId}`);
     console.log('Updates:', JSON.stringify(updates, null, 2));
     
-    const result = await invokeMongoDBFunction<{ _id: string; success: boolean }>('mongodb-operations', {
-      operation: 'updateIncentiveScheme',
+    const result = await invokeMongoDBFunction<{ _id: string; success: boolean }>('updateIncentiveScheme', {
       schemeId,
       updates,
       status
@@ -101,9 +99,7 @@ export const updateIncentiveScheme = async (schemeId: string, updates: Partial<I
 export const getSchemeAdminConfigs = async (): Promise<SchemeAdminConfig[]> => {
   try {
     console.log('Fetching scheme admin configurations from MongoDB...');
-    const result = await invokeMongoDBFunction<SchemeAdminConfig[]>('mongodb-operations', {
-      operation: 'getSchemeAdminConfigs'
-    });
+    const result = await invokeMongoDBFunction<SchemeAdminConfig[]>('getSchemeAdminConfigs');
     console.log(`Fetched ${result.length} admin configurations from MongoDB`);
     return result;
   } catch (error) {
@@ -121,8 +117,7 @@ export const saveSchemeAdmin = async (config: SchemeAdminConfig): Promise<string
   try {
     console.log('Saving scheme admin configuration to MongoDB...');
     
-    const result = await invokeMongoDBFunction<{ _id: string; success: boolean }>('mongodb-operations', {
-      operation: 'saveSchemeAdmin',
+    const result = await invokeMongoDBFunction<{ _id: string; success: boolean }>('saveSchemeAdmin', {
       config
     });
     
@@ -144,8 +139,7 @@ export const saveSchemeAdmin = async (config: SchemeAdminConfig): Promise<string
 export const getSchemeAdminConfig = async (configId: string): Promise<SchemeAdminConfig> => {
   try {
     console.log(`Fetching scheme admin configuration with ID: ${configId}`);
-    const result = await invokeMongoDBFunction<SchemeAdminConfig>('mongodb-operations', {
-      operation: 'getSchemeAdminConfig',
+    const result = await invokeMongoDBFunction<SchemeAdminConfig>('getSchemeAdminConfig', {
       configId
     });
     return result;

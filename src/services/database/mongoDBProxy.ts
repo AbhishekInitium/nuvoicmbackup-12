@@ -17,7 +17,9 @@ const FALLBACK_ADMIN_API_URL = 'http://localhost:3001/api/admin';
 export const testMongoDBConnection = async (): Promise<boolean> => {
   try {
     console.log('Testing MongoDB connection via Supabase Edge Function...');
-    const { data, error } = await supabase.functions.invoke('connect-mongodb');
+    const { data, error } = await supabase.functions.invoke('mongodb-connect', {
+      body: { operation: 'testConnection' }
+    });
     
     if (error) {
       console.error('Error connecting to MongoDB via Supabase:', error);
@@ -25,7 +27,7 @@ export const testMongoDBConnection = async (): Promise<boolean> => {
     }
     
     console.log('MongoDB connection test result:', data);
-    return data?.status === 'Connected';
+    return data?.connected === true;
   } catch (error) {
     console.error('Error testing MongoDB connection:', error);
     return false;
@@ -33,27 +35,30 @@ export const testMongoDBConnection = async (): Promise<boolean> => {
 };
 
 /**
- * Generic function to invoke Supabase edge functions for MongoDB operations
+ * Generic function to invoke Supabase edge function for MongoDB operations
  */
 export const invokeMongoDBFunction = async <T>(
-  functionName: string, 
+  operation: string, 
   payload: any = {}
 ): Promise<T> => {
   try {
-    console.log(`Invoking MongoDB function ${functionName} with payload:`, payload);
+    console.log(`Invoking MongoDB operation ${operation} with payload:`, payload);
     
-    const { data, error } = await supabase.functions.invoke(functionName, {
-      body: payload
+    const { data, error } = await supabase.functions.invoke('mongodb-connect', {
+      body: {
+        operation,
+        ...payload
+      }
     });
     
     if (error) {
-      console.error(`Error invoking ${functionName}:`, error);
+      console.error(`Error invoking ${operation}:`, error);
       throw new Error(`Failed to execute MongoDB operation: ${error.message}`);
     }
     
     return data as T;
   } catch (error) {
-    console.error(`Error in MongoDB operation ${functionName}:`, error);
+    console.error(`Error in MongoDB operation ${operation}:`, error);
     throw new Error(`MongoDB operation failed: ${error instanceof Error ? error.message : String(error)}`);
   }
 };
