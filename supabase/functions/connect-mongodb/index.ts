@@ -14,7 +14,8 @@ serve(async (req) => {
   }
 
   try {
-    const MONGODB_URI = Deno.env.get('MONGODB_URI')
+    // Get MongoDB URI from environment variable
+    let MONGODB_URI = Deno.env.get('MONGODB_URI')
     
     if (!MONGODB_URI) {
       console.error("MONGODB_URI environment variable not set")
@@ -27,7 +28,20 @@ serve(async (req) => {
       )
     }
 
-    console.log("Attempting to connect to MongoDB...")
+    // Ensure port 3001 is used in the connection string
+    if (!MONGODB_URI.includes(':3001')) {
+      // If there's already a port defined in the URI, replace it
+      if (MONGODB_URI.match(/:[0-9]+\//)) {
+        MONGODB_URI = MONGODB_URI.replace(/:[0-9]+\//, ':3001/')
+      } 
+      // If no port defined but has a host, add the port
+      else if (MONGODB_URI.match(/\/\/[^\/]+\//)) {
+        MONGODB_URI = MONGODB_URI.replace(/\/\/([^\/]+)\//, '//$1:3001/')
+      }
+      console.log("Modified MongoDB URI to use port 3001")
+    }
+
+    console.log("Attempting to connect to MongoDB on port 3001...")
     
     // Test the connection
     const client = new MongoClient()
@@ -40,7 +54,7 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         status: "Connected", 
-        message: "Successfully connected to MongoDB",
+        message: "Successfully connected to MongoDB on port 3001",
         databases: dbNames.length
       }),
       { 
