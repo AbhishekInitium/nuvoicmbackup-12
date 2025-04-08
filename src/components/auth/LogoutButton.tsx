@@ -8,9 +8,17 @@ import { useToast } from '@/hooks/use-toast';
 
 interface LogoutButtonProps {
   variant?: 'default' | 'destructive' | 'outline' | 'secondary' | 'ghost' | 'link';
+  size?: 'default' | 'sm' | 'lg' | 'icon';
+  showIcon?: boolean;
+  showText?: boolean;
 }
 
-const LogoutButton: React.FC<LogoutButtonProps> = ({ variant = 'outline' }) => {
+const LogoutButton: React.FC<LogoutButtonProps> = ({ 
+  variant = 'outline', 
+  size = 'default',
+  showIcon = true,
+  showText = true
+}) => {
   const { logout, user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -27,9 +35,9 @@ const LogoutButton: React.FC<LogoutButtonProps> = ({ variant = 'outline' }) => {
   if (!user) return null;
 
   return (
-    <Button variant={variant} onClick={handleLogout} className="gap-2">
-      <LogOut className="h-4 w-4" />
-      <span>Logout</span>
+    <Button variant={variant} size={size} onClick={handleLogout} className={showIcon && showText ? "gap-2" : ""}>
+      {showIcon && <LogOut className="h-4 w-4" />}
+      {showText && <span>Logout</span>}
     </Button>
   );
 };

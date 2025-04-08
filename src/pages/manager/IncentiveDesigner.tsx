@@ -12,9 +12,13 @@ import { getIncentiveSchemes } from '@/services/database/mongoDBService';
 import DesignerNavigation from '@/components/incentive/DesignerNavigation';
 import SchemeAdministratorScreen from '@/components/incentive/scheme-admin/SchemeAdministratorScreen';
 import { Button } from '@/components/ui/button';
+import { useAuth } from '@/contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 const IncentiveDesigner = () => {
   const { toast } = useToast();
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const [schemes, setSchemes] = useState<IncentivePlanWithStatus[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [planTemplate, setPlanTemplate] = useState<IncentivePlan | null>(null);
@@ -132,6 +136,15 @@ const IncentiveDesigner = () => {
   };
 
   const handleOpenAdmin = () => {
+    // Only admins can access the SchemeAdministrator
+    if (user?.role !== 'admin') {
+      toast({
+        title: "Access Denied",
+        description: "Only Scheme Administrators can access this feature.",
+        variant: "destructive"
+      });
+      return;
+    }
     setShowAdminScreen(true);
   };
 
@@ -158,9 +171,12 @@ const IncentiveDesigner = () => {
           <div className="max-w-6xl mx-auto px-4 py-8">
             <div className="flex justify-between items-center mb-8">
               <h1 className="text-2xl font-bold">Incentive Scheme Management</h1>
-              <Button onClick={handleOpenAdmin} variant="outline">
-                Scheme Administrator
-              </Button>
+              {/* Only show the button for scheme administrators */}
+              {user?.role === 'admin' && (
+                <Button onClick={handleOpenAdmin} variant="outline">
+                  Scheme Administrator
+                </Button>
+              )}
             </div>
             
             <SchemeTable 
