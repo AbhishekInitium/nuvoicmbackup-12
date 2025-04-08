@@ -3,3 +3,6 @@ project_id = "uigkpjvtipnfxyjijrtf"
 
 [functions.connect-mongodb]
 verify_jwt = true
+
+[functions.mongodb-operations]
+verify_jwt = true
