@@ -1,80 +1,80 @@
 
-import React from 'react';
-import { Link } from 'react-router-dom';
-import { User, Settings, BarChart3, Database } from 'lucide-react';
-import NavBar from '@/components/layout/NavBar';
-import Container from '@/components/layout/Container';
-import { usePortalContext } from '@/contexts/PortalContext';
+import React, { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 
 const Index = () => {
-  const { setActivePortal } = usePortalContext();
+  const { user } = useAuth();
+  const navigate = useNavigate();
 
-  // Define navigation items
-  const navItems = [
-    {
-      label: 'Sales Agent Portal',
-      path: '/agent',
-      icon: <User className="h-6 w-6 mb-2" />,
-      onClick: () => setActivePortal('agent'),
-      description: 'Access your dashboard, quota attainment, and earnings information'
-    },
-    {
-      label: 'Manager Portal',
-      path: '/manager',
-      icon: <Settings className="h-6 w-6 mb-2" />,
-      onClick: () => setActivePortal('manager'),
-      description: 'Manage incentive plans, team performance, and commission payments'
-    },
-    {
-      label: 'Ops & Finance',
-      path: '/operations',
-      icon: <BarChart3 className="h-6 w-6 mb-2" />,
-      onClick: () => setActivePortal('all'),
-      description: 'Financial reporting, commission validation, and payment processing'
-    },
-    {
-      label: 'SAP Integration',
-      path: '/integration',
-      icon: <Database className="h-6 w-6 mb-2" />,
-      onClick: () => setActivePortal('all'),
-      description: 'Configure and test SAP integration points and data mapping'
+  useEffect(() => {
+    // Redirect authenticated users to their appropriate portal
+    if (user) {
+      switch (user.role) {
+        case 'admin':
+          navigate('/integration');
+          break;
+        case 'manager':
+          navigate('/manager');
+          break;
+        case 'agent':
+          navigate('/agent');
+          break;
+        case 'finance':
+          navigate('/operations');
+          break;
+      }
     }
-  ];
+  }, [user, navigate]);
+
+  const handleLogin = () => {
+    navigate('/login');
+  };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-app-gray-50 to-white">
-      <NavBar />
-      
-      <div className="py-12 sm:py-16">
-        <Container>
-          <div className="max-w-3xl mx-auto text-center mb-12">
-            <h1 className="text-4xl font-bold text-app-gray-900 tracking-tight mb-4">
-              Nuvo ICM Platform
-            </h1>
-            <p className="text-xl text-app-gray-600 mb-12">
-              A comprehensive incentive compensation management system integrated with SAP
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-4">
+      <Card className="max-w-md w-full p-8 text-center">
+        <h1 className="text-3xl font-bold mb-6">NUVO ICM Platform</h1>
+        <p className="text-gray-600 mb-8">
+          Incentive Compensation Management System
+        </p>
+        
+        {!user ? (
+          <Button size="lg" onClick={handleLogin}>
+            Login to Continue
+          </Button>
+        ) : (
+          <div className="space-y-4">
+            <p className="text-green-600">
+              You are logged in as {user.username}
             </p>
-            
-            {/* Navigation Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-12">
-              {navItems.map((item) => (
-                <Link 
-                  key={item.path}
-                  to={item.path}
-                  onClick={item.onClick}
-                  className="flex flex-col items-center p-6 bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow border border-app-gray-100"
-                >
-                  <div className="flex items-center justify-center w-12 h-12 bg-app-blue-50 rounded-full mb-4">
-                    {item.icon}
-                  </div>
-                  <h3 className="text-lg font-medium text-app-gray-900 mb-2">{item.label}</h3>
-                  <p className="text-sm text-app-gray-600 text-center">{item.description}</p>
-                </Link>
-              ))}
+            <div className="grid grid-cols-1 gap-2">
+              {user.role === 'admin' && (
+                <Button onClick={() => navigate('/integration')}>
+                  Go to Admin Portal
+                </Button>
+              )}
+              {user.role === 'manager' && (
+                <Button onClick={() => navigate('/manager')}>
+                  Go to Manager Portal
+                </Button>
+              )}
+              {user.role === 'agent' && (
+                <Button onClick={() => navigate('/agent')}>
+                  Go to Agent Portal
+                </Button>
+              )}
+              {user.role === 'finance' && (
+                <Button onClick={() => navigate('/operations')}>
+                  Go to Finance Portal
+                </Button>
+              )}
             </div>
           </div>
-        </Container>
-      </div>
+        )}
+      </Card>
     </div>
   );
 };
