@@ -8,6 +8,12 @@ const reactProcess = spawn('npm', ['run', 'dev'], {
   shell: true
 });
 
+// Start the consolidated server
+const serverProcess = spawn('node', [path.join(__dirname, 'server/server.js')], {
+  stdio: 'inherit',
+  shell: true
+});
+
 // Start the proxy server
 const proxyProcess = spawn('node', [path.join(__dirname, 'src/proxy/proxyServer.js')], {
   stdio: 'inherit',
@@ -17,8 +23,9 @@ const proxyProcess = spawn('node', [path.join(__dirname, 'src/proxy/proxyServer.
 // Handle process exit
 process.on('SIGINT', () => {
   reactProcess.kill();
+  serverProcess.kill();
   proxyProcess.kill();
   process.exit();
 });
 
-console.log('Started development server with proxy');
+console.log('Started development server with API and proxy');
