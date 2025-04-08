@@ -1,6 +1,6 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import axios from 'axios';
+import { loginUser, logoutUser } from '@/services/auth/userService';
 
 // Define the user roles
 export type UserRole = 'admin' | 'manager' | 'agent' | 'finance';
@@ -46,21 +46,20 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       setIsLoading(true);
       
-      // In a real app, you would validate credentials against your MongoDB here
-      // For now, we'll simulate a successful login and store the user info
-      
-      const newUser: User = {
+      // Call the authentication service
+      const result = await loginUser({
         username,
         role,
-        clientId,
-        isAuthenticated: true
-      };
+        clientId
+      });
       
-      // Store user in local storage for persistence
-      localStorage.setItem('nuvo_user', JSON.stringify(newUser));
-      setUser(newUser);
-      
-      return true;
+      if (result.isAuthenticated) {
+        // Store user in local storage for persistence
+        localStorage.setItem('nuvo_user', JSON.stringify(result));
+        setUser(result);
+        return true;
+      }
+      return false;
     } catch (error) {
       console.error('Login failed:', error);
       return false;
@@ -69,7 +68,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  const logout = () => {
+  const logout = async () => {
+    if (user) {
+      try {
+        // Call the logout service if user exists
+        await logoutUser(user.username);
+      } catch (error) {
+        console.error('Logout API call failed:', error);
+      }
+    }
+    
+    // Clear local storage and state regardless of API success
     localStorage.removeItem('nuvo_user');
     setUser(null);
   };
