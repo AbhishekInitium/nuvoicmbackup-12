@@ -2,6 +2,7 @@
 import axios from 'axios';
 import { User, UserRole } from '@/contexts/AuthContext';
 
+// Use a single base URL that will work with the consolidated server approach
 const API_BASE_URL = 'http://localhost:3001/api/users';
 
 export interface UserLoginRequest {
